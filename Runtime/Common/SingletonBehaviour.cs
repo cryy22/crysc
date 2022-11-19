@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Singletons
+namespace Crysc.Common
 {
     [DefaultExecutionOrder(-1)]
     public class SingletonBehaviour<T> : MonoBehaviour where T : SingletonBehaviour<T>
