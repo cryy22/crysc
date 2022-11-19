@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace Crysc.Common
+namespace Crysc.Initialization
 {
-    public abstract class InitializedBehaviour<TInitParams> : MonoBehaviour
+    public abstract class InitializationBehaviour<TInitParams> : MonoBehaviour
     {
         protected bool IsInitialized { get; private set; }
         protected TInitParams InitParams { get; private set; }
