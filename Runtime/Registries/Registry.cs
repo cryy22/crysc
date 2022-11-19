@@ -9,6 +9,9 @@ namespace Crysc.Registries
         where TSelf : Registry<T, TSelf>
     {
         private readonly HashSet<T> _members = new();
+
+        public event EventHandler Destroying;
+
         public IEnumerable<T> Members => _members;
 
         private void OnEnable()
@@ -34,6 +37,8 @@ namespace Crysc.Registries
         {
             var member = (T) sender;
             _members.Remove(member);
+
+            Destroying?.Invoke(sender: member, e: EventArgs.Empty);
         }
     }
 }
