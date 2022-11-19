@@ -17,12 +17,9 @@ namespace Crysc.Helpers
                 behaviours
                     .Select(b => b.StartCoroutine(enumerator(b)))
                     .ToArray()
-                );
+            );
         }
-        
-        public static IEnumerator RunConcurrently(params Coroutine[] coroutines)
-        {
-            foreach (Coroutine coroutine in coroutines) { yield return coroutine; }
-        }
+
+        public static IEnumerator RunConcurrently(params Coroutine[] coroutines) { return coroutines.GetEnumerator(); }
     }
 }
