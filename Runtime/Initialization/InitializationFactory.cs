@@ -2,22 +2,25 @@ using UnityEngine;
 
 namespace Crysc.Initialization
 {
-    public abstract class InitializationFactory<TBehaviour, TConfig, TInitParams> : ScriptableObject
-        where TBehaviour : InitializationBehaviour<TInitParams>
+    public abstract class InitializationFactory<T, TConfig, TInitParams> : ScriptableObject
+        where T : InitializationBehaviour<TInitParams>
     {
-        [SerializeField] private TBehaviour Prefab;
+        [SerializeField] private T Prefab;
 
-        public TBehaviour Create(TConfig config)
+        public T Create(TConfig config)
         {
-            TBehaviour instance = Instantiate(Prefab);
+            T instance = Instantiate(Prefab);
             instance.Initialize(GetInitParams(config));
 
             return instance;
         }
 
-        protected virtual TInitParams GetInitParams(TConfig config)
-        {
-            return config is TInitParams initParams ? initParams : default;
-        }
+        protected abstract TInitParams GetInitParams(TConfig config);
+    }
+
+    public abstract class InitializationFactory<T, TConfig> : InitializationFactory<T, TConfig, TConfig>
+        where T : InitializationBehaviour<TConfig>
+    {
+        protected override TConfig GetInitParams(TConfig config) { return config; }
     }
 }
