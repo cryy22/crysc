@@ -13,6 +13,7 @@ namespace Crysc.Registries
         public event EventHandler Hovered;
         public event EventHandler Unhovered;
         public event EventHandler Clicked;
+        public event EventHandler Destroying;
 
         protected IEnumerable<T> Members => Registrars.Select(r => r.Registrant);
 
@@ -40,6 +41,8 @@ namespace Crysc.Registries
 
         protected virtual void SubscribeToEvents(IRegistrar<T> registrar)
         {
+            registrar.Destroying += DestroyingEventHandler;
+
             if (registrar is IMouseEventRegistrar<T> meRegistrar)
             {
                 meRegistrar.Hovered += HoveredEventHandler;
@@ -50,6 +53,8 @@ namespace Crysc.Registries
 
         protected virtual void UnsubscribeFromEvents(IRegistrar<T> registrar)
         {
+            registrar.Destroying -= DestroyingEventHandler;
+
             if (registrar is IMouseEventRegistrar<T> meRegistrar)
             {
                 meRegistrar.Hovered -= HoveredEventHandler;
@@ -61,5 +66,6 @@ namespace Crysc.Registries
         private void HoveredEventHandler(object sender, EventArgs e) { Hovered?.Invoke(sender: sender, e: e); }
         private void UnhoveredEventHandler(object sender, EventArgs e) { Unhovered?.Invoke(sender: sender, e: e); }
         private void ClickedEventHandler(object sender, EventArgs e) { Clicked?.Invoke(sender: sender, e: e); }
+        private void DestroyingEventHandler(object sender, EventArgs e) { Destroying?.Invoke(sender: sender, e: e); }
     }
 }
