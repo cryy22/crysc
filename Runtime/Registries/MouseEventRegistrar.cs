@@ -4,17 +4,17 @@ using UnityEngine.EventSystems;
 
 namespace Crysc.Registries
 {
-    [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(Collider2D))]
     public abstract class MouseEventRegistrar<T> : Registrar<T>, IMouseEventRegistrar<T>,
         IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
         where T : Component
     {
-        private Collider _collider;
+        private Collider2D _collider;
 
         protected override void Awake()
         {
             base.Awake();
-            _collider = GetComponent<Collider>();
+            _collider = GetComponent<Collider2D>();
         }
 
         private void OnDisable() { Unhovered?.Invoke(sender: Registrant, e: BuildEventArgs()); }

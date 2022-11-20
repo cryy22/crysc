@@ -13,6 +13,11 @@ namespace Crysc.UI
         [SerializeField] protected GameObject Container;
 
         [SerializeField] private bool PersistsOnTooltipHover;
+        [SerializeField] private bool MoveToTargetPosition;
+
+        private Camera _camera;
+
+        private void Awake() { _camera = Camera.main; }
 
         protected virtual void OnEnable()
         {
@@ -29,7 +34,28 @@ namespace Crysc.UI
         protected virtual void ShowTooltip(T target) { Container.SetActive(true); }
         private void HideTooltip() { Container.SetActive(false); }
 
-        private void HoveredEventHandler(object sender, EventArgs _) { ShowTooltip(sender as T); }
+        private void HoveredEventHandler(object sender, RegistryEventArgs<T> e)
+        {
+            ShowTooltip(sender as T);
+
+            if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar)
+                MoveTooltip(meRegistrar);
+        }
+
+        private void MoveTooltip(IMouseEventRegistrar<T> registrar)
+        {
+            var worldPoint = new Vector3(
+                x: registrar.Bounds.center.x,
+                y: registrar.Bounds.max.y - 0.25f,
+                z: registrar.Bounds.center.z
+            );
+            Vector3 screenPoint = _camera.WorldToScreenPoint(worldPoint);
+            Container.transform.position = new Vector3(
+                x: screenPoint.x,
+                y: screenPoint.y,
+                z: Container.transform.position.z
+            );
+        }
 
         private void UnhoveredEventHandler(object sender, EventArgs _) { HideTooltip(); }
 
