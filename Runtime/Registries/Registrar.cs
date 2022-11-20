@@ -12,12 +12,17 @@ namespace Crysc.Registries
 
         protected virtual void OnDestroy()
         {
-            Destroying?.Invoke(sender: Registrant, e: EventArgs.Empty);
+            Destroying?.Invoke(sender: Registrant, e: BuildEventArgs());
             Registry.Unregister(this);
         }
 
+        protected RegistryEventArgs<T> BuildEventArgs()
+        {
+            return new RegistryEventArgs<T>(registrar: this, registrant: Registrant);
+        }
+
         // IRegistrar
-        public event EventHandler Destroying;
+        public event EventHandler<RegistryEventArgs<T>> Destroying;
         public T Registrant { get; private set; }
     }
 }

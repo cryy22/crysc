@@ -8,35 +8,35 @@ namespace Crysc.Registries
     public abstract class Registry<T> : ScriptableObject
         where T : Component
     {
-        [NonSerialized] private readonly HashSet<IRegistrar<T>> Registrars = new();
+        [NonSerialized] private readonly HashSet<IRegistrar<T>> _registrars = new();
 
-        public event EventHandler Hovered;
-        public event EventHandler Unhovered;
-        public event EventHandler Clicked;
-        public event EventHandler Destroying;
+        public event EventHandler<RegistryEventArgs<T>> Hovered;
+        public event EventHandler<RegistryEventArgs<T>> Unhovered;
+        public event EventHandler<RegistryEventArgs<T>> Clicked;
+        public event EventHandler<RegistryEventArgs<T>> Destroying;
 
-        protected IEnumerable<T> Members => Registrars.Select(r => r.Registrant);
+        protected IEnumerable<T> Members => _registrars.Select(r => r.Registrant);
 
         protected virtual void OnEnable()
         {
-            foreach (IRegistrar<T> registrar in Registrars) SubscribeToEvents(registrar);
+            foreach (IRegistrar<T> registrar in _registrars) SubscribeToEvents(registrar);
         }
 
         protected virtual void OnDisable()
         {
-            foreach (IRegistrar<T> registrar in Registrars) UnsubscribeFromEvents(registrar);
+            foreach (IRegistrar<T> registrar in _registrars) UnsubscribeFromEvents(registrar);
         }
 
         public void Register(IRegistrar<T> registrar)
         {
-            Registrars.Add(registrar);
+            _registrars.Add(registrar);
             SubscribeToEvents(registrar);
         }
 
         public void Unregister(IRegistrar<T> registrar)
         {
             UnsubscribeFromEvents(registrar);
-            Registrars.Remove(registrar);
+            _registrars.Remove(registrar);
         }
 
         protected virtual void SubscribeToEvents(IRegistrar<T> registrar)
@@ -63,9 +63,24 @@ namespace Crysc.Registries
             }
         }
 
-        private void HoveredEventHandler(object sender, EventArgs e) { Hovered?.Invoke(sender: sender, e: e); }
-        private void UnhoveredEventHandler(object sender, EventArgs e) { Unhovered?.Invoke(sender: sender, e: e); }
-        private void ClickedEventHandler(object sender, EventArgs e) { Clicked?.Invoke(sender: sender, e: e); }
-        private void DestroyingEventHandler(object sender, EventArgs e) { Destroying?.Invoke(sender: sender, e: e); }
+        private void HoveredEventHandler(object sender, RegistryEventArgs<T> e)
+        {
+            Hovered?.Invoke(sender: sender, e: e);
+        }
+
+        private void UnhoveredEventHandler(object sender, RegistryEventArgs<T> e)
+        {
+            Unhovered?.Invoke(sender: sender, e: e);
+        }
+
+        private void ClickedEventHandler(object sender, RegistryEventArgs<T> e)
+        {
+            Clicked?.Invoke(sender: sender, e: e);
+        }
+
+        private void DestroyingEventHandler(object sender, RegistryEventArgs<T> e)
+        {
+            Destroying?.Invoke(sender: sender, e: e);
+        }
     }
 }
