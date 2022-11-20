@@ -5,35 +5,36 @@ using UnityEngine;
 
 namespace Crysc.Registries
 {
-    public abstract class Registry<T> : ScriptableObject where T : Component
+    public abstract class Registry<T> : ScriptableObject
+        where T : Component
     {
-        [NonSerialized] private readonly HashSet<Registrar<T>> _registrars = new();
+        [NonSerialized] protected readonly HashSet<IRegistrar<T>> Registrars = new();
 
-        public IEnumerable<T> Members => _registrars.Select(r => r.Registrant);
+        public IEnumerable<T> Members => Registrars.Select(r => r.Registrant);
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
-            foreach (T member in Members) SubscribeToEvents(member);
+            foreach (IRegistrar<T> registrar in Registrars) SubscribeToEvents(registrar);
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
-            foreach (T member in Members) UnsubscribeFromEvents(member);
+            foreach (IRegistrar<T> registrar in Registrars) UnsubscribeFromEvents(registrar);
         }
 
-        public void Register(Registrar<T> registrar)
+        public void Register(IRegistrar<T> registrar)
         {
-            _registrars.Add(registrar);
-            SubscribeToEvents(registrar.Registrant);
+            Registrars.Add(registrar);
+            SubscribeToEvents(registrar);
         }
 
-        public void Unregister(Registrar<T> registrar)
+        public void Unregister(IRegistrar<T> registrar)
         {
-            UnsubscribeFromEvents(registrar.Registrant);
-            _registrars.Remove(registrar);
+            UnsubscribeFromEvents(registrar);
+            Registrars.Remove(registrar);
         }
 
-        protected virtual void SubscribeToEvents(T member) { }
-        protected virtual void UnsubscribeFromEvents(T member) { }
+        protected virtual void SubscribeToEvents(IRegistrar<T> registrar) { }
+        protected virtual void UnsubscribeFromEvents(IRegistrar<T> registrar) { }
     }
 }

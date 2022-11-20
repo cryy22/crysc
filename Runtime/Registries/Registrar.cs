@@ -2,13 +2,14 @@ using UnityEngine;
 
 namespace Crysc.Registries
 {
-    public abstract class Registrar<T> : MonoBehaviour where T : Component
+    public abstract class Registrar<T> : MonoBehaviour, IRegistrar<T> where T : Component
     {
-        [SerializeField] private Registry<T> Registry;
-        public T Registrant { get; private set; }
+        [SerializeField] protected Registry<T> Registry;
 
-        private void Awake() { Registrant = GetComponent<T>(); }
-        private void Start() { Registry.Register(this); }
-        private void OnDestroy() { Registry.Unregister(this); }
+        protected virtual void Awake() { Registrant = GetComponent<T>(); }
+        protected virtual void Start() { Registry.Register(this); }
+        protected virtual void OnDestroy() { Registry.Unregister(this); }
+
+        public T Registrant { get; private set; }
     }
 }
