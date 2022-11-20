@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Crysc.Common;
+using System.Linq;
+using UnityEngine;
 
 namespace Crysc.Registries
 {
-    public class Registry<T, TSelf> : SingletonBehaviour<TSelf>
-        where T : IRegisterable
-        where TSelf : Registry<T, TSelf>
+    public abstract class Registry<T> : ScriptableObject where T : Component
     {
-        private readonly HashSet<T> _members = new();
+        [NonSerialized] private readonly HashSet<Registrar<T>> _registrars = new();
 
-        public event EventHandler Destroying;
-
-        public IEnumerable<T> Members => _members;
+        public IEnumerable<T> Members => _registrars.Select(r => r.Registrant);
 
         private void OnEnable()
         {
@@ -24,21 +21,19 @@ namespace Crysc.Registries
             foreach (T member in Members) UnsubscribeFromEvents(member);
         }
 
-        public void Register(T member)
+        public void Register(Registrar<T> registrar)
         {
-            _members.Add(member);
-            SubscribeToEvents(member);
+            _registrars.Add(registrar);
+            SubscribeToEvents(registrar.Registrant);
         }
 
-        protected virtual void SubscribeToEvents(T member) { member.Destroying += DestroyingEventHandler; }
-        protected virtual void UnsubscribeFromEvents(T member) { member.Destroying -= DestroyingEventHandler; }
-
-        private void DestroyingEventHandler(object sender, EventArgs _)
+        public void Unregister(Registrar<T> registrar)
         {
-            var member = (T) sender;
-            _members.Remove(member);
-
-            Destroying?.Invoke(sender: member, e: EventArgs.Empty);
+            UnsubscribeFromEvents(registrar.Registrant);
+            _registrars.Remove(registrar);
         }
+
+        protected virtual void SubscribeToEvents(T member) { }
+        protected virtual void UnsubscribeFromEvents(T member) { }
     }
 }
