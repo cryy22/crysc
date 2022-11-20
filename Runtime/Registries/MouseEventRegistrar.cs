@@ -9,12 +9,21 @@ namespace Crysc.Registries
         IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
         where T : Component
     {
+        private Collider _collider;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            _collider = GetComponent<Collider>();
+        }
+
         private void OnDisable() { Unhovered?.Invoke(sender: Registrant, e: BuildEventArgs()); }
 
         // IMouseEventRegistrar
         public event EventHandler<RegistryEventArgs<T>> Hovered;
         public event EventHandler<RegistryEventArgs<T>> Unhovered;
         public event EventHandler<RegistryEventArgs<T>> Clicked;
+        public Bounds Bounds => _collider.bounds;
 
         // IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
         public void OnPointerDown(PointerEventData _) { Clicked?.Invoke(sender: Registrant, e: BuildEventArgs()); }
