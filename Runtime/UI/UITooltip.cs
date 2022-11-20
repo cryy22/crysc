@@ -1,13 +1,18 @@
 using System;
 using Crysc.Registries;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Crysc.UI
 {
-    public abstract class UITooltip<T> : MonoBehaviour where T : Component
+    public abstract class UITooltip<T> : MonoBehaviour,
+        IPointerEnterHandler, IPointerExitHandler
+        where T : Component
     {
         [SerializeField] private Registry<T> Registry;
-        [SerializeField] private GameObject Container;
+        [SerializeField] protected GameObject Container;
+
+        [SerializeField] private bool PersistsOnTooltipHover;
 
         protected virtual void OnEnable()
         {
@@ -22,11 +27,17 @@ namespace Crysc.UI
         }
 
         protected virtual void ShowTooltip(T target) { Container.SetActive(true); }
-
-        protected virtual void HideTooltip() { Container.SetActive(false); }
+        private void HideTooltip() { Container.SetActive(false); }
 
         private void HoveredEventHandler(object sender, EventArgs _) { ShowTooltip(sender as T); }
 
         private void UnhoveredEventHandler(object sender, EventArgs _) { HideTooltip(); }
+
+        public void OnPointerEnter(PointerEventData _)
+        {
+            if (PersistsOnTooltipHover) Container.SetActive(true);
+        }
+
+        public void OnPointerExit(PointerEventData _) { HideTooltip(); }
     }
 }
