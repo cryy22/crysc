@@ -1,11 +1,12 @@
 using System;
+using Crysc.Registries;
 using UnityEngine;
 
-namespace Crysc.UI.Tooltip
+namespace Crysc.UI
 {
     public abstract class UITooltip<T> : MonoBehaviour where T : Component
     {
-        [SerializeField] private TooltipRegistry<T> Registry;
+        [SerializeField] private Registry<T> Registry;
         [SerializeField] private GameObject Container;
 
         protected virtual void OnEnable()
