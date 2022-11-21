@@ -1,9 +1,9 @@
 using System;
-using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Crysc.Registries
 {
-    public class LifecycleRegistrar<T> : Registrar<T>, ILifecycleRegistrar<T> where T : Component
+    public class LifecycleRegistrar<T> : Registrar<T>, ILifecycleRegistrar<T> where T : Object
     {
         protected override void OnDestroy()
         {

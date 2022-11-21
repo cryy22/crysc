@@ -1,12 +1,23 @@
+using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Crysc.Registries
 {
-    public abstract class Registrar<T> : MonoBehaviour, IRegistrar<T> where T : Component
+    public abstract class Registrar<T> : MonoBehaviour, IRegistrar<T> where T : Object
     {
         [SerializeField] protected Registry<T> Registry;
 
-        protected virtual void Awake() { Registrant = GetComponent<T>(); }
+        protected virtual void Awake()
+        {
+            try
+            {
+                Registrant = GetComponent<T>();
+            }
+            catch (ArgumentException)
+            { }
+        }
+
         protected virtual void Start() { Registry.Register(this); }
         protected virtual void OnDestroy() { Registry.Unregister(this); }
 
@@ -16,6 +27,6 @@ namespace Crysc.Registries
         }
 
         // IRegistrar
-        public T Registrant { get; private set; }
+        public virtual T Registrant { get; private set; }
     }
 }

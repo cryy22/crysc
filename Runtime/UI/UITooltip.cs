@@ -2,12 +2,13 @@ using System;
 using Crysc.Registries;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Object = UnityEngine.Object;
 
 namespace Crysc.UI
 {
     public abstract class UITooltip<T> : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler
-        where T : Component
+        where T : Object
     {
         [SerializeField] private Registry<T> Registry;
         [SerializeField] protected GameObject Container;
@@ -44,16 +45,17 @@ namespace Crysc.UI
 
         private void MoveTooltip(IMouseEventRegistrar<T> registrar)
         {
+            Bounds bounds = registrar.Bounds;
             var worldPoint = new Vector3(
-                x: registrar.Bounds.center.x,
-                y: registrar.Bounds.max.y - 0.25f,
+                x: bounds.center.x + (bounds.extents.x / 2),
+                y: registrar.Bounds.max.y - (bounds.extents.y / 4),
                 z: registrar.Bounds.center.z
             );
             Vector3 screenPoint = _camera.WorldToScreenPoint(worldPoint);
-            Container.transform.position = new Vector3(
+            transform.position = new Vector3(
                 x: screenPoint.x,
                 y: screenPoint.y,
-                z: Container.transform.position.z
+                z: transform.position.z
             );
         }
 
