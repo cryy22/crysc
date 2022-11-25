@@ -17,6 +17,7 @@ namespace Crysc.UI
         [SerializeField] private bool MoveToTargetPosition;
 
         private Camera _camera;
+        private T _target;
 
         private void Awake()
         {
@@ -36,7 +37,18 @@ namespace Crysc.UI
             Registry.Unhovered -= UnhoveredEventHandler;
         }
 
-        protected virtual void ShowTooltip(T target) { Container.SetActive(true); }
+        protected virtual bool ShouldShowTooltip(T target) { return true; }
+
+        protected virtual void ShowTooltip(T target)
+        {
+            if (ShouldShowTooltip(target) == false) return;
+
+            UpdateTarget(target: target, previousTarget: _target);
+            Container.SetActive(true);
+        }
+
+        protected virtual void UpdateTarget(T target, T previousTarget) { _target = target; }
+
         private void HideTooltip() { Container.SetActive(false); }
 
         private void HoveredEventHandler(object sender, RegistryEventArgs<T> e)
