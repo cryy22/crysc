@@ -1,13 +1,11 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Object = UnityEngine.Object;
 
 namespace Crysc.Registries
 {
     public abstract class MouseEventRegistrar<T> : Registrar<T>, IMouseEventRegistrar<T>,
         IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
-        where T : Object
     {
         private Collider _collider;
         private Collider2D _collider2D;

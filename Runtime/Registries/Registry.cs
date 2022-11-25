@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Crysc.Registries
 {
     public abstract class Registry<T> : ScriptableObject
-        where T : Object
     {
         [NonSerialized] private readonly HashSet<IRegistrar<T>> _registrars = new();
 

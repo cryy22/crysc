@@ -1,10 +1,9 @@
 using System;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Crysc.Registries
 {
-    public abstract class Registrar<T> : MonoBehaviour, IRegistrar<T> where T : Object
+    public abstract class Registrar<T> : MonoBehaviour, IRegistrar<T>
     {
         [SerializeField] protected Registry<T> Registry;
 
