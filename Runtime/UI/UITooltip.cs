@@ -6,6 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace Crysc.UI
 {
+    [RequireComponent(typeof(RectTransform))]
     public abstract class UITooltip<T> : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler
         where T : Object
@@ -17,11 +18,15 @@ namespace Crysc.UI
         [SerializeField] private bool MoveToTargetPosition;
 
         private Camera _camera;
+        private Canvas _canvas;
+        private RectTransform _rectTransform;
         private T _target;
 
         private void Awake()
         {
             _camera = Camera.main;
+            _canvas = GetComponentInParent<Canvas>();
+            _rectTransform = GetComponent<RectTransform>();
             HideTooltip();
         }
 
@@ -60,18 +65,59 @@ namespace Crysc.UI
 
         private void MoveTooltip(IMouseEventRegistrar<T> registrar)
         {
-            Bounds bounds = registrar.Bounds;
-            var worldPoint = new Vector3(
-                x: bounds.max.x - (bounds.extents.x / 3),
-                y: bounds.max.y - (bounds.extents.y / 3),
-                z: bounds.center.z
-            );
-            Vector3 screenPoint = _camera.WorldToScreenPoint(worldPoint);
+            Vector3 screenPoint = GetTooltipScreenPoint(registrar);
             transform.position = new Vector3(
                 x: screenPoint.x,
                 y: screenPoint.y,
                 z: transform.position.z
             );
+        }
+
+        private Vector3 GetTooltipScreenPoint(IMouseEventRegistrar<T> registrar)
+        {
+            Bounds registrarBounds = registrar.Bounds;
+            Bounds tooltipBounds = GetBounds();
+            float xInset = registrarBounds.extents.x / 4;
+            bool isRight = IsRegistrarOnRight(registrar);
+
+            float xValue = isRight
+                ? (registrarBounds.min.x - tooltipBounds.size.x) + xInset
+                : registrarBounds.max.x - xInset;
+
+            var worldPoint = new Vector2(
+                x: xValue,
+                y: registrarBounds.center.y + (registrarBounds.extents.y / 2)
+            );
+
+            return _camera.WorldToScreenPoint(worldPoint);
+        }
+
+        private bool IsRegistrarOnRight(IMouseEventRegistrar<T> registrar)
+        {
+            Vector3 screenPoint = _camera.WorldToScreenPoint(registrar.Bounds.center);
+            return screenPoint.x > (Screen.width / 3) * 2;
+        }
+
+        private Bounds GetBounds()
+        {
+            var rectCorners = new Vector3[4];
+            _rectTransform.GetWorldCorners(rectCorners);
+
+            Vector3 min = Vector3.positiveInfinity;
+            Vector3 max = Vector3.negativeInfinity;
+
+            foreach (Vector3 corner in rectCorners)
+            {
+                Vector3 worldPoint = _canvas.renderMode == RenderMode.WorldSpace
+                    ? corner
+                    : _camera.ScreenToWorldPoint(corner);
+                min = Vector3.Min(lhs: min, rhs: worldPoint);
+                max = Vector3.Max(lhs: max, rhs: worldPoint);
+            }
+
+            Bounds bounds = new();
+            bounds.SetMinMax(min: min, max: max);
+            return bounds;
         }
 
         private void UnhoveredEventHandler(object sender, EventArgs _) { HideTooltip(); }
