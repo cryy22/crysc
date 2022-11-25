@@ -39,17 +39,16 @@ namespace Crysc.UI
         {
             ShowTooltip(sender as T);
 
-            if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar)
-                MoveTooltip(meRegistrar);
+            if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar) MoveTooltip(meRegistrar);
         }
 
         private void MoveTooltip(IMouseEventRegistrar<T> registrar)
         {
             Bounds bounds = registrar.Bounds;
             var worldPoint = new Vector3(
-                x: bounds.center.x + (bounds.extents.x / 2),
-                y: registrar.Bounds.max.y - (bounds.extents.y / 4),
-                z: registrar.Bounds.center.z
+                x: bounds.max.x - (bounds.extents.x / 3),
+                y: bounds.max.y - (bounds.extents.y / 3),
+                z: bounds.center.z
             );
             Vector3 screenPoint = _camera.WorldToScreenPoint(worldPoint);
             transform.position = new Vector3(
