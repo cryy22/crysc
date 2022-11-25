@@ -18,7 +18,11 @@ namespace Crysc.UI
 
         private Camera _camera;
 
-        private void Awake() { _camera = Camera.main; }
+        private void Awake()
+        {
+            _camera = Camera.main;
+            HideTooltip();
+        }
 
         protected virtual void OnEnable()
         {
