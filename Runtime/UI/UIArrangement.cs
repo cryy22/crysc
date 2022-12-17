@@ -8,9 +8,9 @@ namespace Crysc.UI
     public class UIArrangement : MonoBehaviour
     {
         private const float _zOffset = 0.000001f;
+
         [SerializeField] private Vector2 ElementSpacing = Vector2.right;
         [SerializeField] private Vector2 ElementStagger = Vector2.zero;
-
         [SerializeField] private Transform ElementsParent;
 
         private readonly Dictionary<Transform, Vector3> _elementsPositions = new();
