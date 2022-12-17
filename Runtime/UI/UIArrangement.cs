@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Crysc.Helpers;
@@ -11,6 +12,7 @@ namespace Crysc.UI
 
         [SerializeField] private Vector2 ElementSpacing = Vector2.right;
         [SerializeField] private Vector2 ElementStagger = Vector2.zero;
+        [SerializeField] private bool InvertOrder;
         [SerializeField] private Transform ElementsParent;
 
         private readonly Dictionary<Transform, Vector3> _elementsPositions = new();
@@ -22,10 +24,10 @@ namespace Crysc.UI
                 element.localPosition = _elementsPositions[element];
         }
 
-        public void AnimateUpdateArrangement(IEnumerable<Transform> elements)
+        public IEnumerator AnimateUpdateArrangement(IEnumerable<Transform> elements)
         {
             bool hasChanged = UpdateElementsAndPositions(elements);
-            if (!hasChanged) return;
+            if (!hasChanged) yield break;
 
             Coroutine[] coroutines = _elementsPositions.Keys
                 .Select(
@@ -33,7 +35,7 @@ namespace Crysc.UI
                 )
                 .ToArray();
 
-            StartCoroutine(CoroutineWaiter.RunConcurrently(coroutines));
+            yield return CoroutineWaiter.RunConcurrently(coroutines);
         }
 
         private bool UpdateElementsAndPositions(IEnumerable<Transform> elements)
@@ -57,24 +59,21 @@ namespace Crysc.UI
 
         private bool UpdateElementAndPosition(Transform element, int index)
         {
-            Vector2 localPosition = index * ElementSpacing;
-            localPosition += ElementStagger * (index % 2);
+            Vector2 localPosition2D = index * ElementSpacing * (InvertOrder ? -1 : 1);
+            localPosition2D += ElementStagger * (index % 2);
 
-            Vector3 position = ElementsParent.TransformPoint(
-                new Vector3(
-                    x: localPosition.x,
-                    y: localPosition.y,
-                    z: _zOffset * index
-                )
+            var localPosition = new Vector3(
+                x: localPosition2D.x,
+                y: localPosition2D.y,
+                z: _zOffset * index
             );
-
-            if (_elementsPositions.ContainsKey(element) && _elementsPositions[element] == position) return false;
+            if (_elementsPositions.ContainsKey(element) && _elementsPositions[element] == localPosition) return false;
 
             element.SetParent(ElementsParent);
             element.gameObject.SetActive(true);
             element.localScale = Vector3.one;
 
-            _elementsPositions[element] = position;
+            _elementsPositions[element] = localPosition;
             return true;
         }
     }
