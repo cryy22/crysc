@@ -12,19 +12,26 @@ namespace Crysc.UI
 
         [SerializeField] private Vector2 ElementSpacing = Vector2.right;
         [SerializeField] private Vector2 ElementStagger = Vector2.zero;
-        [SerializeField] private bool InvertOrder;
+        [SerializeField] private bool IsOrderInverted;
+
         [SerializeField] private Transform ElementsParent;
 
         private readonly Dictionary<Transform, Vector3> _elementsPositions = new();
 
-        public void UpdateArrangement(IEnumerable<Transform> elements)
+        public void InvertOrder()
+        {
+            IsOrderInverted = !IsOrderInverted;
+            UpdateElements(_elementsPositions.Keys);
+        }
+
+        public void UpdateElements(IEnumerable<Transform> elements)
         {
             UpdateElementsAndPositions(elements);
             foreach (Transform element in _elementsPositions.Keys)
                 element.localPosition = _elementsPositions[element];
         }
 
-        public IEnumerator AnimateUpdateArrangement(IEnumerable<Transform> elements)
+        public IEnumerator AnimateUpdateElements(IEnumerable<Transform> elements)
         {
             bool hasChanged = UpdateElementsAndPositions(elements);
             if (!hasChanged) yield break;
@@ -59,7 +66,7 @@ namespace Crysc.UI
 
         private bool UpdateElementAndPosition(Transform element, int index)
         {
-            Vector2 localPosition2D = index * ElementSpacing * (InvertOrder ? -1 : 1);
+            Vector2 localPosition2D = index * ElementSpacing * (IsOrderInverted ? -1 : 1);
             localPosition2D += ElementStagger * (index % 2);
 
             var localPosition = new Vector3(
