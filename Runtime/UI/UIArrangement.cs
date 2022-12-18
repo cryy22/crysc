@@ -8,11 +8,11 @@ namespace Crysc.UI
 {
     using IElement = IArrangementElement;
 
-    public class UIArrangement : MonoBehaviour
+    public class UIArrangement : MonoBehaviour, IElement
     {
         private const float _zOffset = 0.000001f;
 
-        [SerializeField] private Vector2 ElementSpacing = Vector2.right;
+        [SerializeField] private Vector2 Direction = Vector2.right;
         [SerializeField] private Vector2 ElementStagger = Vector2.zero;
         [SerializeField] private bool IsOrderInverted;
 
@@ -54,11 +54,14 @@ namespace Crysc.UI
             elements = elements.ToList();
             var hasChanged = false;
 
-            var positionedElements = 0;
-            foreach (IElement element in elements)
+            var index = 0;
+            IElement previous = null;
+            foreach (IElement current in elements)
             {
-                if (UpdateElementAndPosition(element: element, index: positionedElements)) hasChanged = true;
-                positionedElements++;
+                if (UpdateElementPosition(current: current, previous: previous, index: index)) hasChanged = true;
+
+                index++;
+                previous = current;
             }
 
             List<IElement> removedElements = _elementsPositions.Keys.Except(elements).ToList();
@@ -68,24 +71,57 @@ namespace Crysc.UI
             return hasChanged;
         }
 
-        private bool UpdateElementAndPosition(IElement element, int index)
+        private bool UpdateElementPosition(IElement current, IElement previous, int index)
         {
-            Vector2 localPosition2D = ElementSpacing * (index * (IsOrderInverted ? -1 : 1));
-            localPosition2D += ElementStagger * (index % 2);
+            Vector3 localPosition = CalculateElementPosition(current: current, previous: previous, index: index);
+            if (_elementsPositions.ContainsKey(current) && _elementsPositions[current] == localPosition) return false;
 
-            var localPosition = new Vector3(
+            current.Transform.SetParent(ElementsParent);
+            current.Transform.gameObject.SetActive(true);
+            current.Transform.localScale = Vector3.one;
+
+            _elementsPositions[current] = localPosition;
+            return true;
+        }
+
+        private Vector3 CalculateElementPosition(IElement current, IElement previous, int index)
+        {
+            if (index == 0) return Vector3.zero;
+
+            Vector2 localPosition2D = _elementsPositions[previous];
+
+            Vector2 distance = (previous.Bounds.extents + current.Bounds.extents) * Direction;
+            localPosition2D += distance * (IsOrderInverted ? -1 : 1);
+            localPosition2D += ElementStagger * (index % 2 == 0 ? 1 : -1);
+
+            return new Vector3(
                 x: localPosition2D.x,
                 y: localPosition2D.y,
                 z: _zOffset * index
             );
-            if (_elementsPositions.ContainsKey(element) && _elementsPositions[element] == localPosition) return false;
-
-            element.Transform.SetParent(ElementsParent);
-            element.Transform.gameObject.SetActive(true);
-            element.Transform.localScale = Vector3.one;
-
-            _elementsPositions[element] = localPosition;
-            return true;
         }
+
+        private Bounds GetBounds()
+        {
+            if (_elementsPositions.Count == 0) return new Bounds(center: transform.position, size: Vector3.zero);
+
+            Vector3 min = Vector3.positiveInfinity;
+            Vector3 max = Vector3.negativeInfinity;
+
+            foreach (IElement element in _elementsPositions.Keys)
+            {
+                Bounds elementBounds = element.Bounds;
+                min = Vector3.Min(lhs: min, rhs: elementBounds.min);
+                max = Vector3.Max(lhs: max, rhs: elementBounds.max);
+            }
+
+            Bounds bounds = new();
+            bounds.SetMinMax(min: min, max: max);
+            return bounds;
+        }
+
+        // IArrangementElement
+        public Transform Transform => transform;
+        public Bounds Bounds => GetBounds();
     }
 }
