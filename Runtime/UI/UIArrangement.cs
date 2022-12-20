@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Crysc.UI
 {
@@ -12,13 +13,18 @@ namespace Crysc.UI
     {
         private const float _zOffset = 0.000001f;
 
-        [SerializeField] private Vector2 Direction = Vector2.right;
+        [FormerlySerializedAs("Direction")]
+        [SerializeField]
+        private Vector2 PreferredDirection = Vector2.right;
+
         [SerializeField] private Vector2 ElementStagger = Vector2.zero;
+        [SerializeField] private Vector2 MaxSize = Vector2.positiveInfinity;
         [SerializeField] private bool IsOrderInverted;
 
         [SerializeField] private Transform ElementsParent;
 
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
+        private Vector2 _direction;
 
         // 1 - ARRANGEMENT SHOULD ACCEPT MAX SIZE AND STACK ELEMENTS AS NEEDED
         // 2 - ARRANGEMENT SHOULD BE ABLE TO ANIMATE SIZE CHANGES, ESPECIALLY MAX SIZE
@@ -56,6 +62,7 @@ namespace Crysc.UI
         private bool UpdateElementsAndPositions(IEnumerable<IElement> elements)
         {
             elements = elements.ToList();
+            UpdateMaxSizeAwareDirection(elements);
             var hasChanged = false;
 
             var index = 0;
@@ -94,7 +101,7 @@ namespace Crysc.UI
 
             Vector2 localPosition2D = _elementsPositions[previous];
 
-            Vector2 distance = (previous.Bounds.extents + current.Bounds.extents) * Direction;
+            Vector2 distance = (previous.Bounds.extents + current.Bounds.extents) * _direction;
             localPosition2D += distance * (IsOrderInverted ? -1 : 1);
             localPosition2D += ElementStagger * (index % 2 == 0 ? 1 : -1);
 
@@ -103,6 +110,16 @@ namespace Crysc.UI
                 y: localPosition2D.y,
                 z: _zOffset * index
             );
+        }
+
+        private void UpdateMaxSizeAwareDirection(IEnumerable<IElement> elements)
+        {
+            Vector2 totalSize = elements.Aggregate(
+                seed: Vector2.zero,
+                (acc, kvp) => acc + (Vector2) kvp.Bounds.size
+            );
+            Vector2 maxDirection = MaxSize / totalSize;
+            _direction = Vector2.Min(lhs: PreferredDirection, rhs: maxDirection);
         }
 
         private Bounds GetBounds()
