@@ -20,6 +20,10 @@ namespace Crysc.UI
 
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
 
+        // 1 - ARRANGEMENT SHOULD ACCEPT MAX SIZE AND STACK ELEMENTS AS NEEDED
+        // 2 - ARRANGEMENT SHOULD BE ABLE TO ANIMATE SIZE CHANGES, ESPECIALLY MAX SIZE
+        // 3 - NON-FRONT SQUAD ELEMENTS SHOULD BE SQUEEZED INTO THE BACK
+
         public void InvertOrder()
         {
             IsOrderInverted = !IsOrderInverted;
