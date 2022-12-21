@@ -36,6 +36,14 @@ namespace Crysc.UI
             UpdateElements(_elementsPositions.Keys);
         }
 
+        public void SetMaxSizeQuietly(Vector2 size) { _maxSizeUnits = size / BaseElementSpacing; }
+
+        public void UpdateMaxSize(Vector2 maxSize)
+        {
+            _maxSizeUnits = maxSize / BaseElementSpacing;
+            UpdateElements(_elementsPositions.Keys);
+        }
+
         public IEnumerator AnimateUpdateMaxSize(Vector2 maxSize)
         {
             _maxSizeUnits = maxSize / BaseElementSpacing;
