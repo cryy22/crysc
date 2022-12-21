@@ -26,7 +26,6 @@ namespace Crysc.UI
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private Vector2 _direction;
 
-        // 1 - ARRANGEMENT SHOULD ACCEPT MAX SIZE AND STACK ELEMENTS AS NEEDED
         // 2 - ARRANGEMENT SHOULD BE ABLE TO ANIMATE SIZE CHANGES, ESPECIALLY MAX SIZE
         // 3 - NON-FRONT SQUAD ELEMENTS SHOULD BE SQUEEZED INTO THE BACK
 
@@ -34,6 +33,12 @@ namespace Crysc.UI
         {
             IsOrderInverted = !IsOrderInverted;
             UpdateElements(_elementsPositions.Keys);
+        }
+
+        public IEnumerator AnimateUpdateMaxSize(Vector2 size)
+        {
+            MaxSize = size;
+            yield return AnimateUpdateElements(_elementsPositions.Keys);
         }
 
         public void UpdateElements(IEnumerable<IElement> elements)
@@ -118,7 +123,11 @@ namespace Crysc.UI
                 seed: Vector2.zero,
                 (acc, kvp) => acc + (Vector2) kvp.Bounds.size
             );
-            Vector2 maxDirection = MaxSize / totalSize;
+            Vector2 maxDirection = new(
+                x: totalSize.x != 0 ? MaxSize.x / totalSize.x : 0,
+                y: totalSize.y != 0 ? MaxSize.y / totalSize.y : 0
+            );
+
             _direction = Vector2.Min(lhs: PreferredDirection, rhs: maxDirection);
         }
 
