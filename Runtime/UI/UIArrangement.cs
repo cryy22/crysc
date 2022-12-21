@@ -12,15 +12,19 @@ namespace Crysc.UI
     {
         private const float _zOffset = 0.000001f;
 
-        [SerializeField] private Vector2 PreferredDirection = Vector2.right;
-        [SerializeField] private Vector2 ElementStagger = Vector2.zero;
-        [SerializeField] private Vector2 MaxSize = Vector2.positiveInfinity;
-        [SerializeField] private bool IsOrderInverted;
-
         [SerializeField] private Transform ElementsParent;
 
+        [SerializeField] private Vector2 BaseElementSize = Vector2.one;
+        [SerializeField] private Vector2 PreferredSpaceRatio = Vector2.right;
+        [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
+        [SerializeField] private Vector2 InitialMaxSize = Vector2.positiveInfinity;
+        [SerializeField] private bool IsOrderInverted;
+
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
-        private Vector2 _direction;
+        private Vector2 _elementSpacing;
+        private Vector2 _maxSize;
+
+        private void Awake() { _maxSize = InitialMaxSize; }
 
         // 3 - NON-FRONT SQUAD ELEMENTS SHOULD BE SQUEEZED INTO THE BACK
 
@@ -30,9 +34,9 @@ namespace Crysc.UI
             UpdateElements(_elementsPositions.Keys);
         }
 
-        public IEnumerator AnimateUpdateMaxSize(Vector2 size)
+        public IEnumerator AnimateUpdateMaxSize(Vector2 maxSize)
         {
-            MaxSize = size;
+            _maxSize = maxSize;
             yield return AnimateUpdateElements(_elementsPositions.Keys);
         }
 
@@ -62,17 +66,14 @@ namespace Crysc.UI
         private bool UpdateElementsAndPositions(IEnumerable<IElement> elements)
         {
             elements = elements.ToList();
-            UpdateMaxSizeAwareDirection(elements);
+            UpdateElementSpacing(elements);
             var hasChanged = false;
 
             var index = 0;
-            IElement previous = null;
             foreach (IElement current in elements)
             {
-                if (UpdateElementPosition(current: current, previous: previous, index: index)) hasChanged = true;
-
+                if (UpdateElementPosition(current: current, index: index)) hasChanged = true;
                 index++;
-                previous = current;
             }
 
             List<IElement> removedElements = _elementsPositions.Keys.Except(elements).ToList();
@@ -82,9 +83,9 @@ namespace Crysc.UI
             return hasChanged;
         }
 
-        private bool UpdateElementPosition(IElement current, IElement previous, int index)
+        private bool UpdateElementPosition(IElement current, int index)
         {
-            Vector3 localPosition = CalculateElementPosition(current: current, previous: previous, index: index);
+            Vector3 localPosition = CalculateElementPosition(index);
             if (_elementsPositions.ContainsKey(current) && _elementsPositions[current] == localPosition) return false;
 
             current.Transform.SetParent(ElementsParent);
@@ -95,15 +96,10 @@ namespace Crysc.UI
             return true;
         }
 
-        private Vector3 CalculateElementPosition(IElement current, IElement previous, int index)
+        private Vector3 CalculateElementPosition(int index)
         {
-            if (index == 0) return Vector3.zero;
-
-            Vector2 localPosition2D = _elementsPositions[previous];
-
-            Vector2 distance = (previous.Bounds.extents + current.Bounds.extents) * _direction;
-            localPosition2D += distance * (IsOrderInverted ? -1 : 1);
-            localPosition2D += ElementStagger * (index % 2 == 0 ? 1 : -1);
+            Vector2 localPosition2D = _elementSpacing * index;
+            if (index % 2 == 1) localPosition2D += OddElementStagger;
 
             return new Vector3(
                 x: localPosition2D.x,
@@ -112,41 +108,29 @@ namespace Crysc.UI
             );
         }
 
-        private void UpdateMaxSizeAwareDirection(IEnumerable<IElement> elements)
+        private void UpdateElementSpacing(IEnumerable<IElement> elements)
         {
-            Vector2 totalSize = elements.Aggregate(
-                seed: Vector2.zero,
-                (acc, kvp) => acc + (Vector2) kvp.Bounds.size
+            var directionVector = new Vector2(
+                x: PreferredSpaceRatio.x > 0 ? 1 : -1,
+                y: PreferredSpaceRatio.y > 0 ? 1 : -1
             );
-            Vector2 maxDirection = new(
-                x: totalSize.x != 0 ? MaxSize.x / totalSize.x : 0,
-                y: totalSize.y != 0 ? MaxSize.y / totalSize.y : 0
+            if (IsOrderInverted) directionVector *= -1;
+
+            var absSpaceRatio = new Vector2(
+                x: Mathf.Abs(PreferredSpaceRatio.x),
+                y: Mathf.Abs(PreferredSpaceRatio.y)
+            );
+            Vector2 totalSize = BaseElementSize * elements.Count();
+            Vector2 maxSpaceRatio = new(
+                x: totalSize.x != 0 ? _maxSize.x / totalSize.x : 0,
+                y: totalSize.y != 0 ? _maxSize.y / totalSize.y : 0
             );
 
-            _direction = Vector2.Min(lhs: PreferredDirection, rhs: maxDirection);
-        }
-
-        private Bounds GetBounds()
-        {
-            if (_elementsPositions.Count == 0) return new Bounds(center: transform.position, size: Vector3.zero);
-
-            Vector3 min = Vector3.positiveInfinity;
-            Vector3 max = Vector3.negativeInfinity;
-
-            foreach (IElement element in _elementsPositions.Keys)
-            {
-                Bounds elementBounds = element.Bounds;
-                min = Vector3.Min(lhs: min, rhs: elementBounds.min);
-                max = Vector3.Max(lhs: max, rhs: elementBounds.max);
-            }
-
-            Bounds bounds = new();
-            bounds.SetMinMax(min: min, max: max);
-            return bounds;
+            Vector2 percentageSpacing = Vector2.Min(lhs: absSpaceRatio, rhs: maxSpaceRatio) * directionVector;
+            _elementSpacing = percentageSpacing * BaseElementSize;
         }
 
         // IArrangementElement
         public Transform Transform => transform;
-        public Bounds Bounds => GetBounds();
     }
 }
