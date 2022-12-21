@@ -1,4 +1,5 @@
 using System;
+using Crysc.Common;
 using Crysc.Registries;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -18,15 +19,14 @@ namespace Crysc.UI
         [SerializeField] private bool MoveToTargetPosition;
 
         private Camera _camera;
-        private Canvas _canvas;
-        private RectTransform _rectTransform;
+        private BoundsCalculator _boundsCalculator;
         private T _target;
 
         private void Awake()
         {
             _camera = Camera.main;
-            _canvas = GetComponentInParent<Canvas>();
-            _rectTransform = GetComponent<RectTransform>();
+            _boundsCalculator = new BoundsCalculator(this);
+
             HideTooltip();
         }
 
@@ -76,7 +76,7 @@ namespace Crysc.UI
         private Vector3 GetTooltipScreenPoint(IMouseEventRegistrar<T> registrar)
         {
             Bounds registrarBounds = registrar.Bounds;
-            Bounds tooltipBounds = GetBounds();
+            Bounds tooltipBounds = _boundsCalculator.Calculate();
             float xInset = registrarBounds.extents.x / 4;
             bool isRight = IsRegistrarOnRight(registrar);
 
@@ -96,28 +96,6 @@ namespace Crysc.UI
         {
             Vector3 screenPoint = _camera.WorldToScreenPoint(registrar.Bounds.center);
             return screenPoint.x > (Screen.width / 3) * 2;
-        }
-
-        private Bounds GetBounds()
-        {
-            var rectCorners = new Vector3[4];
-            _rectTransform.GetWorldCorners(rectCorners);
-
-            Vector3 min = Vector3.positiveInfinity;
-            Vector3 max = Vector3.negativeInfinity;
-
-            foreach (Vector3 corner in rectCorners)
-            {
-                Vector3 worldPoint = _canvas.renderMode == RenderMode.WorldSpace
-                    ? corner
-                    : _camera.ScreenToWorldPoint(corner);
-                min = Vector3.Min(lhs: min, rhs: worldPoint);
-                max = Vector3.Max(lhs: max, rhs: worldPoint);
-            }
-
-            Bounds bounds = new();
-            bounds.SetMinMax(min: min, max: max);
-            return bounds;
         }
 
         private void UnhoveredEventHandler(object sender, EventArgs _) { HideTooltip(); }
