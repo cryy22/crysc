@@ -14,17 +14,19 @@ namespace Crysc.UI
 
         [SerializeField] private Transform ElementsParent;
 
-        [SerializeField] private Vector2 BaseElementSize = Vector2.one;
-        [SerializeField] private Vector2 PreferredSpaceRatio = Vector2.right;
+        [SerializeField] private Vector2 BaseElementSpacing = Vector2.right; // prob won't work with a negative
+        [SerializeField] private Vector2 PreferredOverhangRatio = Vector2.zero;
         [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
         [SerializeField] private Vector2 InitialMaxSize = Vector2.positiveInfinity;
         [SerializeField] private bool IsOrderInverted;
 
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
-        private Vector2 _elementSpacing;
-        private Vector2 _maxSize;
+        private Vector2 _overhang;
+        private Vector2 _maxSizeUnits;
 
-        private void Awake() { _maxSize = InitialMaxSize; }
+        private Vector2 ElementSpacing => BaseElementSpacing * (IsOrderInverted ? -1 : 1);
+
+        private void Awake() { _maxSizeUnits = InitialMaxSize / BaseElementSpacing; }
 
         // 3 - NON-FRONT SQUAD ELEMENTS SHOULD BE SQUEEZED INTO THE BACK
 
@@ -36,7 +38,7 @@ namespace Crysc.UI
 
         public IEnumerator AnimateUpdateMaxSize(Vector2 maxSize)
         {
-            _maxSize = maxSize;
+            _maxSizeUnits = maxSize / BaseElementSpacing;
             yield return AnimateUpdateElements(_elementsPositions.Keys);
         }
 
@@ -66,13 +68,19 @@ namespace Crysc.UI
         private bool UpdateElementsAndPositions(IEnumerable<IElement> elements)
         {
             elements = elements.ToList();
-            UpdateElementSpacing(elements);
+            UpdateOverhang(elements);
             var hasChanged = false;
 
+            Vector2 weightedIndexes = Vector2.zero;
             var index = 0;
-            foreach (IElement current in elements)
+            foreach (IElement element in elements)
             {
-                if (UpdateElementPosition(current: current, index: index)) hasChanged = true;
+                Vector3 startPoint = CalculateElementStartPoint(weightedIndexes: weightedIndexes, index: index);
+                Vector3 localPosition = CalculateElementTransformPosition(element: element, startPoint: startPoint);
+
+                if (UpdateElementPosition(element: element, localPosition: localPosition)) hasChanged = true;
+
+                weightedIndexes += element.SpacingMultiplier;
                 index++;
             }
 
@@ -83,54 +91,68 @@ namespace Crysc.UI
             return hasChanged;
         }
 
-        private bool UpdateElementPosition(IElement current, int index)
+        private bool UpdateElementPosition(IElement element, Vector3 localPosition)
         {
-            Vector3 localPosition = CalculateElementPosition(index);
-            if (_elementsPositions.ContainsKey(current) && _elementsPositions[current] == localPosition) return false;
+            if (_elementsPositions.ContainsKey(element) && _elementsPositions[element] == localPosition) return false;
 
-            current.Transform.SetParent(ElementsParent);
-            current.Transform.gameObject.SetActive(true);
-            current.Transform.localScale = Vector3.one;
+            element.Transform.SetParent(ElementsParent);
+            element.Transform.gameObject.SetActive(true);
+            element.Transform.localScale = Vector3.one;
 
-            _elementsPositions[current] = localPosition;
+            _elementsPositions[element] = localPosition;
             return true;
         }
 
-        private Vector3 CalculateElementPosition(int index)
+        private Vector3 CalculateElementStartPoint(Vector2 weightedIndexes, int index)
         {
-            Vector2 localPosition2D = _elementSpacing * index;
-            if (index % 2 == 1) localPosition2D += OddElementStagger;
+            Vector2 startPoint2d = (ElementSpacing * weightedIndexes) - (_overhang * index);
+            if (index % 2 == 1) startPoint2d += OddElementStagger;
 
             return new Vector3(
-                x: localPosition2D.x,
-                y: localPosition2D.y,
+                x: startPoint2d.x,
+                y: startPoint2d.y,
                 z: _zOffset * index
             );
         }
 
-        private void UpdateElementSpacing(IEnumerable<IElement> elements)
+        private void UpdateOverhang(IEnumerable<IElement> elements)
         {
-            var directionVector = new Vector2(
-                x: PreferredSpaceRatio.x > 0 ? 1 : -1,
-                y: PreferredSpaceRatio.y > 0 ? 1 : -1
-            );
-            if (IsOrderInverted) directionVector *= -1;
-
-            var absSpaceRatio = new Vector2(
-                x: Mathf.Abs(PreferredSpaceRatio.x),
-                y: Mathf.Abs(PreferredSpaceRatio.y)
-            );
-            Vector2 totalSize = BaseElementSize * elements.Count();
-            Vector2 maxSpaceRatio = new(
-                x: totalSize.x != 0 ? _maxSize.x / totalSize.x : 0,
-                y: totalSize.y != 0 ? _maxSize.y / totalSize.y : 0
+            elements = elements.ToList();
+            Vector2 totalSizeUnits = elements.Aggregate(
+                seed: Vector2.zero,
+                (acc, e) => acc + e.SpacingMultiplier
             );
 
-            Vector2 percentageSpacing = Vector2.Min(lhs: absSpaceRatio, rhs: maxSpaceRatio) * directionVector;
-            _elementSpacing = percentageSpacing * BaseElementSize;
+            Vector2 minOverhangRatio = CalculateMinOverhangRatio(
+                totalSizeUnits: totalSizeUnits,
+                count: elements.Count()
+            );
+
+            Vector2 overhangRatio = Vector2.Max(lhs: PreferredOverhangRatio, rhs: minOverhangRatio);
+            _overhang = overhangRatio * ElementSpacing;
+        }
+
+        private Vector2 CalculateMinOverhangRatio(Vector2 totalSizeUnits, int count)
+        {
+            if (count <= 1) return Vector2.negativeInfinity;
+            return (totalSizeUnits - _maxSizeUnits) / (count - 1);
+        }
+
+        private Vector3 CalculateElementTransformPosition(IElement element, Vector3 startPoint)
+        {
+            Vector2 elementSpacing = ElementSpacing * element.SpacingMultiplier;
+            Vector2 midpoint2d = (Vector2) startPoint + (elementSpacing * element.Pivot);
+
+            return new Vector3(
+                x: midpoint2d.x,
+                y: midpoint2d.y,
+                z: startPoint.z
+            );
         }
 
         // IArrangementElement
         public Transform Transform => transform;
+        public Vector2 SpacingMultiplier => Vector2.one;
+        public Vector2 Pivot => Vector2.zero;
     }
 }
