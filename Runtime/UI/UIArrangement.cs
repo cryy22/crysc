@@ -130,6 +130,8 @@ namespace Crysc.UI
 
             Vector2 overhangRatio = Vector2.Max(lhs: PreferredOverhangRatio, rhs: minOverhangRatio);
             _overhang = overhangRatio * ElementSpacing;
+
+            SpacingMultiplier = totalSizeUnits - (overhangRatio * (elements.Count() - 1));
         }
 
         private Vector2 CalculateMinOverhangRatio(Vector2 totalSizeUnits, int count)
@@ -152,7 +154,7 @@ namespace Crysc.UI
 
         // IArrangementElement
         public Transform Transform => transform;
-        public Vector2 SpacingMultiplier => Vector2.one;
         public Vector2 Pivot => Vector2.zero;
+        public Vector2 SpacingMultiplier { get; private set; } = Vector2.one;
     }
 }
