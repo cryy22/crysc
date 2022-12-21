@@ -18,25 +18,23 @@ namespace Crysc.UI
         [SerializeField] private Vector2 PreferredOverhangRatio = Vector2.zero;
         [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
         [SerializeField] private Vector2 InitialMaxSize = Vector2.positiveInfinity;
+        [SerializeField] private bool CenterElements;
         [SerializeField] private bool IsOrderInverted;
 
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private Vector2 _overhang;
         private Vector2 _maxSizeUnits;
+        private Vector2 _centeringOffset;
 
         private Vector2 ElementSpacing => BaseElementSpacing * (IsOrderInverted ? -1 : 1);
 
         private void Awake() { _maxSizeUnits = InitialMaxSize / BaseElementSpacing; }
-
-        // 3 - NON-FRONT SQUAD ELEMENTS SHOULD BE SQUEEZED INTO THE BACK
 
         public void InvertOrder()
         {
             IsOrderInverted = !IsOrderInverted;
             UpdateElements(_elementsPositions.Keys);
         }
-
-        public void SetMaxSizeQuietly(Vector2 size) { _maxSizeUnits = size / BaseElementSpacing; }
 
         public void UpdateMaxSize(Vector2 maxSize)
         {
@@ -113,7 +111,7 @@ namespace Crysc.UI
 
         private Vector3 CalculateElementStartPoint(Vector2 weightedIndexes, int index)
         {
-            Vector2 startPoint2d = (ElementSpacing * weightedIndexes) - (_overhang * index);
+            Vector2 startPoint2d = (ElementSpacing * weightedIndexes) - (_overhang * index) - _centeringOffset;
             if (index % 2 == 1) startPoint2d += OddElementStagger;
 
             return new Vector3(
@@ -140,6 +138,7 @@ namespace Crysc.UI
             _overhang = overhangRatio * ElementSpacing;
 
             SpacingMultiplier = totalSizeUnits - (overhangRatio * (elements.Count() - 1));
+            _centeringOffset = CenterElements ? (SpacingMultiplier * ElementSpacing) / 2 : Vector2.zero;
         }
 
         private Vector2 CalculateMinOverhangRatio(Vector2 totalSizeUnits, int count)
@@ -162,7 +161,7 @@ namespace Crysc.UI
 
         // IArrangementElement
         public Transform Transform => transform;
-        public Vector2 Pivot => Vector2.zero;
+        public Vector2 Pivot => CenterElements ? Vector2.one * 0.5f : Vector2.zero;
         public Vector2 SpacingMultiplier { get; private set; } = Vector2.one;
     }
 }
