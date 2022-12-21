@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Crysc.UI
 {
@@ -13,10 +12,7 @@ namespace Crysc.UI
     {
         private const float _zOffset = 0.000001f;
 
-        [FormerlySerializedAs("Direction")]
-        [SerializeField]
-        private Vector2 PreferredDirection = Vector2.right;
-
+        [SerializeField] private Vector2 PreferredDirection = Vector2.right;
         [SerializeField] private Vector2 ElementStagger = Vector2.zero;
         [SerializeField] private Vector2 MaxSize = Vector2.positiveInfinity;
         [SerializeField] private bool IsOrderInverted;
@@ -26,7 +22,6 @@ namespace Crysc.UI
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private Vector2 _direction;
 
-        // 2 - ARRANGEMENT SHOULD BE ABLE TO ANIMATE SIZE CHANGES, ESPECIALLY MAX SIZE
         // 3 - NON-FRONT SQUAD ELEMENTS SHOULD BE SQUEEZED INTO THE BACK
 
         public void InvertOrder()
