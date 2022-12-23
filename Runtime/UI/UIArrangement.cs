@@ -18,7 +18,7 @@ namespace Crysc.UI
         [SerializeField] private Vector2 PreferredOverhangRatio = Vector2.zero;
         [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
         [SerializeField] private Vector2 InitialMaxSize = Vector2.positiveInfinity;
-        [SerializeField] private bool CenterElements;
+        [SerializeField] private bool CentersElements;
         [SerializeField] private bool IsOrderInverted;
 
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
@@ -30,9 +30,9 @@ namespace Crysc.UI
 
         private void Awake() { _maxSizeUnits = InitialMaxSize / BaseElementSpacing; }
 
-        public void SetOrderInversion(bool isInverted)
+        public void UpdateIsOrderInverted(bool isOrderInverted)
         {
-            IsOrderInverted = isInverted;
+            IsOrderInverted = isOrderInverted;
             UpdateElements(_elementsPositions.Keys);
         }
 
@@ -42,10 +42,16 @@ namespace Crysc.UI
             UpdateElements(_elementsPositions.Keys);
         }
 
-        public IEnumerator AnimateUpdateMaxSize(Vector2 maxSize)
+        public IEnumerator AnimateUpdateMaxSize(Vector2 maxSize, float duration = 0.25f)
         {
             _maxSizeUnits = maxSize / BaseElementSpacing;
-            yield return AnimateUpdateElements(_elementsPositions.Keys);
+            yield return AnimateUpdateElements(elements: _elementsPositions.Keys, duration: duration);
+        }
+
+        public IEnumerator AnimateUpdateCentersElements(bool centersElements, float duration = 0.25f)
+        {
+            CentersElements = centersElements;
+            yield return AnimateUpdateElements(elements: _elementsPositions.Keys, duration: duration);
         }
 
         public void UpdateElements(IEnumerable<IElement> elements)
@@ -55,7 +61,7 @@ namespace Crysc.UI
                 element.Transform.localPosition = _elementsPositions[element];
         }
 
-        public IEnumerator AnimateUpdateElements(IEnumerable<IElement> elements)
+        public IEnumerator AnimateUpdateElements(IEnumerable<IElement> elements, float duration = 0.25f)
         {
             bool hasChanged = UpdateElementsAndPositions(elements);
             if (!hasChanged) yield break;
@@ -63,7 +69,7 @@ namespace Crysc.UI
             Coroutine[] coroutines = _elementsPositions.Keys
                 .Select(
                     e => StartCoroutine(
-                        Mover.MoveLocal(transform: e.Transform, end: _elementsPositions[e], duration: 0.25f)
+                        Mover.MoveLocal(transform: e.Transform, end: _elementsPositions[e], duration: duration)
                     )
                 )
                 .ToArray();
@@ -138,7 +144,7 @@ namespace Crysc.UI
             _overhang = overhangRatio * ElementSpacing;
 
             SpacingMultiplier = totalSizeUnits - (overhangRatio * (elements.Count() - 1));
-            _centeringOffset = CenterElements ? (SpacingMultiplier * ElementSpacing) / 2 : Vector2.zero;
+            _centeringOffset = CentersElements ? (SpacingMultiplier * ElementSpacing) / 2 : Vector2.zero;
         }
 
         private Vector2 CalculateMinOverhangRatio(Vector2 totalSizeUnits, int count)
@@ -161,7 +167,7 @@ namespace Crysc.UI
 
         // IArrangementElement
         public Transform Transform => transform;
-        public Vector2 Pivot => CenterElements ? Vector2.one * 0.5f : Vector2.zero;
+        public Vector2 Pivot => CentersElements ? Vector2.one * 0.5f : Vector2.zero;
         public Vector2 SpacingMultiplier { get; private set; } = Vector2.one;
     }
 }
