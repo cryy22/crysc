@@ -20,7 +20,7 @@ namespace Crysc.Coordination
             }
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
             if (Container != null) Container.SetActive(false);
         }

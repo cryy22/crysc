@@ -5,7 +5,7 @@ namespace Crysc.Helpers
 {
     public static class Mover
     {
-        public static IEnumerator Move(Transform transform, Vector3 end, float duration = 0.125f)
+        public static IEnumerator Move(Transform transform, Vector3 end, float duration = 0.25f)
         {
             Vector3 start = transform.position;
             float t = 0;
@@ -19,7 +19,7 @@ namespace Crysc.Helpers
             transform.position = end;
         }
 
-        public static IEnumerator MoveLocal(Transform transform, Vector3 end, float duration = 0.125f)
+        public static IEnumerator MoveLocal(Transform transform, Vector3 end, float duration = 0.25f)
         {
             Vector3 start = transform.localPosition;
             float t = 0;
