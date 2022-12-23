@@ -30,9 +30,9 @@ namespace Crysc.UI
 
         private void Awake() { _maxSizeUnits = InitialMaxSize / BaseElementSpacing; }
 
-        public void InvertOrder()
+        public void SetOrderInversion(bool isInverted)
         {
-            IsOrderInverted = !IsOrderInverted;
+            IsOrderInverted = isInverted;
             UpdateElements(_elementsPositions.Keys);
         }
 
