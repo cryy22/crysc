@@ -8,7 +8,7 @@ namespace Crysc.UI
 {
     using IElement = IArrangementElement;
 
-    public class UIArrangement : MonoBehaviour, IElement
+    public class UIArrangement : MonoBehaviour, IArrangement, IElement
     {
         private const float _zOffset = 0.000001f;
 
@@ -22,22 +22,7 @@ namespace Crysc.UI
         private Vector2 _overhang;
         private Vector2 _centeringOffset;
 
-        [field: SerializeField] public bool IsCentered { get; set; }
-        [field: SerializeField] public bool IsInverted { get; set; }
-        [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.positiveInfinity;
-
         private Vector2 ElementSpacing => BaseElementSpacing * (IsInverted ? -1 : 1);
-
-        public void SetElements(IEnumerable<IElement> elements)
-        {
-            elements = elements.ToList();
-            List<IElement> existingElements = _elementsPositions.Keys.ToList();
-
-            foreach (IElement element in elements.Except(existingElements))
-                _elementsPositions[element] = element.Transform.localPosition;
-            foreach (IElement element in existingElements.Except(elements))
-                _elementsPositions.Remove(element);
-        }
 
         public void UpdateElements(IEnumerable<IElement> elements)
         {
@@ -49,28 +34,6 @@ namespace Crysc.UI
         {
             SetElements(elements);
             yield return AnimateRearrange(duration);
-        }
-
-        public void Rearrange()
-        {
-            UpdateElementsAndPositions();
-            foreach (IElement element in _elementsPositions.Keys)
-                element.Transform.localPosition = _elementsPositions[element];
-        }
-
-        public IEnumerator AnimateRearrange(float duration = 0.25f)
-        {
-            UpdateElementsAndPositions();
-
-            Coroutine[] coroutines = _elementsPositions
-                .Select(
-                    kvp => StartCoroutine(
-                        Mover.MoveLocal(transform: kvp.Key.Transform, end: kvp.Value, duration: duration)
-                    )
-                )
-                .ToArray();
-
-            yield return CoroutineWaiter.RunConcurrently(coroutines);
         }
 
         private void UpdateElementsAndPositions()
@@ -155,6 +118,44 @@ namespace Crysc.UI
                 y: midpoint2d.y,
                 z: startPoint.z
             );
+        }
+
+        // IArrangement
+        [field: SerializeField] public bool IsCentered { get; set; }
+        [field: SerializeField] public bool IsInverted { get; set; }
+        [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.positiveInfinity;
+
+        public void SetElements(IEnumerable<IElement> elements)
+        {
+            elements = elements.ToList();
+            List<IElement> existingElements = _elementsPositions.Keys.ToList();
+
+            foreach (IElement element in elements.Except(existingElements))
+                _elementsPositions[element] = element.Transform.localPosition;
+            foreach (IElement element in existingElements.Except(elements))
+                _elementsPositions.Remove(element);
+        }
+
+        public void Rearrange()
+        {
+            UpdateElementsAndPositions();
+            foreach (IElement element in _elementsPositions.Keys)
+                element.Transform.localPosition = _elementsPositions[element];
+        }
+
+        public IEnumerator AnimateRearrange(float duration = 0.25f)
+        {
+            UpdateElementsAndPositions();
+
+            Coroutine[] coroutines = _elementsPositions
+                .Select(
+                    kvp => StartCoroutine(
+                        Mover.MoveLocal(transform: kvp.Key.Transform, end: kvp.Value, duration: duration)
+                    )
+                )
+                .ToArray();
+
+            yield return CoroutineWaiter.RunConcurrently(coroutines);
         }
 
         // IArrangementElement
