@@ -17,59 +17,55 @@ namespace Crysc.UI
         [SerializeField] private Vector2 BaseElementSpacing = Vector2.right; // prob won't work with a negative
         [SerializeField] private Vector2 PreferredOverhangRatio = Vector2.zero;
         [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
-        [SerializeField] private Vector2 InitialMaxSize = Vector2.positiveInfinity;
-        [SerializeField] private bool CentersElements;
-        [SerializeField] private bool IsOrderInverted;
 
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private Vector2 _overhang;
-        private Vector2 _maxSizeUnits;
         private Vector2 _centeringOffset;
 
-        private Vector2 ElementSpacing => BaseElementSpacing * (IsOrderInverted ? -1 : 1);
+        [field: SerializeField] public bool IsCentered { get; set; }
+        [field: SerializeField] public bool IsInverted { get; set; }
+        [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.positiveInfinity;
 
-        private void Awake() { _maxSizeUnits = InitialMaxSize / BaseElementSpacing; }
+        private Vector2 ElementSpacing => BaseElementSpacing * (IsInverted ? -1 : 1);
 
-        public void UpdateIsOrderInverted(bool isOrderInverted)
+        public void SetElements(IEnumerable<IElement> elements)
         {
-            IsOrderInverted = isOrderInverted;
-            UpdateElements(_elementsPositions.Keys);
-        }
+            elements = elements.ToList();
+            List<IElement> existingElements = _elementsPositions.Keys.ToList();
 
-        public void UpdateMaxSize(Vector2 maxSize)
-        {
-            _maxSizeUnits = maxSize / BaseElementSpacing;
-            UpdateElements(_elementsPositions.Keys);
-        }
-
-        public IEnumerator AnimateUpdateMaxSize(Vector2 maxSize, float duration = 0.25f)
-        {
-            _maxSizeUnits = maxSize / BaseElementSpacing;
-            yield return AnimateUpdateElements(elements: _elementsPositions.Keys, duration: duration);
-        }
-
-        public IEnumerator AnimateUpdateCentersElements(bool centersElements, float duration = 0.25f)
-        {
-            CentersElements = centersElements;
-            yield return AnimateUpdateElements(elements: _elementsPositions.Keys, duration: duration);
+            foreach (IElement element in elements.Except(existingElements))
+                _elementsPositions[element] = element.Transform.localPosition;
+            foreach (IElement element in existingElements.Except(elements))
+                _elementsPositions.Remove(element);
         }
 
         public void UpdateElements(IEnumerable<IElement> elements)
         {
-            UpdateElementsAndPositions(elements);
-            foreach (IElement element in _elementsPositions.Keys)
-                element.Transform.localPosition = _elementsPositions[element];
+            SetElements(elements);
+            Rearrange();
         }
 
         public IEnumerator AnimateUpdateElements(IEnumerable<IElement> elements, float duration = 0.25f)
         {
-            bool hasChanged = UpdateElementsAndPositions(elements);
-            if (!hasChanged) yield break;
+            SetElements(elements);
+            yield return AnimateRearrange(duration);
+        }
 
-            Coroutine[] coroutines = _elementsPositions.Keys
+        public void Rearrange()
+        {
+            UpdateElementsAndPositions();
+            foreach (IElement element in _elementsPositions.Keys)
+                element.Transform.localPosition = _elementsPositions[element];
+        }
+
+        public IEnumerator AnimateRearrange(float duration = 0.25f)
+        {
+            UpdateElementsAndPositions();
+
+            Coroutine[] coroutines = _elementsPositions
                 .Select(
-                    e => StartCoroutine(
-                        Mover.MoveLocal(transform: e.Transform, end: _elementsPositions[e], duration: duration)
+                    kvp => StartCoroutine(
+                        Mover.MoveLocal(transform: kvp.Key.Transform, end: kvp.Value, duration: duration)
                     )
                 )
                 .ToArray();
@@ -77,11 +73,11 @@ namespace Crysc.UI
             yield return CoroutineWaiter.RunConcurrently(coroutines);
         }
 
-        private bool UpdateElementsAndPositions(IEnumerable<IElement> elements)
+        private void UpdateElementsAndPositions()
         {
-            elements = elements.ToList();
+            List<IElement> elements = _elementsPositions.Keys.ToList();
+
             UpdateOverhang(elements);
-            var hasChanged = false;
 
             Vector2 weightedIndexes = Vector2.zero;
             var index = 0;
@@ -90,17 +86,11 @@ namespace Crysc.UI
                 Vector3 startPoint = CalculateElementStartPoint(weightedIndexes: weightedIndexes, index: index);
                 Vector3 localPosition = CalculateElementTransformPosition(element: element, startPoint: startPoint);
 
-                if (UpdateElementPosition(element: element, localPosition: localPosition)) hasChanged = true;
+                UpdateElementPosition(element: element, localPosition: localPosition);
 
                 weightedIndexes += element.SpacingMultiplier;
                 index++;
             }
-
-            List<IElement> removedElements = _elementsPositions.Keys.Except(elements).ToList();
-            if (removedElements.Count > 0) hasChanged = true;
-            foreach (IElement element in removedElements) _elementsPositions.Remove(element);
-
-            return hasChanged;
         }
 
         private bool UpdateElementPosition(IElement element, Vector3 localPosition)
@@ -144,13 +134,15 @@ namespace Crysc.UI
             _overhang = overhangRatio * ElementSpacing;
 
             SpacingMultiplier = totalSizeUnits - (overhangRatio * (elements.Count() - 1));
-            _centeringOffset = CentersElements ? (SpacingMultiplier * ElementSpacing) / 2 : Vector2.zero;
+            _centeringOffset = IsCentered ? (SpacingMultiplier * ElementSpacing) / 2 : Vector2.zero;
         }
 
         private Vector2 CalculateMinOverhangRatio(Vector2 totalSizeUnits, int count)
         {
             if (count <= 1) return Vector2.negativeInfinity;
-            return (totalSizeUnits - _maxSizeUnits) / (count - 1);
+
+            Vector2 maxSizeUnits = MaxSize / BaseElementSpacing;
+            return (totalSizeUnits - maxSizeUnits) / (count - 1);
         }
 
         private Vector3 CalculateElementTransformPosition(IElement element, Vector3 startPoint)
@@ -167,7 +159,7 @@ namespace Crysc.UI
 
         // IArrangementElement
         public Transform Transform => transform;
-        public Vector2 Pivot => CentersElements ? Vector2.one * 0.5f : Vector2.zero;
+        public Vector2 Pivot => IsCentered ? Vector2.one * 0.5f : Vector2.zero;
         public Vector2 SpacingMultiplier { get; private set; } = Vector2.one;
     }
 }
