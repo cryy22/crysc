@@ -15,7 +15,6 @@ namespace Crysc.UI
         [SerializeField] private Transform ElementsParent;
 
         [SerializeField] private Vector2 BaseElementSpacing = Vector2.right; // prob won't work with a negative
-        [SerializeField] private Vector2 PreferredOverhangRatio = Vector2.zero;
         [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
 
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
@@ -108,6 +107,7 @@ namespace Crysc.UI
         [field: SerializeField] public bool IsCentered { get; set; }
         [field: SerializeField] public bool IsInverted { get; set; }
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.positiveInfinity;
+        [field: SerializeField] public Vector2 PreferredOverhangRatio { get; set; } = Vector2.zero;
 
         public void SetElements(IEnumerable<IElement> elements)
         {
