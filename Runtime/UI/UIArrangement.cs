@@ -8,7 +8,7 @@ namespace Crysc.UI
 {
     using IElement = IArrangementElement;
 
-    public class UIArrangement : MonoBehaviour, IArrangement, IElement
+    public class UIArrangement : MonoBehaviour, IArrangement<IElement>, IElement
     {
         private const float _zOffset = 0.000001f;
 
@@ -23,12 +23,6 @@ namespace Crysc.UI
         private Vector2 _centeringOffset;
 
         private Vector2 ElementSpacing => BaseElementSpacing * (IsInverted ? -1 : 1);
-
-        public void UpdateElements(IEnumerable<IElement> elements)
-        {
-            SetElements(elements);
-            Rearrange();
-        }
 
         public IEnumerator AnimateUpdateElements(IEnumerable<IElement> elements, float duration = 0.25f)
         {
@@ -47,25 +41,21 @@ namespace Crysc.UI
             foreach (IElement element in elements)
             {
                 Vector3 startPoint = CalculateElementStartPoint(weightedIndexes: weightedIndexes, index: index);
-                Vector3 localPosition = CalculateElementTransformPosition(element: element, startPoint: startPoint);
-
-                UpdateElementPosition(element: element, localPosition: localPosition);
+                _elementsPositions[element] = CalculateElementAnchorPoint(element: element, startPoint: startPoint);
 
                 weightedIndexes += element.SpacingMultiplier;
                 index++;
             }
         }
 
-        private bool UpdateElementPosition(IElement element, Vector3 localPosition)
+        private void AddElement(IElement element)
         {
-            if (_elementsPositions.ContainsKey(element) && _elementsPositions[element] == localPosition) return false;
+            Transform elementTransform = element.Transform;
+            elementTransform.SetParent(ElementsParent);
+            elementTransform.gameObject.SetActive(true);
+            elementTransform.localScale = Vector3.one;
 
-            element.Transform.SetParent(ElementsParent);
-            element.Transform.gameObject.SetActive(true);
-            element.Transform.localScale = Vector3.one;
-
-            _elementsPositions[element] = localPosition;
-            return true;
+            _elementsPositions[element] = elementTransform.localPosition;
         }
 
         private Vector3 CalculateElementStartPoint(Vector2 weightedIndexes, int index)
@@ -108,7 +98,7 @@ namespace Crysc.UI
             return (totalSizeUnits - maxSizeUnits) / (count - 1);
         }
 
-        private Vector3 CalculateElementTransformPosition(IElement element, Vector3 startPoint)
+        private Vector3 CalculateElementAnchorPoint(IElement element, Vector3 startPoint)
         {
             Vector2 elementSpacing = ElementSpacing * element.SpacingMultiplier;
             Vector2 midpoint2d = (Vector2) startPoint + (elementSpacing * element.Pivot);
@@ -130,10 +120,8 @@ namespace Crysc.UI
             elements = elements.ToList();
             List<IElement> existingElements = _elementsPositions.Keys.ToList();
 
-            foreach (IElement element in elements.Except(existingElements))
-                _elementsPositions[element] = element.Transform.localPosition;
-            foreach (IElement element in existingElements.Except(elements))
-                _elementsPositions.Remove(element);
+            foreach (IElement element in elements.Except(existingElements)) AddElement(element);
+            foreach (IElement element in existingElements.Except(elements)) _elementsPositions.Remove(element);
         }
 
         public void Rearrange()
