@@ -24,12 +24,6 @@ namespace Crysc.UI
 
         private Vector2 ElementSpacing => BaseElementSpacing * (IsInverted ? -1 : 1);
 
-        public IEnumerator AnimateUpdateElements(IEnumerable<IElement> elements, float duration = 0.25f)
-        {
-            SetElements(elements);
-            yield return AnimateRearrange(duration);
-        }
-
         private void UpdateElementsAndPositions()
         {
             List<IElement> elements = _elementsPositions.Keys.ToList();
