@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace Crysc.UI
 {
     [RequireComponent(typeof(RectTransform))]
-    public abstract class UITooltip<T> : MonoBehaviour,
+    public abstract class Tooltip<T> : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler
         where T : Object
     {

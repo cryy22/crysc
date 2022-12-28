@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crysc.UI
+namespace Crysc.Presentation
 {
     public interface IArrangementElement
     {

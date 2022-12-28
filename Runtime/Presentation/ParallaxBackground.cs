@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Crysc.UI
+namespace Crysc.Presentation
 {
-    public class UIParallaxBackground : MonoBehaviour
+    public class ParallaxBackground : MonoBehaviour
     {
         [SerializeField] private Transform FocalPoint;
         [SerializeField] private List<ParallaxLayer> Layers = new();

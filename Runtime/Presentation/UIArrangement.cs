@@ -5,7 +5,7 @@ using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
 
-namespace Crysc.UI
+namespace Crysc.Presentation
 {
     using IElement = IArrangementElement;
 

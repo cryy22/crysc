@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Crysc.UI;
 using UnityEngine;
 
-namespace Crysc.UI
+namespace Crysc.Presentation
 {
     public interface IArrangement<in T> where T : IArrangementElement
     {
