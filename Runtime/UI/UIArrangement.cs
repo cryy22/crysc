@@ -151,7 +151,7 @@ namespace Crysc.UI
             Coroutine[] coroutines = _elementsPositions
                 .Select(
                     kvp => StartCoroutine(
-                        Mover.MoveLocal(transform: kvp.Key.Transform, end: kvp.Value, duration: duration)
+                        Mover.MoveTo(transform: kvp.Key.Transform, end: kvp.Value, duration: duration)
                     )
                 )
                 .ToArray();

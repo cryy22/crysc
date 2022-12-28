@@ -5,32 +5,66 @@ namespace Crysc.Helpers
 {
     public static class Mover
     {
-        public static IEnumerator Move(Transform transform, Vector3 end, float duration = 0.25f)
+        public static IEnumerator MoveTo(
+            Transform transform,
+            Vector3 end,
+            float duration = 0.25f,
+            bool isLocal = true
+        )
         {
-            Vector3 start = transform.position;
+            Vector3 start = GetPosition(transform: transform, isLocal: isLocal);
+
             float t = 0;
             while (t < 1)
             {
                 t += Time.deltaTime / duration;
-                transform.position = Vector3.Lerp(a: start, b: end, t: t);
+
+                SetPosition(
+                    transform: transform,
+                    position: Vector3.Lerp(a: start, b: end, t: t),
+                    isLocal: isLocal
+                );
+
                 yield return null;
             }
 
-            transform.position = end;
+            SetPosition(transform: transform, position: end, isLocal: isLocal);
         }
 
-        public static IEnumerator MoveLocal(Transform transform, Vector3 end, float duration = 0.25f)
+        public static IEnumerator MoveSine(
+            Transform transform,
+            Vector3 delta,
+            float duration = 0.25f,
+            float period = 0.25f,
+            bool isLocal = true
+        )
         {
-            Vector3 start = transform.localPosition;
-            float t = 0;
-            while (t < 1)
+            Vector3 initial = GetPosition(transform: transform, isLocal: isLocal);
+            Vector3 min = initial - delta;
+            Vector3 max = initial + delta;
+
+            var t = 0f;
+            while (t < duration)
             {
-                t += Time.deltaTime / duration;
-                transform.localPosition = Vector3.Lerp(a: start, b: end, t: t);
+                t += Time.deltaTime;
+
+                float sineT = (Mathf.Sin((t / period) * 2 * Mathf.PI) / 2) + 0.5f;
+                Vector3 newPosition = Vector3.Lerp(a: min, b: max, t: sineT);
+                SetPosition(transform: transform, position: newPosition, isLocal: isLocal);
+
                 yield return null;
             }
+        }
 
-            transform.localPosition = end;
+        private static Vector3 GetPosition(Transform transform, bool isLocal)
+        {
+            return isLocal ? transform.localPosition : transform.position;
+        }
+
+        private static void SetPosition(Transform transform, Vector3 position, bool isLocal)
+        {
+            if (isLocal) transform.localPosition = position;
+            else transform.position = position;
         }
     }
 }
