@@ -1,6 +1,6 @@
 {
   "name": "art.cryy22.crysc",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "a collection of common Unity scripts, types, and patterns for use in gamedev.",
   "displayName": "crysc: cry sauce",
   "unity": "2021.3",
