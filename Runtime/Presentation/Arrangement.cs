@@ -9,7 +9,7 @@ namespace Crysc.Presentation
 {
     using IElement = IArrangementElement;
 
-    public class UIArrangement : MonoBehaviour, IArrangement<IElement>, IElement
+    public class Arrangement : MonoBehaviour, IArrangement<IElement>, IElement
     {
         private const float _zOffset = 0.000001f;
 
