@@ -1,11 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using Crysc.UI;
 using UnityEngine;
 
 namespace Crysc.Presentation
 {
-    public interface IArrangement<in T> where T : IArrangementElement
+    public interface IArrangement<in T>
     {
         public bool IsCentered { get; set; }
         public bool IsInverted { get; set; }
