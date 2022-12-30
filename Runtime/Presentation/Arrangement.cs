@@ -14,16 +14,15 @@ namespace Crysc.Presentation
         private const float _zOffset = 0.000001f;
 
         [SerializeField] private Transform ElementsParent;
-
         [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
         [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
+        private readonly HashSet<IElement> _excludedFromRearrange = new();
+
         private Vector2 _spacing = Vector2.zero;
         private Vector2 _centeringOffset;
-
-        public IReadOnlyDictionary<IElement, Vector3> ElementsPositions => _elementsPositions;
 
         private Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
 
@@ -72,6 +71,9 @@ namespace Crysc.Presentation
             else if (IsInverted) Pivot = new Vector2(x: 1, y: 1);
             else Pivot = Vector2.zero;
         }
+
+        public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
+        public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
 
         private void UpdateElementsAndPositions()
         {
@@ -156,7 +158,7 @@ namespace Crysc.Presentation
         public void Rearrange()
         {
             UpdateElementsAndPositions();
-            foreach (IElement element in _elementsPositions.Keys)
+            foreach (IElement element in _elementsPositions.Keys.Except(_excludedFromRearrange))
                 element.Transform.localPosition = _elementsPositions[element];
         }
 
@@ -164,15 +166,16 @@ namespace Crysc.Presentation
         {
             UpdateElementsAndPositions();
 
-            Coroutine[] coroutines = _elementsPositions
+            IEnumerable<Coroutine> coroutines = _elementsPositions.Keys
+                .Except(_excludedFromRearrange)
                 .Select(
-                    kvp => StartCoroutine(
-                        Mover.MoveTo(transform: kvp.Key.Transform, end: kvp.Value, duration: duration)
-                    )
-                )
-                .ToArray();
+                    e =>
+                        StartCoroutine(
+                            Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration)
+                        )
+                );
 
-            yield return CoroutineWaiter.RunConcurrently(coroutines);
+            yield return CoroutineWaiter.RunConcurrently(coroutines.ToArray());
         }
 
         // IArrangementElement
