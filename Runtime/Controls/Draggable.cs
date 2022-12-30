@@ -12,6 +12,7 @@ namespace Crysc.Controls
         private T _target;
 
         public event EventHandler<DraggableEventArgs<T>> Began;
+        public event EventHandler<DraggableEventArgs<T>> Moved;
         public event EventHandler<DraggableEventArgs<T>> Ended;
 
         [field: SerializeField] public bool IsActive { get; set; }
@@ -40,6 +41,8 @@ namespace Crysc.Controls
 
             Transform draggableTransform = transform;
             draggableTransform.position = new Vector3(x: cursor.x, y: cursor.y, z: draggableTransform.position.z);
+
+            Moved?.Invoke(sender: this, e: new DraggableEventArgs<T>(_target));
         }
 
         private void OnMouseUp()

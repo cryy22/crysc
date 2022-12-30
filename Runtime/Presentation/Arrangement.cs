@@ -18,10 +18,12 @@ namespace Crysc.Presentation
         [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
         [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
 
-        private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private readonly List<IElement> _elements = new();
+        private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private Vector2 _spacing = Vector2.zero;
         private Vector2 _centeringOffset;
+
+        public IReadOnlyDictionary<IElement, Vector3> ElementsPositions => _elementsPositions;
 
         private Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
 
@@ -29,6 +31,24 @@ namespace Crysc.Presentation
         {
             if (BaseElementSize.x < 0 || BaseElementSize.y < 0)
                 throw new Exception("BaseElementSize cannot be negative");
+        }
+
+        public int GetClosestIndex(Vector2 position)
+        {
+            var closestIndex = 0;
+            var closestDistance = float.MaxValue;
+            for (var i = 0; i < _elements.Count; i++)
+            {
+                if (!_elementsPositions.TryGetValue(key: _elements[i], value: out Vector3 elementPosition)) continue;
+                float distance = Vector2.Distance(a: position, b: elementPosition);
+
+                if (!(distance < closestDistance)) continue;
+
+                closestDistance = distance;
+                closestIndex = i;
+            }
+
+            return closestIndex;
         }
 
         public void UpdateProperties()
@@ -114,11 +134,7 @@ namespace Crysc.Presentation
             Vector2 directionalPivot = element.Pivot - (IsInverted ? Vector2.one : Vector2.zero);
             Vector2 midpoint2d = (Vector2) startPoint + (elementSize * directionalPivot);
 
-            return new Vector3(
-                x: midpoint2d.x,
-                y: midpoint2d.y,
-                z: startPoint.z
-            );
+            return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z);
         }
 
         // IArrangement
