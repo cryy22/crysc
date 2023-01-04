@@ -10,7 +10,6 @@ namespace Crysc.Registries
         [NonSerialized] private readonly HashSet<IRegistrar<T>> _registrars = new();
 
         public event EventHandler<RegistryEventArgs<T>> Destroying;
-
         public event EventHandler<RegistryEventArgs<T>> Hovered;
         public event EventHandler<RegistryEventArgs<T>> Unhovered;
         public event EventHandler<RegistryEventArgs<T>> Clicked;
