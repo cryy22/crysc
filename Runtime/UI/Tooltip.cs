@@ -18,6 +18,14 @@ namespace Crysc.UI
         [SerializeField] private bool PersistsOnTooltipHover;
         [SerializeField] private bool MoveToTargetPosition;
 
+        [SerializeField]
+        [Range(min: 0, max: 1)]
+        private float XFromCenter = 0.5f;
+
+        [SerializeField]
+        [Range(min: 0, max: 1)]
+        private float YFromCenter = 0.5f;
+
         private Camera _camera;
         private BoundsCalculator _boundsCalculator;
         private T _target;
@@ -77,7 +85,8 @@ namespace Crysc.UI
         {
             Bounds registrarBounds = registrar.Bounds;
             Bounds tooltipBounds = _boundsCalculator.Calculate();
-            float xInset = registrarBounds.extents.x / 4;
+            float xInset = registrarBounds.extents.x * (1 - XFromCenter);
+            float yInset = registrarBounds.extents.y * (1 - YFromCenter);
             bool isRight = IsRegistrarOnRight(registrar);
 
             float xValue = isRight
@@ -86,7 +95,7 @@ namespace Crysc.UI
 
             var worldPoint = new Vector2(
                 x: xValue,
-                y: registrarBounds.center.y + (registrarBounds.extents.y / 2)
+                y: registrarBounds.center.y + yInset
             );
 
             return _camera.WorldToScreenPoint(worldPoint);
