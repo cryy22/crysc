@@ -1,6 +1,6 @@
 using System;
 
-namespace Crysc.Registries
+namespace Crysc.Patterns.Registries
 {
     public interface ILifecycleRegistrar<T> : IRegistrar<T>
     {

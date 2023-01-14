@@ -1,6 +1,6 @@
 using UnityEngine.AddressableAssets;
 
-namespace Crysc.Common
+namespace Crysc.Patterns
 {
     public class InstanceCacher<T> where T : class
     {

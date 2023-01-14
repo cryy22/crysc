@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Crysc.Coordination
+namespace Crysc.Patterns.Coordination
 {
     public class Coordinator : MonoBehaviour
     {

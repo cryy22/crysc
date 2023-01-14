@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crysc.Initialization
+namespace Crysc.Patterns.Initialization
 {
     public abstract class InitializationBehaviour<TInitParams> : MonoBehaviour
     {

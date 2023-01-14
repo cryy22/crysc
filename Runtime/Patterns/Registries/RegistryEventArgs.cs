@@ -1,6 +1,6 @@
 using System;
 
-namespace Crysc.Registries
+namespace Crysc.Patterns.Registries
 {
     public class RegistryEventArgs<T> : EventArgs
     {

@@ -1,6 +1,6 @@
 using System;
 using Crysc.Common;
-using Crysc.Registries;
+using Crysc.Patterns.Registries;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Object = UnityEngine.Object;

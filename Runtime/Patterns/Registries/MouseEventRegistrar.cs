@@ -3,7 +3,7 @@ using Crysc.Common;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Crysc.Registries
+namespace Crysc.Patterns.Registries
 {
     public abstract class MouseEventRegistrar<T> : Registrar<T>, IMouseEventRegistrar<T>,
         IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler

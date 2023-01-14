@@ -1,4 +1,4 @@
-namespace Crysc.Registries
+namespace Crysc.Patterns.Registries
 {
     public interface IRegistrar<out T>
     {

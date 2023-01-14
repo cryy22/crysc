@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Crysc.Registries
+namespace Crysc.Patterns.Registries
 {
     public abstract class Registrar<T> : MonoBehaviour, IRegistrar<T>
     {
