@@ -1,15 +1,15 @@
-using UnityEngine.AddressableAssets;
+using UnityEngine;
 
 namespace Crysc.Patterns
 {
-    public class InstanceCacher<T> where T : class
+    public class InstanceCacher<T> where T : Object
     {
         private readonly InstanceCreator _creator;
         private T _instance;
 
         public InstanceCacher(InstanceCreator creator) { _creator = creator; }
 
-        public InstanceCacher(string assetAddress) { _creator = () => LoadAsset(assetAddress); }
+        public InstanceCacher(string resourceAddress) { _creator = () => LoadAsset(resourceAddress); }
 
         public delegate T InstanceCreator();
 
@@ -24,9 +24,6 @@ namespace Crysc.Patterns
             }
         }
 
-        private static T LoadAsset(string assetAddress)
-        {
-            return Addressables.LoadAssetAsync<T>(assetAddress).WaitForCompletion();
-        }
+        private static T LoadAsset(string address) { return Resources.Load<T>(address); }
     }
 }
