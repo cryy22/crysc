@@ -11,7 +11,7 @@ namespace Crysc.Presentation
 
     public class Arrangement : MonoBehaviour, IArrangement<IElement>, IElement
     {
-        private const float _zOffset = 0.000001f;
+        private const float _zOffset = 0.0001f;
 
         [SerializeField] private Transform ElementsParent;
         [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
@@ -23,6 +23,17 @@ namespace Crysc.Presentation
 
         private Vector2 _spacing = Vector2.zero;
         private Vector2 _centeringOffset;
+
+        // IArrangementElement
+        public Transform Transform => transform;
+
+        // IArrangement
+        [field: SerializeField] public bool IsCentered { get; set; }
+        [field: SerializeField] public bool IsInverted { get; set; }
+        [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
+        [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
+        public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
+        public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
 
         private Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
 
@@ -74,6 +85,39 @@ namespace Crysc.Presentation
 
         public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
         public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
+
+        public void SetElements(IEnumerable<IElement> elements)
+        {
+            _elements.Clear();
+            _elements.AddRange(elements);
+            List<IElement> existingElements = _elementsPositions.Keys.ToList();
+
+            foreach (IElement element in _elements.Except(existingElements)) AddElement(element);
+            foreach (IElement element in existingElements.Except(_elements)) _elementsPositions.Remove(element);
+        }
+
+        public void Rearrange()
+        {
+            UpdateElementsAndPositions();
+            foreach (IElement element in _elementsPositions.Keys.Except(_excludedFromRearrange))
+                element.Transform.localPosition = _elementsPositions[element];
+        }
+
+        public IEnumerator AnimateRearrange(float duration = 0.25f)
+        {
+            UpdateElementsAndPositions();
+
+            IEnumerable<Coroutine> coroutines = _elementsPositions.Keys
+                .Except(_excludedFromRearrange)
+                .Select(
+                    e =>
+                        StartCoroutine(
+                            Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration)
+                        )
+                );
+
+            yield return CoroutineWaiter.RunConcurrently(coroutines.ToArray());
+        }
 
         private void UpdateElementsAndPositions()
         {
@@ -138,49 +182,5 @@ namespace Crysc.Presentation
 
             return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z);
         }
-
-        // IArrangement
-        [field: SerializeField] public bool IsCentered { get; set; }
-        [field: SerializeField] public bool IsInverted { get; set; }
-        [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
-        [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
-
-        public void SetElements(IEnumerable<IElement> elements)
-        {
-            _elements.Clear();
-            _elements.AddRange(elements);
-            List<IElement> existingElements = _elementsPositions.Keys.ToList();
-
-            foreach (IElement element in _elements.Except(existingElements)) AddElement(element);
-            foreach (IElement element in existingElements.Except(_elements)) _elementsPositions.Remove(element);
-        }
-
-        public void Rearrange()
-        {
-            UpdateElementsAndPositions();
-            foreach (IElement element in _elementsPositions.Keys.Except(_excludedFromRearrange))
-                element.Transform.localPosition = _elementsPositions[element];
-        }
-
-        public IEnumerator AnimateRearrange(float duration = 0.25f)
-        {
-            UpdateElementsAndPositions();
-
-            IEnumerable<Coroutine> coroutines = _elementsPositions.Keys
-                .Except(_excludedFromRearrange)
-                .Select(
-                    e =>
-                        StartCoroutine(
-                            Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration)
-                        )
-                );
-
-            yield return CoroutineWaiter.RunConcurrently(coroutines.ToArray());
-        }
-
-        // IArrangementElement
-        public Transform Transform => transform;
-        public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
-        public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
     }
 }

@@ -15,4 +15,7 @@ namespace Crysc.Presentation
         public void Rearrange();
         public IEnumerator AnimateRearrange(float duration);
     }
+
+    public interface IArrangement : IArrangement<IArrangementElement>
+    { }
 }
