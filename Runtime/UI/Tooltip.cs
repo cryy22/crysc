@@ -70,6 +70,18 @@ namespace Crysc.UI
 
         protected virtual void UpdateTarget(T target, T previousTarget) { _target = target; }
 
+        private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, Bounds tooltipBounds)
+        {
+            const float padding = 10;
+            float xMax = Screen.width - tooltipBounds.size.x - padding;
+            float yMax = Screen.height - tooltipBounds.size.y - padding;
+
+            return new Vector2(
+                x: xMax > padding ? Mathf.Clamp(value: screenPoint.x, min: padding, max: xMax) : padding,
+                y: yMax > padding ? Mathf.Clamp(value: screenPoint.y, min: padding, max: yMax) : padding
+            );
+        }
+
         private void HideTooltip() { Container.SetActive(false); }
 
         private void HoveredEventHandler(object sender, RegistryEventArgs<T> e)
@@ -84,7 +96,7 @@ namespace Crysc.UI
         private IEnumerator RunMoveTooltip(IMouseEventRegistrar<T> registrar)
         {
             yield return new WaitForEndOfFrame();
-            Vector3 screenPoint = GetTooltipScreenPoint(registrar);
+            Vector2 screenPoint = GetTooltipScreenPoint(registrar);
             transform.position = new Vector3(
                 x: screenPoint.x,
                 y: screenPoint.y,
@@ -92,7 +104,7 @@ namespace Crysc.UI
             );
         }
 
-        private Vector3 GetTooltipScreenPoint(IMouseEventRegistrar<T> registrar)
+        private Vector2 GetTooltipScreenPoint(IMouseEventRegistrar<T> registrar)
         {
             Bounds registrarBounds = registrar.Bounds;
             Bounds tooltipBounds = _boundsCalculator.Calculate();
@@ -112,7 +124,10 @@ namespace Crysc.UI
                 y: yValue
             );
 
-            return _camera.WorldToScreenPoint(worldPoint);
+            return EnsureTooltipIsOnScreen(
+                screenPoint: _camera.WorldToScreenPoint(worldPoint),
+                tooltipBounds: tooltipBounds
+            );
         }
 
         private bool IsRegistrarOnLeft(IMouseEventRegistrar<T> registrar)
