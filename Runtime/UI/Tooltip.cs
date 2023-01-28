@@ -27,14 +27,16 @@ namespace Crysc.UI
         [Range(min: 0, max: 1)]
         private float YFromCenter = 0.5f;
 
+        private static readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
+
         private Camera _camera;
-        private BoundsCalculator _boundsCalculator;
+        private GenericSizeCalculator _genericSizeCalculator;
         private T _target;
 
         private void Awake()
         {
             _camera = Camera.main;
-            _boundsCalculator = new BoundsCalculator(Container.transform);
+            _genericSizeCalculator = new GenericSizeCalculator(Container.transform);
 
             HideTooltip();
         }
@@ -58,6 +60,8 @@ namespace Crysc.UI
 
         public void OnPointerExit(PointerEventData _) { HideTooltip(); }
 
+        public void HideTooltip() { Container.SetActive(false); }
+
         protected virtual bool ShouldShowTooltip(T target) { return true; }
 
         protected virtual void ShowTooltip(T target)
@@ -70,11 +74,11 @@ namespace Crysc.UI
 
         protected virtual void UpdateTarget(T target, T previousTarget) { _target = target; }
 
-        private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, Bounds tooltipBounds)
+        private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, GenericSize tooltipSize)
         {
             const float padding = 10;
-            float xMax = Screen.width - tooltipBounds.size.x - padding;
-            float yMax = Screen.height - tooltipBounds.size.y - padding;
+            float xMax = Screen.width - tooltipSize.ScreenDimensions.x - padding;
+            float yMax = Screen.height - tooltipSize.ScreenDimensions.y - padding;
 
             return new Vector2(
                 x: xMax > padding ? Mathf.Clamp(value: screenPoint.x, min: padding, max: xMax) : padding,
@@ -82,20 +86,21 @@ namespace Crysc.UI
             );
         }
 
-        private void HideTooltip() { Container.SetActive(false); }
-
         private void HoveredEventHandler(object sender, RegistryEventArgs<T> e)
         {
             ShowTooltip(sender as T);
 
-            if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar) MoveTooltip(meRegistrar);
+            if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar)
+                StartCoroutine(RunMoveTooltip(meRegistrar));
         }
-
-        private void MoveTooltip(IMouseEventRegistrar<T> registrar) { StartCoroutine(RunMoveTooltip(registrar)); }
 
         private IEnumerator RunMoveTooltip(IMouseEventRegistrar<T> registrar)
         {
-            yield return new WaitForEndOfFrame();
+            transform.position = _offScreen;
+            Canvas.ForceUpdateCanvases();
+
+            yield return null;
+
             Vector2 screenPoint = GetTooltipScreenPoint(registrar);
             transform.position = new Vector3(
                 x: screenPoint.x,
@@ -107,17 +112,17 @@ namespace Crysc.UI
         private Vector2 GetTooltipScreenPoint(IMouseEventRegistrar<T> registrar)
         {
             Bounds registrarBounds = registrar.Bounds;
-            Bounds tooltipBounds = _boundsCalculator.Calculate();
+            GenericSize tooltipSize = _genericSizeCalculator.Calculate();
             float xInset = registrarBounds.extents.x * (1 - XFromCenter);
             float yInset = registrarBounds.extents.y * (1 - YFromCenter);
 
             float xValue = IsRegistrarOnLeft(registrar)
                 ? registrarBounds.max.x - xInset
-                : (registrarBounds.min.x - tooltipBounds.size.x) + xInset;
+                : (registrarBounds.min.x - tooltipSize.Bounds.size.x) + xInset;
 
             float yValue = IsRegistrarOnBottom(registrar)
                 ? registrarBounds.max.y - yInset
-                : (registrarBounds.min.y - tooltipBounds.size.y) + yInset;
+                : (registrarBounds.min.y - tooltipSize.Bounds.size.y) + yInset;
 
             var worldPoint = new Vector2(
                 x: xValue,
@@ -126,20 +131,20 @@ namespace Crysc.UI
 
             return EnsureTooltipIsOnScreen(
                 screenPoint: _camera.WorldToScreenPoint(worldPoint),
-                tooltipBounds: tooltipBounds
+                tooltipSize: tooltipSize
             );
         }
 
         private bool IsRegistrarOnLeft(IMouseEventRegistrar<T> registrar)
         {
             Vector3 screenPoint = _camera.WorldToScreenPoint(registrar.Bounds.center);
-            return screenPoint.x <= Screen.width / 2f;
+            return screenPoint.x <= (Screen.width / 3f) * 2;
         }
 
         private bool IsRegistrarOnBottom(IMouseEventRegistrar<T> registrar)
         {
             Vector3 screenPoint = _camera.WorldToScreenPoint(registrar.Bounds.center);
-            return screenPoint.y <= Screen.height / 2f;
+            return screenPoint.y <= (Screen.height / 3f) * 2;
         }
 
         private void UnhoveredEventHandler(object sender, EventArgs _) { HideTooltip(); }

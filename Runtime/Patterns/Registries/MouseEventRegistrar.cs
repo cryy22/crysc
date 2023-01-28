@@ -8,21 +8,21 @@ namespace Crysc.Patterns.Registries
     public abstract class MouseEventRegistrar<T> : Registrar<T>, IMouseEventRegistrar<T>,
         IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
     {
-        private BoundsCalculator _boundsCalculator;
-
-        protected override void Awake()
-        {
-            base.Awake();
-            _boundsCalculator = new BoundsCalculator(this);
-        }
-
-        private void OnDisable() { Unhovered?.Invoke(sender: Registrant, e: BuildEventArgs()); }
+        private GenericSizeCalculator _genericSizeCalculator;
 
         // IMouseEventRegistrar
         public event EventHandler<RegistryEventArgs<T>> Hovered;
         public event EventHandler<RegistryEventArgs<T>> Unhovered;
         public event EventHandler<RegistryEventArgs<T>> Clicked;
-        public Bounds Bounds => _boundsCalculator.Calculate();
+        public Bounds Bounds => _genericSizeCalculator.Calculate().Bounds;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            _genericSizeCalculator = new GenericSizeCalculator(this);
+        }
+
+        private void OnDisable() { Unhovered?.Invoke(sender: Registrant, e: BuildEventArgs()); }
 
         // IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
         public void OnPointerDown(PointerEventData _) { Clicked?.Invoke(sender: Registrant, e: BuildEventArgs()); }

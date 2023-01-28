@@ -2,16 +2,25 @@ using UnityEngine;
 
 namespace Crysc.Common
 {
-    public class BoundsCalculator
+    public class GenericSizeCalculator
     {
         private readonly Collider _collider;
         private readonly Collider2D _collider2D;
         private readonly RectTransform _rectTransform;
 
         private readonly Canvas _canvas;
-        private readonly Camera _camera;
+        private Camera _camera;
 
-        public BoundsCalculator(Component behaviour)
+        private Camera Camera
+        {
+            get
+            {
+                _camera ??= Camera.main;
+                return _camera;
+            }
+        }
+
+        public GenericSizeCalculator(Component behaviour)
         {
             _collider = behaviour.GetComponent<Collider>();
             _collider2D = behaviour.GetComponent<Collider2D>();
@@ -22,13 +31,20 @@ namespace Crysc.Common
 
             if (_collider != null || _collider2D != null) return;
             _canvas = behaviour.GetComponentInParent<Canvas>();
-            _camera = Camera.main;
         }
 
-        public Bounds Calculate()
+        public GenericSize Calculate()
         {
-            if (_collider != null) return _collider.bounds;
-            if (_collider2D != null) return _collider2D.bounds;
+            if (_collider != null)
+                return new GenericSize(
+                    bounds: _collider.bounds,
+                    screenDimensions: ScreenDimensionsFromBounds(_collider.bounds)
+                );
+            if (_collider2D != null)
+                return new GenericSize(
+                    bounds: _collider2D.bounds,
+                    screenDimensions: ScreenDimensionsFromBounds(_collider2D.bounds)
+                );
 
             var rectCorners = new Vector3[4];
             _rectTransform.GetWorldCorners(rectCorners);
@@ -40,14 +56,26 @@ namespace Crysc.Common
             {
                 Vector3 worldPoint = _canvas.renderMode == RenderMode.WorldSpace
                     ? corner
-                    : _camera.ScreenToWorldPoint(corner);
+                    : Camera.ScreenToWorldPoint(corner);
                 min = Vector3.Min(lhs: min, rhs: worldPoint);
                 max = Vector3.Max(lhs: max, rhs: worldPoint);
             }
 
             Bounds bounds = new();
             bounds.SetMinMax(min: min, max: max);
-            return bounds;
+            return new GenericSize(
+                bounds: bounds,
+                screenDimensions: ScreenDimensionsFromBounds(bounds)
+            );
+        }
+
+        private Vector2 ScreenDimensionsFromBounds(Bounds bounds)
+        {
+            if (Camera == null) return Vector2.zero;
+
+            Vector2 min = Camera.WorldToScreenPoint(position: bounds.min);
+            Vector2 max = Camera.WorldToScreenPoint(position: bounds.max);
+            return max - min;
         }
     }
 }
