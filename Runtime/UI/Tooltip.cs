@@ -4,17 +4,17 @@ using Crysc.Common;
 using Crysc.Patterns.Registries;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Crysc.UI
 {
-    [RequireComponent(typeof(RectTransform))]
     public abstract class Tooltip<T> : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler
         where T : Object
     {
         [SerializeField] private Registry<T> Registry;
-        [SerializeField] protected GameObject Container;
+        [SerializeField] protected RectTransform Container;
 
         [SerializeField] private bool PersistsOnTooltipHover;
         [SerializeField] private bool MoveToTargetPosition;
@@ -36,7 +36,7 @@ namespace Crysc.UI
         private void Awake()
         {
             _camera = Camera.main;
-            _genericSizeCalculator = new GenericSizeCalculator(Container.transform);
+            _genericSizeCalculator = new GenericSizeCalculator(Container);
 
             HideTooltip();
         }
@@ -55,12 +55,12 @@ namespace Crysc.UI
 
         public void OnPointerEnter(PointerEventData _)
         {
-            if (PersistsOnTooltipHover) Container.SetActive(true);
+            if (PersistsOnTooltipHover) Container.gameObject.SetActive(true);
         }
 
         public void OnPointerExit(PointerEventData _) { HideTooltip(); }
 
-        protected void HideTooltip() { Container.SetActive(false); }
+        protected void HideTooltip() { Container.gameObject.SetActive(false); }
 
         protected virtual bool ShouldShowTooltip(T target) { return true; }
 
@@ -69,7 +69,7 @@ namespace Crysc.UI
             if (ShouldShowTooltip(target) == false) return;
 
             UpdateTarget(target: target, previousTarget: _target);
-            Container.SetActive(true);
+            Container.gameObject.SetActive(true);
         }
 
         protected virtual void UpdateTarget(T target, T previousTarget) { _target = target; }
@@ -98,7 +98,10 @@ namespace Crysc.UI
         {
             transform.position = _offScreen;
             Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(Container);
 
+            // required to ensure layout of variably-sized tooltips is complete.
+            yield return null;
             yield return null;
 
             Vector2 screenPoint = GetTooltipScreenPoint(registrar);
