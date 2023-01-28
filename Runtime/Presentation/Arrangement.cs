@@ -180,7 +180,7 @@ namespace Crysc.Presentation
             Vector2 directionalPivot = element.Pivot - (IsInverted ? Vector2.one : Vector2.zero);
             Vector2 midpoint2d = (Vector2) startPoint + (elementSize * directionalPivot);
 
-            return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z);
+            return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z) + element.ArrangementOffset;
         }
     }
 }
