@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Crysc.Common;
 using Crysc.Patterns.Registries;
 using UnityEngine;
@@ -33,7 +34,7 @@ namespace Crysc.UI
         private void Awake()
         {
             _camera = Camera.main;
-            _boundsCalculator = new BoundsCalculator(this);
+            _boundsCalculator = new BoundsCalculator(Container.transform);
 
             HideTooltip();
         }
@@ -49,6 +50,13 @@ namespace Crysc.UI
             Registry.Hovered -= HoveredEventHandler;
             Registry.Unhovered -= UnhoveredEventHandler;
         }
+
+        public void OnPointerEnter(PointerEventData _)
+        {
+            if (PersistsOnTooltipHover) Container.SetActive(true);
+        }
+
+        public void OnPointerExit(PointerEventData _) { HideTooltip(); }
 
         protected virtual bool ShouldShowTooltip(T target) { return true; }
 
@@ -71,8 +79,11 @@ namespace Crysc.UI
             if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar) MoveTooltip(meRegistrar);
         }
 
-        private void MoveTooltip(IMouseEventRegistrar<T> registrar)
+        private void MoveTooltip(IMouseEventRegistrar<T> registrar) { StartCoroutine(RunMoveTooltip(registrar)); }
+
+        private IEnumerator RunMoveTooltip(IMouseEventRegistrar<T> registrar)
         {
+            yield return new WaitForEndOfFrame();
             Vector3 screenPoint = GetTooltipScreenPoint(registrar);
             transform.position = new Vector3(
                 x: screenPoint.x,
@@ -87,33 +98,35 @@ namespace Crysc.UI
             Bounds tooltipBounds = _boundsCalculator.Calculate();
             float xInset = registrarBounds.extents.x * (1 - XFromCenter);
             float yInset = registrarBounds.extents.y * (1 - YFromCenter);
-            bool isRight = IsRegistrarOnRight(registrar);
 
-            float xValue = isRight
-                ? (registrarBounds.min.x - tooltipBounds.size.x) + xInset
-                : registrarBounds.max.x - xInset;
+            float xValue = IsRegistrarOnLeft(registrar)
+                ? registrarBounds.max.x - xInset
+                : (registrarBounds.min.x - tooltipBounds.size.x) + xInset;
+
+            float yValue = IsRegistrarOnBottom(registrar)
+                ? registrarBounds.max.y - yInset
+                : (registrarBounds.min.y - tooltipBounds.size.y) + yInset;
 
             var worldPoint = new Vector2(
                 x: xValue,
-                y: registrarBounds.center.y + yInset
+                y: yValue
             );
 
             return _camera.WorldToScreenPoint(worldPoint);
         }
 
-        private bool IsRegistrarOnRight(IMouseEventRegistrar<T> registrar)
+        private bool IsRegistrarOnLeft(IMouseEventRegistrar<T> registrar)
         {
             Vector3 screenPoint = _camera.WorldToScreenPoint(registrar.Bounds.center);
-            return screenPoint.x > (Screen.width / 3) * 2;
+            return screenPoint.x <= Screen.width / 2f;
+        }
+
+        private bool IsRegistrarOnBottom(IMouseEventRegistrar<T> registrar)
+        {
+            Vector3 screenPoint = _camera.WorldToScreenPoint(registrar.Bounds.center);
+            return screenPoint.y <= Screen.height / 2f;
         }
 
         private void UnhoveredEventHandler(object sender, EventArgs _) { HideTooltip(); }
-
-        public void OnPointerEnter(PointerEventData _)
-        {
-            if (PersistsOnTooltipHover) Container.SetActive(true);
-        }
-
-        public void OnPointerExit(PointerEventData _) { HideTooltip(); }
     }
 }
