@@ -60,7 +60,7 @@ namespace Crysc.UI
 
         public void OnPointerExit(PointerEventData _) { HideTooltip(); }
 
-        public void HideTooltip() { Container.SetActive(false); }
+        protected void HideTooltip() { Container.SetActive(false); }
 
         protected virtual bool ShouldShowTooltip(T target) { return true; }
 
