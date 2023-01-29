@@ -20,6 +20,7 @@ namespace Crysc.Presentation
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private readonly HashSet<IElement> _excludedFromRearrange = new();
+        private readonly List<Coroutine> _rearrangeCoroutines = new();
 
         private Vector2 _spacing = Vector2.zero;
         private Vector2 _centeringOffset;
@@ -107,16 +108,23 @@ namespace Crysc.Presentation
         {
             UpdateElementsAndPositions();
 
-            IEnumerable<Coroutine> coroutines = _elementsPositions.Keys
-                .Except(_excludedFromRearrange)
-                .Select(
-                    e =>
-                        StartCoroutine(
-                            Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration)
-                        )
-                );
+            foreach (Coroutine coroutine in _rearrangeCoroutines)
+                if (coroutine != null)
+                    StopCoroutine(coroutine);
+            _rearrangeCoroutines.Clear();
 
-            yield return CoroutineWaiter.RunConcurrently(coroutines.ToArray());
+            _rearrangeCoroutines.AddRange(
+                _elementsPositions.Keys
+                    .Except(_excludedFromRearrange)
+                    .Select(
+                        e =>
+                            StartCoroutine(
+                                Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration)
+                            )
+                    )
+            );
+
+            yield return CoroutineWaiter.RunConcurrently(_rearrangeCoroutines.ToArray());
         }
 
         private void UpdateElementsAndPositions()
