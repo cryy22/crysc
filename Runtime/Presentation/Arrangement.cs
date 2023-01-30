@@ -20,7 +20,7 @@ namespace Crysc.Presentation
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private readonly HashSet<IElement> _excludedFromRearrange = new();
-        private readonly List<Coroutine> _rearrangeCoroutines = new();
+        private readonly List<CryRoutine> _rearrangeRoutines = new();
 
         private Vector2 _spacing = Vector2.zero;
         private Vector2 _centeringOffset;
@@ -108,23 +108,27 @@ namespace Crysc.Presentation
         {
             UpdateElementsAndPositions();
 
-            foreach (Coroutine coroutine in _rearrangeCoroutines)
-                if (coroutine != null)
-                    StopCoroutine(coroutine);
-            _rearrangeCoroutines.Clear();
+            foreach (CryRoutine routine in _rearrangeRoutines) routine.Stop();
+            _rearrangeRoutines.Clear();
 
-            _rearrangeCoroutines.AddRange(
+            _rearrangeRoutines.AddRange(
                 _elementsPositions.Keys
                     .Except(_excludedFromRearrange)
                     .Select(
                         e =>
-                            StartCoroutine(
-                                Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration)
+                            CryRoutine.Start(
+                                behaviour: this,
+                                enumerator: MoveElementPosition(e: e, duration: duration)
                             )
                     )
             );
 
-            yield return CoroutineWaiter.RunConcurrently(_rearrangeCoroutines.ToArray());
+            yield return CoroutineWaiter.RunConcurrently(_rearrangeRoutines.ToArray());
+        }
+
+        private IEnumerator MoveElementPosition(IElement e, float duration)
+        {
+            return Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration);
         }
 
         private void UpdateElementsAndPositions()
