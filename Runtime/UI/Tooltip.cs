@@ -101,8 +101,7 @@ namespace Crysc.UI
             LayoutRebuilder.ForceRebuildLayoutImmediate(Container);
 
             // required to ensure layout of variably-sized tooltips is complete.
-            yield return null;
-            yield return null;
+            for (var i = 0; i < 3; i++) yield return null;
 
             Vector2 screenPoint = GetTooltipScreenPoint(registrar);
             transform.position = new Vector3(
