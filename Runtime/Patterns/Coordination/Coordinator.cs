@@ -30,7 +30,7 @@ namespace Crysc.Patterns.Coordination
             if (Container != null) Container.SetActive(false);
         }
 
-        public virtual void BeginCoordination(TConfig config, TState state)
+        public virtual void Begin(TConfig config, TState state)
         {
             Config = config;
             State = state;
@@ -39,7 +39,7 @@ namespace Crysc.Patterns.Coordination
             if (Container != null) Container.SetActive(true);
         }
 
-        public virtual void EndCoordination()
+        public virtual void End()
         {
             Config = null;
             State = null;
