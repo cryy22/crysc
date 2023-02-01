@@ -3,7 +3,9 @@ using UnityEngine;
 
 namespace Crysc.Patterns.Coordination
 {
-    public class Coordinator : MonoBehaviour
+    public class Coordinator<TConfig, TState> : MonoBehaviour
+        where TConfig : CoordinationConfig
+        where TState : CoordinationState
     {
         [SerializeField] private GameObject Container;
         private bool _isActive;
@@ -20,21 +22,33 @@ namespace Crysc.Patterns.Coordination
             }
         }
 
+        protected TConfig Config { get; private set; }
+        protected TState State { get; private set; }
+
         protected virtual void Awake()
         {
             if (Container != null) Container.SetActive(false);
         }
 
-        public virtual void BeginCoordination()
+        public virtual void BeginCoordination(TConfig config, TState state)
         {
+            Config = config;
+            State = state;
+
             IsActive = true;
             if (Container != null) Container.SetActive(true);
         }
 
         public virtual void EndCoordination()
         {
+            Config = null;
+            State = null;
+
             if (Container != null) Container.SetActive(false);
             IsActive = false;
         }
     }
+
+    public class Coordinator : Coordinator<CoordinationConfig, CoordinationState>
+    { }
 }
