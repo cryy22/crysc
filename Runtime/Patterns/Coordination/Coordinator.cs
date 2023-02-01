@@ -32,6 +32,8 @@ namespace Crysc.Patterns.Coordination
 
         public virtual void Begin(TConfig config, TState state)
         {
+            if (IsActive) Debug.LogWarning("#Begin called on Coordinator that is already active.");
+
             Config = config;
             State = state;
 
@@ -41,6 +43,8 @@ namespace Crysc.Patterns.Coordination
 
         public virtual void End()
         {
+            if (!IsActive) Debug.LogWarning("#End called on Coordinator that is not active.");
+
             Config = null;
             State = null;
 
