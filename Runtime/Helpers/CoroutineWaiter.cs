@@ -8,16 +8,19 @@ namespace Crysc.Helpers
 {
     public static class CoroutineWaiter
     {
-        public static IEnumerator RunConcurrently<T>(
-            IEnumerable<T> behaviours,
-            Func<T, IEnumerator> enumerator
-        ) where T : MonoBehaviour
+        public static IEnumerator RunConcurrently<T>(IEnumerable<T> behaviours, Func<T, IEnumerator> enumerator)
+            where T : MonoBehaviour
         {
             yield return RunConcurrently(
                 behaviours
                     .Select(b => b.StartCoroutine(enumerator(b)))
                     .ToArray()
             );
+        }
+
+        public static IEnumerator RunConcurrently(MonoBehaviour behaviour, params IEnumerator[] enumerators)
+        {
+            yield return RunConcurrently(enumerators.Select(behaviour.StartCoroutine).ToArray());
         }
 
         public static IEnumerator RunConcurrently(params Coroutine[] coroutines) { return coroutines.GetEnumerator(); }

@@ -5,19 +5,18 @@ namespace Crysc.Helpers
 {
     public class CryRoutine : IEnumerator
     {
+        private readonly MonoBehaviour _behaviour;
+        private readonly IEnumerator _enumerator;
         private Coroutine _coroutine;
         private bool _isStopping;
 
         private CryRoutine(MonoBehaviour behaviour, IEnumerator enumerator)
         {
-            Behaviour = behaviour;
-            Enumerator = enumerator;
+            _behaviour = behaviour;
+            _enumerator = enumerator;
         }
 
         public bool IsComplete { get; private set; }
-
-        private MonoBehaviour Behaviour { get; }
-        private IEnumerator Enumerator { get; }
 
         public static CryRoutine Start(MonoBehaviour behaviour, IEnumerator enumerator)
         {
@@ -32,7 +31,7 @@ namespace Crysc.Helpers
         {
             if (_coroutine != null)
             {
-                Behaviour.StopCoroutine(_coroutine);
+                _behaviour.StopCoroutine(_coroutine);
                 _coroutine = null;
             }
 
@@ -40,7 +39,7 @@ namespace Crysc.Helpers
             _isStopping = false;
         }
 
-        private void Run() { _coroutine = Behaviour.StartCoroutine(this); }
+        private void Run() { _coroutine = _behaviour.StartCoroutine(this); }
 
         public bool MoveNext()
         {
@@ -50,18 +49,19 @@ namespace Crysc.Helpers
                 return false;
             }
 
-            if (Enumerator.MoveNext()) return true;
+            if (_enumerator.MoveNext()) return true;
 
             IsComplete = true;
+            _coroutine = null;
             return false;
         }
 
         public void Reset()
         {
-            Enumerator.Reset();
+            _enumerator.Reset();
             IsComplete = false;
         }
 
-        public object Current => Enumerator.Current;
+        public object Current => _enumerator.Current;
     }
 }
