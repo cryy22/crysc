@@ -32,7 +32,10 @@ namespace Crysc.Patterns.Coordination
 
         public virtual void Begin(TConfig config, TState state)
         {
-            if (IsActive) Debug.LogWarning("#Begin called on Coordinator that is already active.");
+            if (gameObject.activeInHierarchy == false)
+                throw new ApplicationException("#Begin called on Coordinator that is not active in hierarchy.");
+            if (IsActive)
+                Debug.LogWarning("#Begin called on Coordinator that is already active.");
 
             Config = config;
             State = state;
