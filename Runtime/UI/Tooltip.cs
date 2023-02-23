@@ -22,18 +22,18 @@ namespace Crysc.UI
         [SerializeField] private bool MoveToTargetPosition;
 
         [SerializeField]
-        [Range(min: 0, max: 1)]
+        [Range(min: 0, max: 2)]
         private float XFromCenter = 0.5f;
 
         [SerializeField]
-        [Range(min: 0, max: 1)]
+        [Range(min: 0, max: 2)]
         private float YFromCenter = 0.5f;
 
         private Camera _camera;
         private GenericSizeCalculator _genericSizeCalculator;
         private T _target;
 
-        private void Awake()
+        protected virtual void Awake()
         {
             _camera = Camera.main;
             _genericSizeCalculator = new GenericSizeCalculator(Container);
