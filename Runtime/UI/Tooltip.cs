@@ -13,6 +13,8 @@ namespace Crysc.UI
         IPointerEnterHandler, IPointerExitHandler
         where T : Object
     {
+        private static readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
+
         [SerializeField] private Registry<T> Registry;
         [SerializeField] protected RectTransform Container;
 
@@ -26,8 +28,6 @@ namespace Crysc.UI
         [SerializeField]
         [Range(min: 0, max: 1)]
         private float YFromCenter = 0.5f;
-
-        private static readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
 
         private Camera _camera;
         private GenericSizeCalculator _genericSizeCalculator;
@@ -60,7 +60,7 @@ namespace Crysc.UI
 
         public void OnPointerExit(PointerEventData _) { HideTooltip(); }
 
-        protected void HideTooltip() { Container.gameObject.SetActive(false); }
+        protected virtual void HideTooltip() { Container.gameObject.SetActive(false); }
 
         protected virtual bool ShouldShowTooltip(T target) { return true; }
 
@@ -90,11 +90,15 @@ namespace Crysc.UI
         {
             ShowTooltip(sender as T);
 
-            if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar)
-                StartCoroutine(RunMoveTooltip(meRegistrar));
+            Vector2 destination = MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar
+                ? GetTooltipScreenPoint(meRegistrar)
+                : transform.position;
+
+            // if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar)
+            StartCoroutine(RunMoveTooltip(destination));
         }
 
-        private IEnumerator RunMoveTooltip(IMouseEventRegistrar<T> registrar)
+        private IEnumerator RunMoveTooltip(Vector2 destination)
         {
             transform.position = _offScreen;
             Canvas.ForceUpdateCanvases();
@@ -103,10 +107,9 @@ namespace Crysc.UI
             // required to ensure layout of variably-sized tooltips is complete.
             for (var i = 0; i < 3; i++) yield return null;
 
-            Vector2 screenPoint = GetTooltipScreenPoint(registrar);
             transform.position = new Vector3(
-                x: screenPoint.x,
-                y: screenPoint.y,
+                x: destination.x,
+                y: destination.y,
                 z: transform.position.z
             );
         }
