@@ -5,63 +5,35 @@ namespace Crysc.Helpers
 {
     public class CryRoutine : IEnumerator
     {
-        private readonly MonoBehaviour _behaviour;
         private readonly IEnumerator _enumerator;
-        private Coroutine _coroutine;
-        private bool _isStopping;
 
-        private CryRoutine(MonoBehaviour behaviour, IEnumerator enumerator)
+        public CryRoutine(IEnumerator enumerator, MonoBehaviour behaviour)
         {
-            _behaviour = behaviour;
             _enumerator = enumerator;
+            behaviour.StartCoroutine(this);
         }
 
         public bool IsComplete { get; private set; }
+        public object Current => _enumerator.Current;
+
+        public bool MoveNext()
+        {
+            if (IsComplete) return false;
+            if (Current is IEnumerator subEnumerator && subEnumerator.MoveNext()) return true;
+            if (_enumerator.MoveNext()) return true;
+
+            IsComplete = true;
+            return false;
+        }
+
+        public void Reset() { _enumerator.Reset(); }
 
         public static CryRoutine Start(MonoBehaviour behaviour, IEnumerator enumerator)
         {
             CryRoutine routine = new(behaviour: behaviour, enumerator: enumerator);
-            routine.Run();
             return routine;
         }
 
-        public void Stop() { _isStopping = true; }
-
-        private void HandleStop()
-        {
-            if (_coroutine != null)
-            {
-                _behaviour.StopCoroutine(_coroutine);
-                _coroutine = null;
-            }
-
-            IsComplete = true;
-            _isStopping = false;
-        }
-
-        private void Run() { _coroutine = _behaviour.StartCoroutine(this); }
-
-        public bool MoveNext()
-        {
-            if (_isStopping)
-            {
-                HandleStop();
-                return false;
-            }
-
-            if (_enumerator.MoveNext()) return true;
-
-            IsComplete = true;
-            _coroutine = null;
-            return false;
-        }
-
-        public void Reset()
-        {
-            _enumerator.Reset();
-            IsComplete = false;
-        }
-
-        public object Current => _enumerator.Current;
+        public void Stop() { IsComplete = true; }
     }
 }
