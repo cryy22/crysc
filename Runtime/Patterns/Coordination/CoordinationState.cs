@@ -2,6 +2,6 @@ using UnityEngine;
 
 namespace Crysc.Patterns.Coordination
 {
-    public class CoordinationState : ScriptableObject
+    public abstract class CoordinationState : ScriptableObject
     { }
 }
