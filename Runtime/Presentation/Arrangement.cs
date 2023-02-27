@@ -128,7 +128,7 @@ namespace Crysc.Presentation
 
         private IEnumerator MoveElementPosition(IElement e, float duration)
         {
-            return Mover.MoveTo(transform: e.Transform, end: _elementsPositions[e], duration: duration);
+            return Mover.MoveToSmoothly(transform: e.Transform, end: _elementsPositions[e], duration: duration);
         }
 
         private void UpdateElementsAndPositions()

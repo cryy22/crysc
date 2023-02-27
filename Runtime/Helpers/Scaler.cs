@@ -40,6 +40,8 @@ namespace Crysc.Helpers
                 duration: duration,
                 period: duration * 4
             );
+
+            transform.localScale = end;
         }
 
         public static IEnumerator ScaleSine(

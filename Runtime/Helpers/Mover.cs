@@ -48,6 +48,8 @@ namespace Crysc.Helpers
                 period: duration * 4,
                 isLocal: isLocal
             );
+
+            SetPosition(transform: transform, position: end, isLocal: isLocal);
         }
 
         public static IEnumerator MoveSine(
