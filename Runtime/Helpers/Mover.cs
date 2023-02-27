@@ -31,6 +31,25 @@ namespace Crysc.Helpers
             SetPosition(transform: transform, position: end, isLocal: isLocal);
         }
 
+        public static IEnumerator MoveToSmoothly(
+            Transform transform,
+            Vector3 end,
+            float duration = 0.25f,
+            bool isLocal = true
+        )
+        {
+            Vector3 start = GetPosition(transform: transform, isLocal: isLocal);
+            Vector3 delta = end - start;
+
+            yield return MoveSine(
+                transform: transform,
+                delta: delta,
+                duration: duration,
+                period: duration * 4,
+                isLocal: isLocal
+            );
+        }
+
         public static IEnumerator MoveSine(
             Transform transform,
             Vector3 delta,
