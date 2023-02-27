@@ -30,8 +30,7 @@ namespace Crysc.Helpers
 
         public static CryRoutine Start(MonoBehaviour behaviour, IEnumerator enumerator)
         {
-            CryRoutine routine = new(behaviour: behaviour, enumerator: enumerator);
-            return routine;
+            return new CryRoutine(behaviour: behaviour, enumerator: enumerator);
         }
 
         public void Stop() { IsComplete = true; }
