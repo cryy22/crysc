@@ -6,6 +6,9 @@ namespace Crysc.Helpers
     public class CryRoutine : IEnumerator
     {
         private readonly IEnumerator _enumerator;
+        private CryRoutine _child;
+
+        public CryRoutine(IEnumerator enumerator) { _enumerator = enumerator; }
 
         public CryRoutine(IEnumerator enumerator, MonoBehaviour behaviour)
         {
@@ -14,13 +17,23 @@ namespace Crysc.Helpers
         }
 
         public bool IsComplete { get; private set; }
-        public object Current => _enumerator.Current;
+        public object Current => _child ?? _enumerator.Current;
 
         public bool MoveNext()
         {
             if (IsComplete) return false;
-            if (Current is IEnumerator subEnumerator && subEnumerator.MoveNext()) return true;
-            if (_enumerator.MoveNext()) return true;
+
+            if (_child != null)
+            {
+                if (_child.MoveNext()) return true;
+                _child = null;
+            }
+
+            if (_enumerator.MoveNext())
+            {
+                if (_enumerator.Current is IEnumerator subEnumerator) _child = new CryRoutine(subEnumerator);
+                return true;
+            }
 
             IsComplete = true;
             return false;
@@ -33,6 +46,10 @@ namespace Crysc.Helpers
             return new CryRoutine(behaviour: behaviour, enumerator: enumerator);
         }
 
-        public void Stop() { IsComplete = true; }
+        public void Stop()
+        {
+            IsComplete = true;
+            _child?.Stop();
+        }
     }
 }
