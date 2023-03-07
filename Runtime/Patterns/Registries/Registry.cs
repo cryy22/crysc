@@ -9,12 +9,12 @@ namespace Crysc.Patterns.Registries
     {
         [NonSerialized] private readonly HashSet<IRegistrar<T>> _registrars = new();
 
+        protected IEnumerable<T> Members => _registrars.Select(r => r.Registrant);
+
         public event EventHandler<RegistryEventArgs<T>> Destroying;
         public event EventHandler<RegistryEventArgs<T>> Hovered;
         public event EventHandler<RegistryEventArgs<T>> Unhovered;
         public event EventHandler<RegistryEventArgs<T>> Clicked;
-
-        protected IEnumerable<T> Members => _registrars.Select(r => r.Registrant);
 
         protected virtual void OnEnable()
         {
@@ -40,7 +40,8 @@ namespace Crysc.Patterns.Registries
 
         protected virtual void SubscribeToEvents(IRegistrar<T> registrar)
         {
-            if (registrar is ILifecycleRegistrar<T> lcRegistrar) lcRegistrar.Destroying += DestroyingEventHandler;
+            if (registrar is ILifecycleRegistrar<T> lcRegistrar)
+                lcRegistrar.Destroying += DestroyingEventHandler;
             if (registrar is IMouseEventRegistrar<T> meRegistrar)
             {
                 meRegistrar.Hovered += HoveredEventHandler;
@@ -51,7 +52,8 @@ namespace Crysc.Patterns.Registries
 
         protected virtual void UnsubscribeFromEvents(IRegistrar<T> registrar)
         {
-            if (registrar is ILifecycleRegistrar<T> lcRegistrar) lcRegistrar.Destroying -= DestroyingEventHandler;
+            if (registrar is ILifecycleRegistrar<T> lcRegistrar)
+                lcRegistrar.Destroying -= DestroyingEventHandler;
             if (registrar is IMouseEventRegistrar<T> meRegistrar)
             {
                 meRegistrar.Hovered -= HoveredEventHandler;
