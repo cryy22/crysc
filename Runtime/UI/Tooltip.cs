@@ -29,9 +29,10 @@ namespace Crysc.UI
         [Range(min: 0, max: 2)]
         private float YFromCenter = 0.5f;
 
+        protected T Target;
+
         private Camera _camera;
         private GenericSizeCalculator _genericSizeCalculator;
-        private T _target;
 
         protected virtual void Awake()
         {
@@ -68,11 +69,11 @@ namespace Crysc.UI
         {
             if (ShouldShowTooltip(target) == false) return;
 
-            UpdateTarget(target: target, previousTarget: _target);
+            UpdateTarget(target: target, previousTarget: Target);
             Container.gameObject.SetActive(true);
         }
 
-        protected virtual void UpdateTarget(T target, T previousTarget) { _target = target; }
+        protected virtual void UpdateTarget(T target, T previousTarget) { Target = target; }
 
         private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, GenericSize tooltipSize)
         {
