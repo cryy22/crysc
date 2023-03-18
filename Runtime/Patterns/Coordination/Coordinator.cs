@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Crysc.Patterns.Coordination
@@ -9,8 +10,6 @@ namespace Crysc.Patterns.Coordination
     {
         [SerializeField] private GameObject Container;
         private bool _isActive;
-
-        public event EventHandler<CoordinationEventArgs> Changed;
 
         public bool IsActive
         {
@@ -25,9 +24,17 @@ namespace Crysc.Patterns.Coordination
         protected TConfig Config { get; private set; }
         protected TState State { get; private set; }
 
+        public event EventHandler<CoordinationEventArgs> Changed;
+
         protected virtual void Awake()
         {
             if (Container != null) Container.SetActive(false);
+        }
+
+        public IEnumerator BeginAndWaitForEnd(TConfig config, TState state)
+        {
+            Begin(config: config, state: state);
+            yield return new WaitUntil(() => !IsActive);
         }
 
         public virtual void Begin(TConfig config, TState state)
