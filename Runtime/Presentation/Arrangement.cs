@@ -83,14 +83,16 @@ namespace Crysc.Presentation
         public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
         public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
 
-        public int GetClosestIndex(Vector2 position)
+        public int GetClosestIndex(Vector2 position, bool isLocal = true)
         {
             var closestIndex = 0;
             var closestDistance = float.MaxValue;
+            Vector2 localPosition = isLocal ? position : transform.InverseTransformPoint(position);
+
             for (var i = 0; i < _elements.Count; i++)
             {
                 if (!_elementsPositions.TryGetValue(key: _elements[i], value: out Vector3 elementPosition)) continue;
-                float distance = Vector2.Distance(a: position, b: elementPosition);
+                float distance = Vector2.Distance(a: localPosition, b: elementPosition);
 
                 if (!(distance < closestDistance)) continue;
 
