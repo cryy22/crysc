@@ -15,7 +15,7 @@ namespace Crysc.Presentation
 
         [SerializeField] private Transform ElementsParent;
         [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
-        [SerializeField] private Vector2 OddElementStagger = Vector2.zero;
+        [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
