@@ -11,7 +11,7 @@ namespace Crysc.Patterns.Registries
         {
             try
             {
-                Registrant = GetComponent<T>();
+                Registrant = GetComponentInParent<T>();
             }
             catch (ArgumentException)
             { }
@@ -20,12 +20,12 @@ namespace Crysc.Patterns.Registries
         protected virtual void Start() { Registry.Register(this); }
         protected virtual void OnDestroy() { Registry.Unregister(this); }
 
+        // IRegistrar
+        public virtual T Registrant { get; private set; }
+
         protected RegistryEventArgs<T> BuildEventArgs()
         {
             return new RegistryEventArgs<T>(registrar: this, registrant: Registrant);
         }
-
-        // IRegistrar
-        public virtual T Registrant { get; private set; }
     }
 }

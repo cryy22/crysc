@@ -11,16 +11,16 @@ namespace Crysc.Controls
         private Vector2 _initialClickOffset;
         private T _target;
 
+        [field: SerializeField] public bool IsActive { get; set; }
+
         public event EventHandler<DraggableEventArgs<T>> Began;
         public event EventHandler<DraggableEventArgs<T>> Moved;
         public event EventHandler<DraggableEventArgs<T>> Ended;
 
-        [field: SerializeField] public bool IsActive { get; set; }
-
         private void Awake()
         {
             _camera = Camera.main;
-            _target = GetComponent<T>();
+            _target = GetComponentInParent<T>();
         }
 
         private void OnMouseDown()
@@ -39,8 +39,8 @@ namespace Crysc.Controls
 
             Vector2 cursor = (Vector2) _camera.ScreenToWorldPoint(Input.mousePosition) + _initialClickOffset;
 
-            Transform draggableTransform = transform;
-            draggableTransform.position = new Vector3(x: cursor.x, y: cursor.y, z: draggableTransform.position.z);
+            Transform targetTransform = _target.transform;
+            targetTransform.position = new Vector3(x: cursor.x, y: cursor.y, z: targetTransform.position.z);
 
             Moved?.Invoke(sender: this, e: new DraggableEventArgs<T>(_target));
         }
