@@ -45,6 +45,7 @@ namespace Crysc.Presentation
             _elements.AddRange(elements);
             List<IElement> existingElements = _elementsPositions.Keys.ToList();
 
+            _excludedFromRearrange.IntersectWith(_elements);
             foreach (IElement element in _elements.Except(existingElements)) AddElement(element);
             foreach (IElement element in existingElements.Except(_elements)) _elementsPositions.Remove(element);
         }
