@@ -21,14 +21,17 @@ namespace Crysc.Presentation
 
         private void Awake()
         {
+            _camera = Camera.main;
+            foreach (ParallaxLayer layer in Layers)
+                _layersInitialPositions.Add(key: layer, value: layer.Transform.position);
+        }
+
+        private void Start()
+        {
             Color initialColor = CurtainPanel.color;
             _curtainClosedColor = new Color(r: initialColor.r, g: initialColor.g, b: initialColor.b, a: 0.5f);
             _curtainOpenColor = new Color(r: initialColor.r, g: initialColor.g, b: initialColor.b, a: 0);
             CurtainPanel.color = _curtainOpenColor;
-
-            _camera = Camera.main;
-            foreach (ParallaxLayer layer in Layers)
-                _layersInitialPositions.Add(key: layer, value: layer.Transform.position);
         }
 
         private void Update()
