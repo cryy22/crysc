@@ -5,13 +5,12 @@ using Crysc.Patterns.Registries;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 namespace Crysc.UI
 {
     public abstract class Tooltip<T> : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler
-        where T : Object
+        where T : class
     {
         private static readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
 

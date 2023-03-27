@@ -1,11 +1,14 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Crysc.Patterns.Registries
 {
     public abstract class Registrar<T> : MonoBehaviour, IRegistrar<T>
     {
-        [SerializeField] protected Registry<T> Registry;
+        [FormerlySerializedAs("Registry")] [SerializeField] protected Registry<T> RegistryInput;
+
+        protected virtual Registry<T> Registry => RegistryInput;
 
         protected virtual void Awake()
         {

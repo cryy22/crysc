@@ -10,12 +10,6 @@ namespace Crysc.Patterns.Registries
     {
         private GenericSizeCalculator _genericSizeCalculator;
 
-        // IMouseEventRegistrar
-        public event EventHandler<RegistryEventArgs<T>> Hovered;
-        public event EventHandler<RegistryEventArgs<T>> Unhovered;
-        public event EventHandler<RegistryEventArgs<T>> Clicked;
-        public Bounds Bounds => _genericSizeCalculator.Calculate().Bounds;
-
         protected override void Awake()
         {
             base.Awake();
@@ -23,6 +17,12 @@ namespace Crysc.Patterns.Registries
         }
 
         private void OnDisable() { Unhovered?.Invoke(sender: Registrant, e: BuildEventArgs()); }
+
+        // IMouseEventRegistrar
+        public event EventHandler<RegistryEventArgs<T>> Hovered;
+        public event EventHandler<RegistryEventArgs<T>> Unhovered;
+        public event EventHandler<RegistryEventArgs<T>> Clicked;
+        public Bounds Bounds => _genericSizeCalculator.Calculate().Bounds;
 
         // IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
         public void OnPointerDown(PointerEventData _) { Clicked?.Invoke(sender: Registrant, e: BuildEventArgs()); }
