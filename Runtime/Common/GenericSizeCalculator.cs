@@ -11,15 +11,6 @@ namespace Crysc.Common
         private readonly Canvas _canvas;
         private Camera _camera;
 
-        private Camera Camera
-        {
-            get
-            {
-                _camera ??= Camera.main;
-                return _camera;
-            }
-        }
-
         public GenericSizeCalculator(Component behaviour)
         {
             _collider = behaviour.GetComponent<Collider>();
@@ -31,6 +22,15 @@ namespace Crysc.Common
 
             if (_collider != null || _collider2D != null) return;
             _canvas = behaviour.GetComponentInParent<Canvas>();
+        }
+
+        private Camera Camera
+        {
+            get
+            {
+                _camera ??= Camera.main;
+                return _camera;
+            }
         }
 
         public GenericSize Calculate()
@@ -54,9 +54,9 @@ namespace Crysc.Common
 
             foreach (Vector3 corner in rectCorners)
             {
-                Vector3 worldPoint = _canvas.renderMode == RenderMode.WorldSpace
-                    ? corner
-                    : Camera.ScreenToWorldPoint(corner);
+                Vector3 worldPoint = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
+                    ? Camera.ScreenToWorldPoint(corner)
+                    : corner;
                 min = Vector3.Min(lhs: min, rhs: worldPoint);
                 max = Vector3.Max(lhs: max, rhs: worldPoint);
             }

@@ -118,6 +118,7 @@ namespace Crysc.UI
         {
             Bounds registrarBounds = registrar.Bounds;
             GenericSize tooltipSize = _genericSizeCalculator.Calculate();
+
             float xInset = registrarBounds.extents.x * (1 - XFromCenter);
             float yInset = registrarBounds.extents.y * (1 - YFromCenter);
 
