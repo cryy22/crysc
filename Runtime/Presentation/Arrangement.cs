@@ -16,6 +16,7 @@ namespace Crysc.Presentation
         [SerializeField] private Transform ElementsParent;
         [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
         [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
+        [SerializeField] private bool UpdateZInstantly = true;
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
@@ -131,6 +132,13 @@ namespace Crysc.Presentation
 
         private IEnumerator MoveElementPosition(IElement e, float duration)
         {
+            if (UpdateZInstantly)
+                e.Transform.localPosition = new Vector3(
+                    x: e.Transform.localPosition.x,
+                    y: e.Transform.localPosition.y,
+                    z: _elementsPositions[e].z
+                );
+
             yield return Mover.MoveToSmoothly(transform: e.Transform, end: _elementsPositions[e], duration: duration);
         }
 
