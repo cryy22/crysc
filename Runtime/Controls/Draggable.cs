@@ -17,7 +17,7 @@ namespace Crysc.Controls
         public event EventHandler<DraggableEventArgs<T>> Moved;
         public event EventHandler<DraggableEventArgs<T>> Ended;
 
-        private void Awake()
+        protected virtual void Awake()
         {
             _camera = Camera.main;
             _target = GetComponentInParent<T>();
