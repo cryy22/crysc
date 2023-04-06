@@ -5,7 +5,13 @@ namespace Crysc.Controls
 {
     public class DraggableEventArgs<T> : EventArgs where T : Component
     {
-        public DraggableEventArgs(T target) { Target = target; }
+        public DraggableEventArgs(T target, Vector2 screenPosition)
+        {
+            Target = target;
+            ScreenPosition = screenPosition;
+        }
+
         public T Target { get; }
+        public Vector2 ScreenPosition { get; }
     }
 }

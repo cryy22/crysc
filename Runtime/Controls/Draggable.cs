@@ -30,7 +30,14 @@ namespace Crysc.Controls
             Vector2 cursor = _camera.ScreenToWorldPoint(Input.mousePosition);
             _initialClickOffset = (Vector2) transform.position - cursor;
 
-            Began?.Invoke(sender: this, e: new DraggableEventArgs<T>(_target));
+
+            Began?.Invoke(
+                sender: this,
+                e: new DraggableEventArgs<T>(
+                    target: _target,
+                    screenPosition: _camera.WorldToScreenPoint(cursor + _initialClickOffset)
+                )
+            );
         }
 
         private void OnMouseDrag()
@@ -42,14 +49,26 @@ namespace Crysc.Controls
             Transform targetTransform = _target.transform;
             targetTransform.position = new Vector3(x: cursor.x, y: cursor.y, z: targetTransform.position.z);
 
-            Moved?.Invoke(sender: this, e: new DraggableEventArgs<T>(_target));
+            Moved?.Invoke(
+                sender: this,
+                e: new DraggableEventArgs<T>(
+                    target: _target,
+                    screenPosition: _camera.WorldToScreenPoint(cursor)
+                )
+            );
         }
 
         private void OnMouseUp()
         {
             if (!IsActive) return;
 
-            Ended?.Invoke(sender: this, e: new DraggableEventArgs<T>(_target));
+            Ended?.Invoke(
+                sender: this,
+                e: new DraggableEventArgs<T>(
+                    target: _target,
+                    screenPosition: Input.mousePosition + _camera.WorldToScreenPoint(_initialClickOffset)
+                )
+            );
         }
     }
 
