@@ -12,8 +12,6 @@ namespace Crysc.UI
         IPointerEnterHandler, IPointerExitHandler
         where T : class
     {
-        private static readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
-
         [SerializeField] private Registry<T> Registry;
         [SerializeField] protected RectTransform Container;
 
@@ -29,6 +27,7 @@ namespace Crysc.UI
         private float YFromCenter = 0.5f;
 
         protected T Target;
+        private readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
 
         private Camera _camera;
         private GenericSizeCalculator _genericSizeCalculator;
@@ -90,15 +89,11 @@ namespace Crysc.UI
         {
             ShowTooltip(sender as T);
 
-            Vector2 destination = MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar
-                ? GetTooltipScreenPoint(meRegistrar)
-                : transform.position;
-
             // if (MoveToTargetPosition && e.Registrar is IMouseEventRegistrar<T> meRegistrar)
-            StartCoroutine(RunMoveTooltip(destination));
+            StartCoroutine(RunMoveTooltip(e.Registrar));
         }
 
-        private IEnumerator RunMoveTooltip(Vector2 destination)
+        private IEnumerator RunMoveTooltip(IRegistrar<T> registrar)
         {
             transform.position = _offScreen;
             Canvas.ForceUpdateCanvases();
@@ -106,6 +101,10 @@ namespace Crysc.UI
 
             // required to ensure layout of variably-sized tooltips is complete.
             for (var i = 0; i < 3; i++) yield return null;
+
+            Vector2 destination = MoveToTargetPosition && registrar is IMouseEventRegistrar<T> meRegistrar
+                ? GetTooltipScreenPoint(meRegistrar)
+                : transform.position;
 
             transform.position = new Vector3(
                 x: destination.x,
