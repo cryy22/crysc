@@ -18,13 +18,8 @@ namespace Crysc.UI
         [SerializeField] private bool PersistsOnTooltipHover;
         [SerializeField] private bool MoveToTargetPosition;
 
-        [SerializeField]
-        [Range(min: 0, max: 2)]
-        private float XFromCenter = 0.5f;
-
-        [SerializeField]
-        [Range(min: 0, max: 2)]
-        private float YFromCenter = 0.5f;
+        [SerializeField] [Range(min: 0, max: 2)] private float XFromCenter = 0.5f;
+        [SerializeField] [Range(min: 0, max: 2)] private float YFromCenter = 0.5f;
 
         protected T Target;
         private readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
