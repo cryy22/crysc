@@ -17,7 +17,7 @@ namespace Crysc.Patterns.Coordination
             if (InitializeImmediately) Initialize();
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
             if (Coordinator.IsActive)
             {
