@@ -7,8 +7,8 @@ namespace Crysc.Patterns.Coordination
         where TState : CoordinationState
     {
         [SerializeField] private Coordinator<TConfig, TState> Coordinator;
-        [SerializeField] private TConfig Config;
-        [SerializeField] private TState State;
+        [SerializeField] protected TConfig Config;
+        [SerializeField] protected TState State;
 
         [SerializeField] private bool InitializeImmediately = true;
 
