@@ -6,12 +6,14 @@ namespace Crysc.Controls
     [RequireComponent(typeof(Collider2D))]
     public class Draggable<T> : MonoBehaviour where T : Component
     {
+        private const float _zAxis = -5f;
+
+        [field: SerializeField] public bool IsActive { get; set; }
+
         private Collider2D _collider;
         private Camera _camera;
         private Vector2 _initialClickOffset;
         private T _target;
-
-        [field: SerializeField] public bool IsActive { get; set; }
 
         public event EventHandler<DraggableEventArgs<T>> Began;
         public event EventHandler<DraggableEventArgs<T>> Moved;
@@ -30,7 +32,6 @@ namespace Crysc.Controls
             Vector2 cursor = _camera.ScreenToWorldPoint(Input.mousePosition);
             _initialClickOffset = (Vector2) transform.position - cursor;
 
-
             Began?.Invoke(
                 sender: this,
                 e: new DraggableEventArgs<T>(
@@ -47,7 +48,7 @@ namespace Crysc.Controls
             Vector2 cursor = (Vector2) _camera.ScreenToWorldPoint(Input.mousePosition) + _initialClickOffset;
 
             Transform targetTransform = _target.transform;
-            targetTransform.position = new Vector3(x: cursor.x, y: cursor.y, z: targetTransform.position.z);
+            targetTransform.position = new Vector3(x: cursor.x, y: cursor.y, z: _zAxis);
 
             Moved?.Invoke(
                 sender: this,
