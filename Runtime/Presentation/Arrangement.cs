@@ -105,6 +105,19 @@ namespace Crysc.Presentation
             return closestIndex;
         }
 
+        public int GetInsertionIndex(Vector2 position, bool isLocal = true, bool useXAxis = true)
+        {
+            Vector2 localPosition = isLocal ? position : transform.InverseTransformPoint(position);
+            int closestIndex = GetClosestIndex(position: localPosition);
+            if (!_elementsPositions.TryGetValue(key: _elements[closestIndex], value: out Vector3 closestPosition))
+                return closestIndex;
+
+            float closestAxialPosition = (useXAxis ? closestPosition.x : closestPosition.y) * (IsInverted ? -1 : 1);
+            float axialPosition = (useXAxis ? localPosition.x : localPosition.y) * (IsInverted ? -1 : 1);
+
+            return axialPosition < closestAxialPosition ? closestIndex : closestIndex + 1;
+        }
+
         public void UpdateProperties()
         {
             Vector2 totalSize = _elements.Aggregate(
