@@ -108,8 +108,12 @@ namespace Crysc.Presentation
         public int GetInsertionIndex(Vector2 position, bool isLocal = true, bool useXAxis = true)
         {
             Vector2 localPosition = isLocal ? position : transform.InverseTransformPoint(position);
+
             int closestIndex = GetClosestIndex(position: localPosition);
-            if (!_elementsPositions.TryGetValue(key: _elements[closestIndex], value: out Vector3 closestPosition))
+            IElement closestElement = _elements.ElementAtOrDefault(closestIndex);
+
+            if (closestElement == null) return closestIndex;
+            if (!_elementsPositions.TryGetValue(key: closestElement, value: out Vector3 closestPosition))
                 return closestIndex;
 
             float closestAxialPosition = (useXAxis ? closestPosition.x : closestPosition.y) * (IsInverted ? -1 : 1);
