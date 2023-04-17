@@ -45,8 +45,9 @@ namespace Crysc.Persistence
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             return true;
-#endif
+#else
             return false;
+#endif
         }
     }
 }
