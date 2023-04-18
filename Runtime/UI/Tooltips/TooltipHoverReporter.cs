@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace Crysc.UI.Tooltips
 {
-    public class TooltipTargetHoverReporter : MonoBehaviour,
+    public class TooltipHoverReporter : MonoBehaviour,
         ITooltipTargetProvider,
         IPointerEnterHandler, IPointerExitHandler
     {
@@ -16,7 +16,7 @@ namespace Crysc.UI.Tooltips
         private readonly List<ITooltipContentProvider> _contentProviders = new();
         private GenericSizeCalculator _sizeCalculator;
 
-        private TooltipHoverPublisher Publisher => PublisherInput;
+        protected virtual TooltipHoverPublisher Publisher => PublisherInput;
 
         private void Start()
         {

@@ -45,13 +45,15 @@ namespace Crysc.UI.Tooltips
             Container.gameObject.SetActive(true);
         }
 
-        protected virtual bool ShouldPresentTooltip(T content) { return true; }
+        protected virtual bool ShouldPresentTooltip(T content) { return content != null; }
 
         protected virtual void DismissTooltip()
         {
             _updatePositionRoutine?.Stop();
 
             Container.gameObject.SetActive(false);
+
+            if (_currentTarget == null) return;
             _currentTarget.Unhovered -= UnhoveredEventHandler;
             _currentTarget = null;
         }
