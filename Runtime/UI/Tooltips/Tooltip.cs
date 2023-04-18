@@ -39,14 +39,9 @@ namespace Crysc.UI.Tooltips
         private void OnEnable() { Publisher.Hovered += HoveredEventHandler; }
         private void OnDisable() { Publisher.Hovered -= HoveredEventHandler; }
 
-        protected virtual void PresentTooltip(T content)
-        {
-            if (ShouldPresentTooltip(content) == false) return;
+        protected virtual void PresentTooltip(T[] contents) { Container.gameObject.SetActive(true); }
 
-            Container.gameObject.SetActive(true);
-        }
-
-        protected virtual bool ShouldPresentTooltip(T content) { return content != null; }
+        protected virtual bool ShouldPresentTooltip(T[] contents) { return true; }
 
         protected virtual void DismissTooltip()
         {
@@ -59,13 +54,13 @@ namespace Crysc.UI.Tooltips
             _currentTarget = null;
         }
 
-        private static bool CanPresentContent(object content) { return content is T; }
-
         private void HoveredEventHandler(object sender, TooltipHoverEventArgs e)
         {
-            if (e.TooltipContent.FirstOrDefault(CanPresentContent) is not T content) return;
+            T[] contents = e.TooltipContent.Where(c => c is T).Cast<T>().ToArray();
+            if (contents.Length == 0) return;
+            if (ShouldPresentTooltip(contents) == false) return;
 
-            PresentTooltip(content);
+            PresentTooltip(contents);
             UpdateCurrentTarget(e.TargetProvider);
 
             _updatePositionRoutine?.Stop();
