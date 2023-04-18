@@ -2,7 +2,7 @@ using System.Collections;
 using Crysc.Helpers;
 using UnityEngine;
 
-namespace GulchGuardians.UI
+namespace Crysc.UI
 {
     public class OffscreenPresenter : MonoBehaviour
     {

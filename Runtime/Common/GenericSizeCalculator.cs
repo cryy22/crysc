@@ -24,14 +24,7 @@ namespace Crysc.Common
             _canvas = behaviour.GetComponentInParent<Canvas>();
         }
 
-        private Camera Camera
-        {
-            get
-            {
-                _camera ??= Camera.main;
-                return _camera;
-            }
-        }
+        private Camera Camera => _camera ? _camera : _camera = Camera.main;
 
         public GenericSize Calculate()
         {
