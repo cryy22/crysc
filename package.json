@@ -6,5 +6,8 @@
   "unity": "2021.3",
   "author": {
     "name": "cryy22"
+  },
+  "dependencies": {
+    "com.unity.textmeshpro": "3.0.6"
   }
 }
