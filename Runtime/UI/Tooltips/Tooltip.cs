@@ -13,6 +13,7 @@ namespace Crysc.UI.Tooltips
         [SerializeField] private TooltipHoverPublisher PublisherInput;
         [SerializeField] protected RectTransform Container;
         [SerializeField] private bool MoveToTargetPosition;
+        [SerializeField] private bool SetInactiveWhenDismissed = true;
 
         [SerializeField] [Range(min: 0, max: 2)] private float XFromCenter = 0.5f;
         [SerializeField] [Range(min: 0, max: 2)] private float YFromCenter = 0.5f;
@@ -51,7 +52,7 @@ namespace Crysc.UI.Tooltips
         {
             _updatePositionRoutine?.Stop();
 
-            Container.gameObject.SetActive(false);
+            if (SetInactiveWhenDismissed) Container.gameObject.SetActive(false);
 
             if (_currentTarget == null) return;
             _currentTarget.Unhovered -= UnhoveredEventHandler;
