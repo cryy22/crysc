@@ -2,30 +2,32 @@ using System;
 using System.Collections;
 using System.Linq;
 using Crysc.Common;
+using Crysc.Helpers;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Crysc.UI.Tooltips
 {
-    public abstract class Tooltip<T> : MonoBehaviour where T : TooltipContent
+    public abstract class Tooltip<T> : MonoBehaviour
     {
-        [SerializeField] private TooltipHoverPublisher Publisher;
-
+        [SerializeField] private TooltipHoverPublisher PublisherInput;
         [SerializeField] protected RectTransform Container;
         [SerializeField] private bool MoveToTargetPosition;
 
         [SerializeField] [Range(min: 0, max: 2)] private float XFromCenter = 0.5f;
         [SerializeField] [Range(min: 0, max: 2)] private float YFromCenter = 0.5f;
 
-        protected ITooltipTargetProvider Target;
-        protected T Content;
-
         private readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
+
+        private ITooltipTargetProvider _currentTarget;
 
         private Camera _camera;
         private GenericSizeCalculator _genericSizeCalculator;
+        private CryRoutine _updatePositionRoutine;
 
-        protected virtual void Awake()
+        private TooltipHoverPublisher Publisher => PublisherInput;
+
+        private void Awake()
         {
             _camera = Camera.main;
             _genericSizeCalculator = new GenericSizeCalculator(Container);
@@ -33,47 +35,53 @@ namespace Crysc.UI.Tooltips
             DismissTooltip();
         }
 
-        protected virtual void OnEnable() { Publisher.Hovered += HoveredEventHandler; }
-        protected virtual void OnDisable() { Publisher.Hovered -= HoveredEventHandler; }
+        private void OnEnable() { Publisher.Hovered += HoveredEventHandler; }
+        private void OnDisable() { Publisher.Hovered -= HoveredEventHandler; }
+
+        protected virtual void PresentTooltip(T content)
+        {
+            if (ShouldPresentTooltip(content) == false) return;
+
+            Container.gameObject.SetActive(true);
+        }
+
+        protected virtual bool ShouldPresentTooltip(T content) { return true; }
 
         protected virtual void DismissTooltip()
         {
+            _updatePositionRoutine?.Stop();
+
             Container.gameObject.SetActive(false);
-            Target.Unhovered -= UnhoveredEventHandler;
+            _currentTarget.Unhovered -= UnhoveredEventHandler;
+            _currentTarget = null;
         }
 
-        protected virtual void PresentTooltip(ITooltipTargetProvider target, T content)
-        {
-            Target = target;
-            Content = content;
-
-            Container.gameObject.SetActive(true);
-            Target.Unhovered += UnhoveredEventHandler;
-        }
-
-        private static bool CanPresentData(TooltipContent content) { return content is T; }
-
-        private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, GenericSize tooltipSize)
-        {
-            const float padding = 10;
-            float xMax = Screen.width - tooltipSize.ScreenDimensions.x - padding;
-            float yMax = Screen.height - tooltipSize.ScreenDimensions.y - padding;
-
-            return new Vector2(
-                x: xMax > padding ? Mathf.Clamp(value: screenPoint.x, min: padding, max: xMax) : padding,
-                y: yMax > padding ? Mathf.Clamp(value: screenPoint.y, min: padding, max: yMax) : padding
-            );
-        }
+        private static bool CanPresentContent(object content) { return content is T; }
 
         private void HoveredEventHandler(object sender, TooltipHoverEventArgs e)
         {
-            if (e.TooltipContent.FirstOrDefault(CanPresentData) is not T content) return;
+            if (e.TooltipContent.FirstOrDefault(CanPresentContent) is not T content) return;
 
-            PresentTooltip(target: e.TargetProvider, content: content);
-            StartCoroutine(RunMoveTooltip(targetProvider: e.TargetProvider, targetBounds: e.Bounds));
+            PresentTooltip(content);
+            UpdateCurrentTarget(e.TargetProvider);
+
+            _updatePositionRoutine?.Stop();
+            _updatePositionRoutine = new CryRoutine(
+                enumerator: RunUpdateTooltipPosition(targetBounds: e.Bounds),
+                behaviour: this
+            );
         }
 
-        private IEnumerator RunMoveTooltip(ITooltipTargetProvider targetProvider, Bounds targetBounds)
+        private void UpdateCurrentTarget(ITooltipTargetProvider target)
+        {
+            if (_currentTarget != null) _currentTarget.Unhovered -= UnhoveredEventHandler;
+            _currentTarget = target;
+            _currentTarget.Unhovered += UnhoveredEventHandler;
+        }
+
+        private void UnhoveredEventHandler(object sender, EventArgs _) { DismissTooltip(); }
+
+        private IEnumerator RunUpdateTooltipPosition(Bounds targetBounds)
         {
             transform.position = _offScreen;
             Canvas.ForceUpdateCanvases();
@@ -83,7 +91,7 @@ namespace Crysc.UI.Tooltips
             for (var i = 0; i < 3; i++) yield return null;
 
             Vector2 destination = MoveToTargetPosition
-                ? GetTooltipScreenPoint(targetProvider: targetProvider, targetBounds: targetBounds)
+                ? GetTooltipScreenPoint(targetBounds: targetBounds)
                 : transform.position;
 
             transform.position = new Vector3(
@@ -93,7 +101,7 @@ namespace Crysc.UI.Tooltips
             );
         }
 
-        private Vector2 GetTooltipScreenPoint(ITooltipTargetProvider targetProvider, Bounds targetBounds)
+        private Vector2 GetTooltipScreenPoint(Bounds targetBounds)
         {
             GenericSize tooltipSize = _genericSizeCalculator.Calculate();
 
@@ -131,6 +139,16 @@ namespace Crysc.UI.Tooltips
             return screenPoint.y <= (Screen.height / 3f) * 2;
         }
 
-        private void UnhoveredEventHandler(object sender, EventArgs _) { DismissTooltip(); }
+        private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, GenericSize tooltipSize)
+        {
+            const float padding = 10;
+            float xMax = Screen.width - tooltipSize.ScreenDimensions.x - padding;
+            float yMax = Screen.height - tooltipSize.ScreenDimensions.y - padding;
+
+            return new Vector2(
+                x: xMax > padding ? Mathf.Clamp(value: screenPoint.x, min: padding, max: xMax) : padding,
+                y: yMax > padding ? Mathf.Clamp(value: screenPoint.y, min: padding, max: yMax) : padding
+            );
+        }
     }
 }

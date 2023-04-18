@@ -10,7 +10,7 @@ namespace Crysc.UI.Tooltips
         public event EventHandler Hovered;
         public event EventHandler Unhovered;
 
-        public TooltipContent[] GetTooltipContent();
+        public object[] GetTooltipContent();
         public Bounds GetBounds();
     }
 }

@@ -7,19 +7,20 @@ using UnityEngine.EventSystems;
 
 namespace Crysc.UI.Tooltips
 {
-    public class TooltipTargetHoverReporter : MonoBehaviour, ITooltipTargetProvider, IPointerEnterHandler,
-        IPointerExitHandler
+    public class TooltipTargetHoverReporter : MonoBehaviour,
+        ITooltipTargetProvider,
+        IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private TooltipHoverPublisher PublisherInput;
 
-        private readonly List<ITooltipContentProvider> _datasources = new();
+        private readonly List<ITooltipContentProvider> _contentProviders = new();
         private GenericSizeCalculator _sizeCalculator;
 
         private TooltipHoverPublisher Publisher => PublisherInput;
 
         private void Start()
         {
-            _datasources.AddRange(GetComponents<ITooltipContentProvider>());
+            _contentProviders.AddRange(GetComponents<ITooltipContentProvider>());
             _sizeCalculator = new GenericSizeCalculator(this);
 
             Hovered += OnHovered;
@@ -42,10 +43,7 @@ namespace Crysc.UI.Tooltips
         public event EventHandler Hovered;
         public event EventHandler Unhovered;
 
-        public TooltipContent[] GetTooltipContent()
-        {
-            return _datasources.SelectMany(datasource => datasource.GetTooltipContent()).ToArray();
-        }
+        public object[] GetTooltipContent() { return _contentProviders.SelectMany(p => p.GetContent()).ToArray(); }
 
         public Bounds GetBounds() { return _sizeCalculator.Calculate().Bounds; }
 

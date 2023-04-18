@@ -7,7 +7,7 @@ namespace Crysc.UI.Tooltips
     {
         public TooltipHoverEventArgs(
             ITooltipTargetProvider targetProvider,
-            TooltipContent[] tooltipContent,
+            object[] tooltipContent,
             Bounds bounds
         )
         {
@@ -17,7 +17,7 @@ namespace Crysc.UI.Tooltips
         }
 
         public ITooltipTargetProvider TargetProvider { get; }
-        public TooltipContent[] TooltipContent { get; }
+        public object[] TooltipContent { get; }
         public Bounds Bounds { get; }
     }
 }
