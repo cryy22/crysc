@@ -18,7 +18,7 @@ namespace Crysc.UI.Tooltips
         [SerializeField] [Range(min: 0, max: 2)] private float XFromCenter = 0.5f;
         [SerializeField] [Range(min: 0, max: 2)] private float YFromCenter = 0.5f;
 
-        private readonly Vector3 _offScreen = new(x: -1000, y: -1000, z: 0);
+        private readonly Vector3 _offScreen = new(x: -10000, y: -10000, z: 0);
 
         private ITooltipTargetProvider _currentTarget;
 
