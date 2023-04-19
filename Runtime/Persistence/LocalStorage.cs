@@ -11,9 +11,23 @@ namespace Crysc.Persistence
 
         public static string Read(string path)
         {
-            return File.ReadAllText(
-                Path.Combine(path1: DataPath(), path2: path)
-            );
+            try
+            {
+                return File.ReadAllText(
+                    Path.Combine(path1: DataPath(), path2: path)
+                );
+            }
+            catch (IOException ex)
+            {
+                switch (ex)
+                {
+                    case FileNotFoundException:
+                    case DirectoryNotFoundException:
+                        return null;
+                    default:
+                        throw;
+                }
+            }
         }
 
         public static void Write(string path, string contents)

@@ -19,12 +19,14 @@ namespace Crysc.Persistence
             );
         }
 
-        public static void LoadInto(string path, object data)
+        public static T LoadInto<T>(string path, T data) where T : class
         {
             JsonUtility.FromJsonOverwrite(
                 json: LocalStorage.Read($"{path}.json"),
                 objectToOverwrite: data
             );
+
+            return data;
         }
     }
 }
