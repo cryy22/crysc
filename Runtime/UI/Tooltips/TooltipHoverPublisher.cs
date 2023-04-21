@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Crysc.UI.Tooltips
 {
-    [CreateAssetMenu(fileName = "TooltipHoverPublisher", menuName = "Publishers/Tooltip Hover")]
+    [CreateAssetMenu(fileName = "TooltipHoverPublisher", menuName = "crysc/Publishers/Tooltip Hover")]
     public class TooltipHoverPublisher : ScriptableObject
     {
         public event EventHandler<TooltipHoverEventArgs> Hovered;
