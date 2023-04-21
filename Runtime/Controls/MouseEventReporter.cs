@@ -7,7 +7,10 @@ namespace Crysc.Controls
     public class MouseEventReporter : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
     {
+        [SerializeField] private Component SenderOverrideInput;
+
         public bool IsHovered { get; private set; }
+        private object Sender => SenderOverrideInput ? SenderOverrideInput : this;
 
         public event EventHandler Hovered;
         public event EventHandler Unhovered;
@@ -18,21 +21,21 @@ namespace Crysc.Controls
             if (IsHovered == false) return;
 
             IsHovered = false;
-            Unhovered?.Invoke(sender: this, e: EventArgs.Empty);
+            Unhovered?.Invoke(sender: Sender, e: EventArgs.Empty);
         }
 
-        public void OnPointerDown(PointerEventData _) { Clicked?.Invoke(sender: this, e: EventArgs.Empty); }
+        public void OnPointerDown(PointerEventData _) { Clicked?.Invoke(sender: Sender, e: EventArgs.Empty); }
 
         public void OnPointerEnter(PointerEventData _)
         {
             IsHovered = true;
-            Hovered?.Invoke(sender: this, e: EventArgs.Empty);
+            Hovered?.Invoke(sender: Sender, e: EventArgs.Empty);
         }
 
         public void OnPointerExit(PointerEventData _)
         {
             IsHovered = false;
-            Unhovered?.Invoke(sender: this, e: EventArgs.Empty);
+            Unhovered?.Invoke(sender: Sender, e: EventArgs.Empty);
         }
     }
 }
