@@ -5,7 +5,6 @@ using UnityEngine;
 namespace Crysc.Presentation
 {
     public abstract class CustomElementListPresenter<T, TPresenter> : MonoBehaviour
-        where T : class
         where TPresenter : MonoBehaviour
     {
         [SerializeField] private TPresenter PresenterPrefab;
