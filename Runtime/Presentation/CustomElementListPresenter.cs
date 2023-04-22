@@ -26,20 +26,16 @@ namespace Crysc.Presentation
 
             for (var i = 0; i < iterations; i++)
             {
-                if (i >= _items.Count)
+                TPresenter presenter = _items.ElementAtOrDefault(i);
+                if (presenter == null)
                 {
-                    TPresenter item = Instantiate(original: PresenterPrefab, parent: PresentersParent);
-                    _items.Add(item);
+                    presenter = Instantiate(original: PresenterPrefab, parent: PresentersParent);
+                    _items.Add(presenter);
                 }
 
-                if (i >= elementsAry.Length)
-                {
-                    _items[i].gameObject.SetActive(false);
-                    continue;
-                }
-
-                _items[i].gameObject.SetActive(true);
-                SetElement(presenter: _items[i], element: elementsAry[i], index: i);
+                T element = elementsAry.ElementAtOrDefault(i);
+                presenter.gameObject.SetActive(element != null);
+                if (element != null) SetElement(presenter: presenter, element: element, index: i);
             }
         }
 
