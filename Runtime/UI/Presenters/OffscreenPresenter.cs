@@ -16,8 +16,8 @@ namespace Crysc.UI
         private CryRoutine _moveRoutine;
 
         public PresentationState PresentationState { get; set; }
-        private Vector3 OffscreenPosition => OffscreenPoint.localPosition;
-        private Vector3 OnscreenPosition => OnscreenPoint.localPosition;
+        private Vector3 OffscreenPosition => OffscreenPoint ? OffscreenPoint.localPosition : transform.localPosition;
+        private Vector3 OnscreenPosition => OnscreenPoint ? OnscreenPoint.localPosition : transform.localPosition;
 
         private void Awake()
         {
