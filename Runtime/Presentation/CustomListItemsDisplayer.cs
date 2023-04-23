@@ -1,22 +1,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Crysc.Presentation
 {
-    public abstract class CustomListItemsDisplayer<T, TPresenter> : MonoBehaviour
-        where TPresenter : MonoBehaviour
+    public abstract class CustomListItemsDisplayer<T, TItem> : MonoBehaviour
+        where TItem : MonoBehaviour
     {
-        [SerializeField] private TPresenter PresenterPrefab;
-        [SerializeField] private Transform PresentersParent;
+        [FormerlySerializedAs("PresenterPrefab")] [SerializeField] private TItem ItemPrefab;
+        [FormerlySerializedAs("PresentersParent")] [SerializeField] private Transform ItemsParent;
         [SerializeField] private Transform NoElementsIndicator;
 
-        private readonly List<TPresenter> _items = new();
+        private readonly List<TItem> _items = new();
 
         public void SetElements(IEnumerable<T> elements)
         {
             bool hasElements = elements.Any();
-            PresentersParent.gameObject.SetActive(hasElements);
+            ItemsParent.gameObject.SetActive(hasElements);
             if (NoElementsIndicator) NoElementsIndicator.gameObject.SetActive(hasElements == false);
             if (hasElements == false) return;
 
@@ -25,10 +26,10 @@ namespace Crysc.Presentation
 
             for (var i = 0; i < iterations; i++)
             {
-                TPresenter presenter = _items.ElementAtOrDefault(i);
+                TItem presenter = _items.ElementAtOrDefault(i);
                 if (presenter == null)
                 {
-                    presenter = Instantiate(original: PresenterPrefab, parent: PresentersParent);
+                    presenter = Instantiate(original: ItemPrefab, parent: ItemsParent);
                     _items.Add(presenter);
                 }
 
@@ -38,6 +39,6 @@ namespace Crysc.Presentation
             }
         }
 
-        protected abstract void SetElement(TPresenter presenter, T element, int index);
+        protected abstract void SetElement(TItem presenter, T element, int index);
     }
 }
