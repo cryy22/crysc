@@ -1,19 +1,12 @@
 using System.Collections;
 using Crysc.Helpers;
+using Crysc.UI.Presenters;
 using UnityEngine;
 
 namespace Crysc.UI
 {
-    public class OffscreenPresenter : MonoBehaviour
+    public class OffscreenPresenter : MonoBehaviour, IPresenter
     {
-        public enum PresentationState
-        {
-            Presenting,
-            Presented,
-            Dismissing,
-            Dismissed,
-        }
-
         [SerializeField] private Transform OffscreenPoint;
         [SerializeField] private Transform OnscreenPoint;
         [SerializeField] private Transform Container;
@@ -22,17 +15,18 @@ namespace Crysc.UI
 
         private CryRoutine _moveRoutine;
 
-        private PresentationState State { get; set; } = PresentationState.Dismissed;
+        public PresentationState PresentationState { get; set; }
         private Vector3 OffscreenPosition => OffscreenPoint.localPosition;
         private Vector3 OnscreenPosition => OnscreenPoint.localPosition;
 
-        private void Awake() { Container.localPosition = OffscreenPosition; }
+        private void Awake()
+        {
+            Container.localPosition = OffscreenPosition;
+            PresentationState = PresentationState.Dismissed;
+        }
 
         public void Present()
         {
-            if (State == PresentationState.Presented) return;
-            if (State == PresentationState.Presenting) return;
-
             _moveRoutine?.Stop();
             _moveRoutine = new CryRoutine(enumerator: RunPresent(), behaviour: this);
         }
@@ -45,9 +39,6 @@ namespace Crysc.UI
 
         public void Dismiss()
         {
-            if (State == PresentationState.Dismissed) return;
-            if (State == PresentationState.Dismissing) return;
-
             _moveRoutine?.Stop();
             _moveRoutine = new CryRoutine(enumerator: RunDismiss(), behaviour: this);
         }
@@ -60,16 +51,22 @@ namespace Crysc.UI
 
         private IEnumerator RunPresent()
         {
-            State = PresentationState.Presenting;
+            if (PresentationState == PresentationState.Presented) yield break;
+            if (PresentationState == PresentationState.Presenting) yield break;
+
+            PresentationState = PresentationState.Presenting;
             yield return Mover.MoveToSmoothly(transform: Container, end: OnscreenPosition, duration: MoveTime);
-            State = PresentationState.Presented;
+            PresentationState = PresentationState.Presented;
         }
 
         private IEnumerator RunDismiss()
         {
-            State = PresentationState.Dismissing;
+            if (PresentationState == PresentationState.Dismissed) yield break;
+            if (PresentationState == PresentationState.Dismissing) yield break;
+
+            PresentationState = PresentationState.Dismissing;
             yield return Mover.MoveToSmoothly(transform: Container, end: OffscreenPosition, duration: MoveTime);
-            State = PresentationState.Dismissed;
+            PresentationState = PresentationState.Dismissed;
         }
     }
 }
