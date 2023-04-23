@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Crysc.Presentation
 {
-    public abstract class CustomElementListPresenter<T, TPresenter> : MonoBehaviour
+    public abstract class CustomListItemsDisplayer<T, TPresenter> : MonoBehaviour
         where TPresenter : MonoBehaviour
     {
         [SerializeField] private TPresenter PresenterPrefab;
