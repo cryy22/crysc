@@ -8,6 +8,8 @@ namespace Crysc.Patterns.Registries
     {
         [FormerlySerializedAs("Registry")] [SerializeField] protected Registry<T> RegistryInput;
 
+        public virtual T Registrant { get; private set; }
+
         protected virtual Registry<T> Registry => RegistryInput;
 
         protected virtual void Awake()
@@ -22,9 +24,6 @@ namespace Crysc.Patterns.Registries
 
         protected virtual void Start() { Registry.Register(this); }
         protected virtual void OnDestroy() { Registry.Unregister(this); }
-
-        // IRegistrar
-        public virtual T Registrant { get; private set; }
 
         protected RegistryEventArgs<T> BuildEventArgs()
         {
