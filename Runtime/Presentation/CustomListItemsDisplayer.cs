@@ -14,6 +14,8 @@ namespace Crysc.Presentation
 
         private readonly List<TItem> _items = new();
 
+        public IEnumerable<TItem> Items => _items;
+
         public void SetElements(IEnumerable<T> elements)
         {
             bool hasElements = elements.Any();
