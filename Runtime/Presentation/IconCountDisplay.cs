@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Crysc.Presentation
 {
-    public class IconCountPresenter<T> : MonoBehaviour where T : MonoBehaviour
+    public class IconCountDisplay<T> : MonoBehaviour where T : MonoBehaviour
     {
         [SerializeField] private T IconPrefab;
         [SerializeField] private Transform Container;
@@ -17,7 +17,7 @@ namespace Crysc.Presentation
 
         public void Set(int count)
         {
-            if (count >= NumeralCounterThreshold)
+            if (count >= NumeralCounterThreshold && NumeralCounter)
             {
                 DisplayIconCount(1);
                 NumeralCounter.text = $"x {count.ToString()}";
@@ -26,7 +26,7 @@ namespace Crysc.Presentation
             }
 
             DisplayIconCount(count);
-            NumeralCounter.gameObject.SetActive(false);
+            if (NumeralCounter) NumeralCounter.gameObject.SetActive(false);
         }
 
         private void DisplayIconCount(int count)
@@ -46,6 +46,6 @@ namespace Crysc.Presentation
         }
     }
 
-    public class IconCountPresenter : IconCountPresenter<MonoBehaviour>
+    public class IconCountDisplay : IconCountDisplay<MonoBehaviour>
     { }
 }
