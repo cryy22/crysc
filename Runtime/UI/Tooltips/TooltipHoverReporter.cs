@@ -16,7 +16,12 @@ namespace Crysc.UI.Tooltips
         private readonly List<ITooltipContentProvider> _contentProviders = new();
         private GenericSizeCalculator _sizeCalculator;
 
+        public bool IsHovered { get; private set; }
+
         protected virtual TooltipHoverPublisher Publisher => PublisherInput;
+
+        public event EventHandler Hovered;
+        public event EventHandler Unhovered;
 
         private void Start()
         {
@@ -37,11 +42,6 @@ namespace Crysc.UI.Tooltips
             IsHovered = false;
             Unhovered?.Invoke(sender: this, e: EventArgs.Empty);
         }
-
-        public bool IsHovered { get; private set; }
-
-        public event EventHandler Hovered;
-        public event EventHandler Unhovered;
 
         public object[] GetTooltipContent() { return _contentProviders.SelectMany(p => p.GetContent()).ToArray(); }
 
