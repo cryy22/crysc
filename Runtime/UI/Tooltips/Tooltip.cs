@@ -1,7 +1,9 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Crysc.UI.Tooltips
 {
@@ -9,13 +11,18 @@ namespace Crysc.UI.Tooltips
     public abstract class Tooltip<T> : MonoBehaviour
     {
         private const float _hoverLockTime = 1f;
-        private const float _unhoverUnlockTime = 0.05f;
+        private const float _unhoverUnlockTime = 0.125f;
 
         [SerializeField] private TooltipHoverPublisher PublisherInput;
         [SerializeField] protected RectTransform Container;
+        [SerializeField] protected Image LockingImageInput;
+        [SerializeField] protected Color LockingImageInactiveColor;
+
         [SerializeField] private bool LocksOnExtendedHover = true;
         [SerializeField] private bool SetInactiveWhenDismissed = true;
 
+        protected virtual IEnumerable<Image> LockingImages =>
+            LockingImageInput ? new[] { LockingImageInput } : Enumerable.Empty<Image>();
         private TooltipHoverPublisher Publisher => PublisherInput;
         private TooltipPositioner _positioner;
         private TooltipPositioner Positioner => _positioner ??= GetComponent<TooltipPositioner>();
@@ -37,7 +44,15 @@ namespace Crysc.UI.Tooltips
             if (!_isActive) DismissTooltip();
         }
 
-        protected virtual void PresentTooltip(T[] contents) { Container.gameObject.SetActive(true); }
+        protected virtual void PresentTooltip(T[] contents)
+        {
+            Container.gameObject.SetActive(true);
+            foreach (Image image in LockingImages)
+            {
+                image.color = LockingImageInactiveColor;
+                image.gameObject.SetActive(LocksOnExtendedHover);
+            }
+        }
 
         protected virtual bool ShouldPresentTooltip(T[] contents) { return _isActive; }
 
@@ -84,6 +99,13 @@ namespace Crysc.UI.Tooltips
 
                 time += Time.deltaTime;
                 if (time >= _hoverLockTime) _isLocked = true;
+                foreach (Image image in LockingImages) image.fillAmount = time / _hoverLockTime;
+            }
+
+            foreach (Image image in LockingImages)
+            {
+                image.color = Color.white;
+                image.fillAmount = 1;
             }
 
             while (_isLocked)
@@ -91,13 +113,21 @@ namespace Crysc.UI.Tooltips
                 yield return null;
                 if (IsTargetHovered(_currentTarget) || Positioner.IsMouseOverTooltip())
                 {
-                    time = 0f;
+                    if (Mathf.Approximately(a: time, b: 0) == false)
+                    {
+                        time = 0f;
+                        foreach (Image image in LockingImages) image.fillAmount = 1;
+                    }
+
                     continue;
                 }
 
                 time += Time.deltaTime;
                 if (time >= _unhoverUnlockTime) _isLocked = false;
+                foreach (Image image in LockingImages) image.fillAmount = 1 - (time / _unhoverUnlockTime);
             }
+
+            foreach (Image image in LockingImages) image.fillAmount = 0;
 
             DismissTooltip();
         }
