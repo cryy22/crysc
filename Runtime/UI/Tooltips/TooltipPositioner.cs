@@ -26,18 +26,21 @@ namespace Crysc.UI.Tooltips
 
         public void HaltPositioning() { _updatePositionRoutine?.Stop(); }
 
-        public void UpdateTooltipPosition(Bounds targetBounds)
+        public void UpdateTooltipPosition(Dimensions targetDimensions)
         {
             _updatePositionRoutine?.Stop();
             _updatePositionRoutine = new CryRoutine(
-                enumerator: RunUpdateTooltipPosition(targetBounds: targetBounds),
+                enumerator: RunUpdateTooltipPosition(targetDimensions),
                 behaviour: this
             );
         }
 
-        private IEnumerator RunUpdateTooltipPosition(Bounds targetBounds)
+        public bool IsMouseOverTooltip() { return SizeCalculator.Calculate().IsScreenPointWithin(Input.mousePosition); }
+
+        private IEnumerator RunUpdateTooltipPosition(Dimensions targetDimensions)
         {
             transform.position = _offScreen;
+
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(Container);
 
@@ -45,7 +48,7 @@ namespace Crysc.UI.Tooltips
             for (var i = 0; i < 3; i++) yield return null;
 
             Vector2 destination = MoveToTargetPosition
-                ? GetTooltipScreenPoint(targetBounds: targetBounds)
+                ? GetTooltipScreenPoint(targetDimensions: targetDimensions)
                 : transform.position;
 
             transform.position = new Vector3(
@@ -55,20 +58,20 @@ namespace Crysc.UI.Tooltips
             );
         }
 
-        private Vector2 GetTooltipScreenPoint(Bounds targetBounds)
+        private Vector2 GetTooltipScreenPoint(Dimensions targetDimensions)
         {
-            GenericSize tooltipSize = SizeCalculator.Calculate();
+            Dimensions tooltipDimensions = SizeCalculator.Calculate();
 
-            float xInset = targetBounds.extents.x * (1 - XFromCenter);
-            float yInset = targetBounds.extents.y * (1 - YFromCenter);
+            float xInset = targetDimensions.WorldBounds.extents.x * (1 - XFromCenter);
+            float yInset = targetDimensions.WorldBounds.extents.y * (1 - YFromCenter);
 
-            float xValue = IsTargetOnLeft(targetBounds)
-                ? targetBounds.max.x - xInset
-                : (targetBounds.min.x - tooltipSize.Bounds.size.x) + xInset;
+            float xValue = IsTargetOnLeft(targetDimensions)
+                ? targetDimensions.WorldBounds.max.x - xInset
+                : (targetDimensions.WorldBounds.min.x - tooltipDimensions.WorldBounds.size.x) + xInset;
 
-            float yValue = IsTargetOnBottom(targetBounds)
-                ? targetBounds.max.y - yInset
-                : (targetBounds.min.y - tooltipSize.Bounds.size.y) + yInset;
+            float yValue = IsTargetOnBottom(targetDimensions)
+                ? targetDimensions.WorldBounds.max.y - yInset
+                : (targetDimensions.WorldBounds.min.y - tooltipDimensions.WorldBounds.size.y) + yInset;
 
             var worldPoint = new Vector2(
                 x: xValue,
@@ -77,27 +80,26 @@ namespace Crysc.UI.Tooltips
 
             return EnsureTooltipIsOnScreen(
                 screenPoint: Camera.WorldToScreenPoint(worldPoint),
-                tooltipSize: tooltipSize
+                tooltipScreenSize: tooltipDimensions.ScreenBounds.size
             );
         }
 
-        private bool IsTargetOnLeft(Bounds targetBounds)
+        private static bool IsTargetOnLeft(Dimensions targetDimensions)
         {
-            Vector3 screenPoint = Camera.WorldToScreenPoint(targetBounds.center);
-            return screenPoint.x <= (Screen.width / 3f) * 2;
+            return targetDimensions.ScreenBounds.center.x <= (Screen.width / 3f) * 2;
         }
 
-        private bool IsTargetOnBottom(Bounds targetBounds)
+        private static bool IsTargetOnBottom(Dimensions targetDimensions)
         {
-            Vector3 screenPoint = Camera.WorldToScreenPoint(targetBounds.center);
-            return screenPoint.y <= (Screen.height / 3f) * 2;
+            return targetDimensions.ScreenBounds.center.y <= (Screen.height / 3f) * 2;
         }
 
-        private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, GenericSize tooltipSize)
+        private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, Vector2 tooltipScreenSize)
         {
             const float padding = 10;
-            float xMax = Screen.width - tooltipSize.ScreenDimensions.x - padding;
-            float yMax = Screen.height - tooltipSize.ScreenDimensions.y - padding;
+
+            float xMax = Screen.width - tooltipScreenSize.x - padding;
+            float yMax = Screen.height - tooltipScreenSize.y - padding;
 
             return new Vector2(
                 x: xMax > padding ? Mathf.Clamp(value: screenPoint.x, min: padding, max: xMax) : padding,

@@ -11,6 +11,8 @@ namespace Crysc.Common
         private readonly Canvas _canvas;
         private Camera _camera;
 
+        private Camera Camera => _camera ? _camera : _camera = Camera.main;
+
         public GenericSizeCalculator(Component behaviour)
         {
             _collider = behaviour.GetComponent<Collider>();
@@ -24,51 +26,50 @@ namespace Crysc.Common
             _canvas = behaviour.GetComponentInParent<Canvas>();
         }
 
-        private Camera Camera => _camera ? _camera : _camera = Camera.main;
-
-        public GenericSize Calculate()
+        public Dimensions Calculate()
         {
             if (_collider != null)
-                return new GenericSize(
-                    bounds: _collider.bounds,
-                    screenDimensions: ScreenDimensionsFromBounds(_collider.bounds)
+                return new Dimensions(
+                    worldBounds: _collider.bounds,
+                    screenBounds: ScreenBoundsFromWorldBounds(_collider.bounds)
                 );
             if (_collider2D != null)
-                return new GenericSize(
-                    bounds: _collider2D.bounds,
-                    screenDimensions: ScreenDimensionsFromBounds(_collider2D.bounds)
+                return new Dimensions(
+                    worldBounds: _collider2D.bounds,
+                    screenBounds: ScreenBoundsFromWorldBounds(_collider2D.bounds)
                 );
 
             var rectCorners = new Vector3[4];
             _rectTransform.GetWorldCorners(rectCorners);
 
-            Vector3 min = Vector3.positiveInfinity;
-            Vector3 max = Vector3.negativeInfinity;
+            Vector3 worldMin = Vector3.positiveInfinity;
+            Vector3 worldMax = Vector3.negativeInfinity;
 
             foreach (Vector3 corner in rectCorners)
             {
                 Vector3 worldPoint = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
                     ? Camera.ScreenToWorldPoint(corner)
                     : corner;
-                min = Vector3.Min(lhs: min, rhs: worldPoint);
-                max = Vector3.Max(lhs: max, rhs: worldPoint);
+                worldMin = Vector3.Min(lhs: worldMin, rhs: worldPoint);
+                worldMax = Vector3.Max(lhs: worldMax, rhs: worldPoint);
             }
 
-            Bounds bounds = new();
-            bounds.SetMinMax(min: min, max: max);
-            return new GenericSize(
-                bounds: bounds,
-                screenDimensions: ScreenDimensionsFromBounds(bounds)
+            Bounds worldBounds = new();
+            worldBounds.SetMinMax(min: worldMin, max: worldMax);
+            return new Dimensions(
+                worldBounds: worldBounds,
+                screenBounds: ScreenBoundsFromWorldBounds(worldBounds)
             );
         }
 
-        private Vector2 ScreenDimensionsFromBounds(Bounds bounds)
+        private Bounds ScreenBoundsFromWorldBounds(Bounds worldBounds)
         {
-            if (Camera == null) return Vector2.zero;
-
-            Vector2 min = Camera.WorldToScreenPoint(position: bounds.min);
-            Vector2 max = Camera.WorldToScreenPoint(position: bounds.max);
-            return max - min;
+            Bounds screenBounds = new();
+            screenBounds.SetMinMax(
+                min: Camera.WorldToScreenPoint(position: worldBounds.min),
+                max: Camera.WorldToScreenPoint(position: worldBounds.max)
+            );
+            return screenBounds;
         }
     }
 }

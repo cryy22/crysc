@@ -12,16 +12,15 @@ namespace Crysc.UI.Tooltips
         IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private TooltipHoverPublisher PublisherInput;
-
-        private readonly List<ITooltipContentProvider> _contentProviders = new();
-        private GenericSizeCalculator _sizeCalculator;
+        [SerializeField] private bool IgnoreRaycastBlockingInput = true;
 
         public bool IsHovered { get; private set; }
+        public bool IgnoreRaycastBlocking => IgnoreRaycastBlockingInput;
 
         protected virtual TooltipHoverPublisher Publisher => PublisherInput;
 
-        public event EventHandler Hovered;
-        public event EventHandler Unhovered;
+        private readonly List<ITooltipContentProvider> _contentProviders = new();
+        private GenericSizeCalculator _sizeCalculator;
 
         private void Start()
         {
@@ -45,8 +44,11 @@ namespace Crysc.UI.Tooltips
 
         public object[] GetTooltipContent() { return _contentProviders.SelectMany(p => p.GetContent()).ToArray(); }
 
-        public Bounds GetBounds() { return _sizeCalculator.Calculate().Bounds; }
+        public Dimensions GetSize() { return _sizeCalculator.Calculate(); }
 
         private void OnHovered(object sender, EventArgs e) { Publisher.RegisterHover(this); }
+
+        public event EventHandler Hovered;
+        public event EventHandler Unhovered;
     }
 }

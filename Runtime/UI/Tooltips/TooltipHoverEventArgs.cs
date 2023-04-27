@@ -1,23 +1,23 @@
 using System;
-using UnityEngine;
+using Crysc.Common;
 
 namespace Crysc.UI.Tooltips
 {
     public class TooltipHoverEventArgs : EventArgs
     {
+        public ITooltipTargetProvider TargetProvider { get; }
+        public object[] TooltipContent { get; }
+        public Dimensions Dimensions { get; }
+
         public TooltipHoverEventArgs(
             ITooltipTargetProvider targetProvider,
             object[] tooltipContent,
-            Bounds bounds
+            Dimensions dimensions
         )
         {
             TargetProvider = targetProvider;
             TooltipContent = tooltipContent;
-            Bounds = bounds;
+            Dimensions = dimensions;
         }
-
-        public ITooltipTargetProvider TargetProvider { get; }
-        public object[] TooltipContent { get; }
-        public Bounds Bounds { get; }
     }
 }

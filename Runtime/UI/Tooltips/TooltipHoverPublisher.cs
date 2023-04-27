@@ -6,8 +6,6 @@ namespace Crysc.UI.Tooltips
     [CreateAssetMenu(fileName = "TooltipHoverPublisher", menuName = "crysc/Publishers/Tooltip Hover")]
     public class TooltipHoverPublisher : ScriptableObject
     {
-        public event EventHandler<TooltipHoverEventArgs> Hovered;
-
         public void RegisterHover(ITooltipTargetProvider targetProvider)
         {
             Hovered?.Invoke(
@@ -15,9 +13,11 @@ namespace Crysc.UI.Tooltips
                 e: new TooltipHoverEventArgs(
                     targetProvider: targetProvider,
                     tooltipContent: targetProvider.GetTooltipContent(),
-                    bounds: targetProvider.GetBounds()
+                    dimensions: targetProvider.GetSize()
                 )
             );
         }
+
+        public event EventHandler<TooltipHoverEventArgs> Hovered;
     }
 }
