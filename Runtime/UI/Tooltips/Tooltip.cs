@@ -26,6 +26,8 @@ namespace Crysc.UI.Tooltips
         private GenericSizeCalculator _genericSizeCalculator;
         private CryRoutine _updatePositionRoutine;
 
+        public bool IsActive { get; private set; } = true;
+
         private TooltipHoverPublisher Publisher => PublisherInput;
 
         private void Awake()
@@ -39,9 +41,15 @@ namespace Crysc.UI.Tooltips
         private void OnEnable() { Publisher.Hovered += HoveredEventHandler; }
         private void OnDisable() { Publisher.Hovered -= HoveredEventHandler; }
 
+        public virtual void SetActive(bool active)
+        {
+            IsActive = active;
+            if (!IsActive) DismissTooltip();
+        }
+
         protected virtual void PresentTooltip(T[] contents) { Container.gameObject.SetActive(true); }
 
-        protected virtual bool ShouldPresentTooltip(T[] contents) { return true; }
+        protected virtual bool ShouldPresentTooltip(T[] contents) { return IsActive; }
 
         protected virtual void DismissTooltip()
         {
