@@ -30,6 +30,8 @@ namespace Crysc.UI.Tooltips
             Hovered += OnHovered;
         }
 
+        private void OnDisable() { OnPointerExit(null); }
+
         public void OnPointerEnter(PointerEventData _)
         {
             IsHovered = true;

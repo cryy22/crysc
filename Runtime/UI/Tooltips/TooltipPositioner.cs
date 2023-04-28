@@ -8,13 +8,13 @@ namespace Crysc.UI.Tooltips
 {
     public class TooltipPositioner : MonoBehaviour
     {
+        private static readonly Vector3 _offScreen = new(x: -10000, y: -10000, z: 0);
+
         [SerializeField] protected RectTransform Container;
         [SerializeField] private bool MoveToTargetPosition;
 
         [SerializeField] [Range(min: 0, max: 2)] private float XFromCenter = 0.5f;
         [SerializeField] [Range(min: 0, max: 2)] private float YFromCenter = 0.5f;
-
-        private readonly Vector3 _offScreen = new(x: -10000, y: -10000, z: 0);
 
         private Camera _camera;
         private Camera Camera => _camera ? _camera : _camera = Camera.main;
@@ -24,8 +24,6 @@ namespace Crysc.UI.Tooltips
         private ITooltipTargetProvider _currentTarget;
         private CryRoutine _updatePositionRoutine;
 
-        public void HaltPositioning() { _updatePositionRoutine?.Stop(); }
-
         public void UpdateTooltipPosition(Dimensions targetDimensions)
         {
             _updatePositionRoutine?.Stop();
@@ -33,6 +31,12 @@ namespace Crysc.UI.Tooltips
                 enumerator: RunUpdateTooltipPosition(targetDimensions),
                 behaviour: this
             );
+        }
+
+        public void HandleDismissal()
+        {
+            _updatePositionRoutine?.Stop();
+            transform.position = _offScreen;
         }
 
         public bool IsMouseOverTooltip() { return SizeCalculator.Calculate().IsScreenPointWithin(Input.mousePosition); }

@@ -59,11 +59,12 @@ namespace Crysc.UI.Tooltips
 
         protected virtual void DismissTooltip()
         {
-            Positioner.HaltPositioning();
+            Positioner.HandleDismissal();
             if (SetInactiveWhenDismissed) Container.gameObject.SetActive(false);
 
             _tooltipPersistenceRoutine?.Stop();
             _currentTarget = null;
+            _isLocked = false;
         }
 
         private void TargetHoveredEventHandler(object sender, TooltipHoverEventArgs e)
