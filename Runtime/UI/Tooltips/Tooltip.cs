@@ -32,6 +32,7 @@ namespace Crysc.UI.Tooltips
 
         private CryRoutine _tooltipPersistenceRoutine;
         private bool _isLocked;
+        private TooltipHoverEventArgs _eventDuringLock;
 
         private void Awake() { DismissTooltip(); }
 
@@ -67,11 +68,15 @@ namespace Crysc.UI.Tooltips
 
         private void TargetHoveredEventHandler(object sender, TooltipHoverEventArgs e)
         {
-            if (_isLocked) return;
-
             T[] contents = e.TooltipContent.Where(c => c is T).Cast<T>().ToArray();
             if (contents.Length == 0) return;
             if (ShouldPresentTooltip(contents) == false) return;
+
+            if (_isLocked)
+            {
+                _eventDuringLock = e;
+                return;
+            }
 
             PresentTooltip(contents);
             _currentTarget = e.TargetProvider;
@@ -129,6 +134,9 @@ namespace Crysc.UI.Tooltips
 
             foreach (Image image in LockingImages) image.fillAmount = 0;
             DismissTooltip();
+
+            if (_eventDuringLock != null) TargetHoveredEventHandler(sender: this, e: _eventDuringLock);
+            _eventDuringLock = null;
         }
 
         private static bool IsTargetHovered(ITooltipTargetProvider target)
