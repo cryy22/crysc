@@ -10,8 +10,8 @@ namespace Crysc.UI.Tooltips
     [RequireComponent(typeof(TooltipPositioner))]
     public abstract class Tooltip<T> : MonoBehaviour
     {
-        private const float _hoverLockTime = 1f;
-        private const float _unhoverUnlockTime = 0.125f;
+        private const float _hoverLockTime = 0.75f;
+        private const float _unhoverUnlockTime = 0.0625f;
 
         [SerializeField] private TooltipHoverPublisher PublisherInput;
         [SerializeField] protected RectTransform Container;
@@ -27,11 +27,11 @@ namespace Crysc.UI.Tooltips
         private TooltipPositioner _positioner;
         private TooltipPositioner Positioner => _positioner ??= GetComponent<TooltipPositioner>();
 
-        private bool _isActive = true;
-        private bool _isLocked;
         private ITooltipTargetProvider _currentTarget;
+        private bool _isActive = true;
 
         private CryRoutine _tooltipPersistenceRoutine;
+        private bool _isLocked;
 
         private void Awake() { DismissTooltip(); }
 
@@ -128,7 +128,6 @@ namespace Crysc.UI.Tooltips
             }
 
             foreach (Image image in LockingImages) image.fillAmount = 0;
-
             DismissTooltip();
         }
 
