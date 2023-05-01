@@ -8,6 +8,7 @@ namespace Crysc.UI.Tooltips
 {
     public class TooltipPositioner : MonoBehaviour
     {
+        private const float _padding = 20;
         private static readonly Vector3 _offScreen = new(x: -10000, y: -10000, z: 0);
 
         [SerializeField] protected RectTransform Container;
@@ -51,8 +52,15 @@ namespace Crysc.UI.Tooltips
             // required to ensure layout of variably-sized tooltips is complete.
             for (var i = 0; i < 3; i++) yield return null;
 
+            Dimensions tooltipDimensions = SizeCalculator.Calculate();
+            transform.localScale = GetScreenFittingScale(
+                tooltipScreenSize: tooltipDimensions.ScreenBounds.size,
+                currentScale: transform.localScale
+            );
+            tooltipDimensions = SizeCalculator.Calculate();
+
             Vector2 destination = MoveToTargetPosition
-                ? GetTooltipScreenPoint(targetDimensions: targetDimensions)
+                ? GetTooltipScreenPoint(targetDimensions: targetDimensions, tooltipDimensions: tooltipDimensions)
                 : transform.position;
 
             transform.position = new Vector3(
@@ -62,10 +70,8 @@ namespace Crysc.UI.Tooltips
             );
         }
 
-        private Vector2 GetTooltipScreenPoint(Dimensions targetDimensions)
+        private Vector2 GetTooltipScreenPoint(Dimensions targetDimensions, Dimensions tooltipDimensions)
         {
-            Dimensions tooltipDimensions = SizeCalculator.Calculate();
-
             float xInset = targetDimensions.WorldBounds.extents.x * (1 - XFromCenter);
             float yInset = targetDimensions.WorldBounds.extents.y * (1 - YFromCenter);
 
@@ -100,15 +106,24 @@ namespace Crysc.UI.Tooltips
 
         private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, Vector2 tooltipScreenSize)
         {
-            const float padding = 10;
-
-            float xMax = Screen.width - tooltipScreenSize.x - padding;
-            float yMax = Screen.height - tooltipScreenSize.y - padding;
+            float xMax = Screen.width - tooltipScreenSize.x - _padding;
+            float yMax = Screen.height - tooltipScreenSize.y - _padding;
 
             return new Vector2(
-                x: xMax > padding ? Mathf.Clamp(value: screenPoint.x, min: padding, max: xMax) : padding,
-                y: yMax > padding ? Mathf.Clamp(value: screenPoint.y, min: padding, max: yMax) : padding
+                x: xMax > _padding ? Mathf.Clamp(value: screenPoint.x, min: _padding, max: xMax) : _padding,
+                y: yMax > _padding ? Mathf.Clamp(value: screenPoint.y, min: _padding, max: yMax) : _padding
             );
+        }
+
+        private static Vector3 GetScreenFittingScale(Vector2 tooltipScreenSize, Vector3 currentScale)
+        {
+            float maxFittingScaleModifier = Mathf.Min(
+                a: (Screen.width - (2 * _padding)) / tooltipScreenSize.x,
+                b: (Screen.height - (2 * _padding)) / tooltipScreenSize.y
+            );
+            float minDimension = Mathf.Min(a: currentScale.x, b: currentScale.y);
+            float scaleModifier = Mathf.Min(a: 1 / minDimension, b: maxFittingScaleModifier);
+            return currentScale * scaleModifier;
         }
     }
 }
