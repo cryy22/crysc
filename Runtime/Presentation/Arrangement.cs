@@ -18,6 +18,17 @@ namespace Crysc.Presentation
         [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
         [SerializeField] private bool UpdateZInstantly = true;
 
+        // IArrangement
+        [field: SerializeField] public bool IsCentered { get; set; }
+        [field: SerializeField] public bool IsInverted { get; set; }
+        [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
+        [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
+
+        // IArrangementElement
+        public Transform Transform => transform;
+        public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
+        public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
+
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private readonly HashSet<IElement> _excludedFromRearrange = new();
@@ -34,12 +45,6 @@ namespace Crysc.Presentation
                 throw new Exception("BaseElementSize cannot be negative");
         }
 
-        // IArrangement
-        [field: SerializeField] public bool IsCentered { get; set; }
-        [field: SerializeField] public bool IsInverted { get; set; }
-        [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
-        [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
-
         public void SetElements(IEnumerable<IElement> elements)
         {
             _elements.Clear();
@@ -55,7 +60,10 @@ namespace Crysc.Presentation
         {
             UpdateElementsAndPositions();
             foreach (IElement element in _elementsPositions.Keys.Except(_excludedFromRearrange))
+            {
                 element.Transform.localPosition = _elementsPositions[element];
+                element.Transform.localScale = Vector3.one;
+            }
         }
 
         public IEnumerator AnimateRearrange(float duration = 0.25f)
@@ -79,11 +87,6 @@ namespace Crysc.Presentation
 
             yield return CoroutineWaiter.RunConcurrently(_rearrangeRoutines.ToArray());
         }
-
-        // IArrangementElement
-        public Transform Transform => transform;
-        public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
-        public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
 
         public int GetClosestIndex(Vector2 position, bool isLocal = true)
         {
@@ -149,14 +152,22 @@ namespace Crysc.Presentation
 
         private IEnumerator MoveElementPosition(IElement e, float duration)
         {
+            Transform elementTransform = e.Transform;
             if (UpdateZInstantly)
                 e.Transform.localPosition = new Vector3(
-                    x: e.Transform.localPosition.x,
-                    y: e.Transform.localPosition.y,
+                    x: elementTransform.localPosition.x,
+                    y: elementTransform.localPosition.y,
                     z: _elementsPositions[e].z
                 );
 
-            yield return Mover.MoveToSmoothly(transform: e.Transform, end: _elementsPositions[e], duration: duration);
+            yield return CoroutineWaiter.RunConcurrently(
+                StartCoroutine(
+                    Mover.MoveToSmoothly(transform: elementTransform, end: _elementsPositions[e], duration: duration)
+                ),
+                StartCoroutine(
+                    Scaler.ScaleToSmoothly(transform: elementTransform, end: Vector3.one, duration: duration)
+                )
+            );
         }
 
         private void UpdateElementsAndPositions()
@@ -180,7 +191,6 @@ namespace Crysc.Presentation
             Transform elementTransform = element.Transform;
             elementTransform.SetParent(ElementsParent);
             elementTransform.gameObject.SetActive(true);
-            elementTransform.localScale = Vector3.one;
 
             _elementsPositions[element] = elementTransform.localPosition;
         }
