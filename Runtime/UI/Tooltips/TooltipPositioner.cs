@@ -75,11 +75,17 @@ namespace Crysc.UI.Tooltips
             float xInset = targetDimensions.WorldBounds.extents.x * (1 - XFromCenter);
             float yInset = targetDimensions.WorldBounds.extents.y * (1 - YFromCenter);
 
-            float xValue = IsTargetOnLeft(targetDimensions)
+            float xValue = ShouldTooltipBeOnRight(
+                targetDimensions: targetDimensions,
+                tooltipDimensions: tooltipDimensions
+            )
                 ? targetDimensions.WorldBounds.max.x - xInset
                 : (targetDimensions.WorldBounds.min.x - tooltipDimensions.WorldBounds.size.x) + xInset;
 
-            float yValue = IsTargetOnBottom(targetDimensions)
+            float yValue = ShouldTooltipBeAbove(
+                targetDimensions: targetDimensions,
+                tooltipDimensions: tooltipDimensions
+            )
                 ? targetDimensions.WorldBounds.max.y - yInset
                 : (targetDimensions.WorldBounds.min.y - tooltipDimensions.WorldBounds.size.y) + yInset;
 
@@ -94,14 +100,14 @@ namespace Crysc.UI.Tooltips
             );
         }
 
-        private static bool IsTargetOnLeft(Dimensions targetDimensions)
+        private static bool ShouldTooltipBeOnRight(Dimensions targetDimensions, Dimensions tooltipDimensions)
         {
-            return targetDimensions.ScreenBounds.center.x <= (Screen.width / 3f) * 2;
+            return targetDimensions.ScreenBounds.center.x <= (Screen.width / 5f) * 3;
         }
 
-        private static bool IsTargetOnBottom(Dimensions targetDimensions)
+        private static bool ShouldTooltipBeAbove(Dimensions targetDimensions, Dimensions tooltipDimensions)
         {
-            return targetDimensions.ScreenBounds.center.y <= (Screen.height / 3f) * 2;
+            return targetDimensions.ScreenBounds.center.y <= (Screen.height / 5f) * 3;
         }
 
         private static Vector2 EnsureTooltipIsOnScreen(Vector3 screenPoint, Vector2 tooltipScreenSize)
