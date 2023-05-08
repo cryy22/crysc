@@ -1,9 +1,8 @@
 using System.Collections;
 using Crysc.Helpers;
-using Crysc.UI.Presenters;
 using UnityEngine;
 
-namespace Crysc.UI
+namespace Crysc.UI.Presenters
 {
     public class OffscreenPresenter : MonoBehaviour, IPresenter
     {
@@ -13,9 +12,9 @@ namespace Crysc.UI
 
         [SerializeField] private float MoveTime = .25f;
 
-        private CryRoutine _moveRoutine;
-
         public PresentationState PresentationState { get; private set; }
+
+        private CryRoutine _moveRoutine;
         private Vector3 OffscreenPosition => OffscreenPoint ? OffscreenPoint.localPosition : transform.localPosition;
         private Vector3 OnscreenPosition => OnscreenPoint ? OnscreenPoint.localPosition : transform.localPosition;
 
