@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Crysc.UI.Presenters;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,9 +10,11 @@ namespace GulchGuardians.Coordination.Camps
     public class ButtonPresenter : MonoBehaviour, IPresenter
     {
         [SerializeField] private Button ButtonInput;
+        [SerializeField] private TMP_Text TextInput;
         [SerializeField] private Component PresenterInput;
 
         public Button Button => ButtonInput;
+        public TMP_Text Text => TextInput;
         public PresentationState PresentationState => Presenter.PresentationState;
 
         private void Awake() { Button.interactable = false; }
