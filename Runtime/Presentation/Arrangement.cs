@@ -32,7 +32,7 @@ namespace Crysc.Presentation
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
         private readonly HashSet<IElement> _excludedFromRearrange = new();
-        private readonly List<CryRoutine> _rearrangeRoutines = new();
+        private readonly List<ConcurrentCryRoutine> _rearrangeRoutines = new();
 
         private Vector2 _spacing = Vector2.zero;
         private Vector2 _centeringOffset;
@@ -70,19 +70,13 @@ namespace Crysc.Presentation
         {
             UpdateElementsAndPositions();
 
-            foreach (CryRoutine routine in _rearrangeRoutines) routine.Stop();
+            foreach (ConcurrentCryRoutine routine in _rearrangeRoutines) routine.Stop();
             _rearrangeRoutines.Clear();
 
             _rearrangeRoutines.AddRange(
                 _elementsPositions.Keys
                     .Except(_excludedFromRearrange)
-                    .Select(
-                        e =>
-                            CryRoutine.Start(
-                                behaviour: this,
-                                enumerator: MoveElementPosition(e: e, duration: duration)
-                            )
-                    )
+                    .Select(e => MoveElementPosition(e: e, duration: duration))
             );
 
             yield return CoroutineWaiter.RunConcurrently(_rearrangeRoutines.ToArray());
@@ -150,7 +144,7 @@ namespace Crysc.Presentation
         public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
         public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
 
-        private IEnumerator MoveElementPosition(IElement e, float duration)
+        private ConcurrentCryRoutine MoveElementPosition(IElement e, float duration)
         {
             Transform elementTransform = e.Transform;
             if (UpdateZInstantly)
@@ -160,13 +154,10 @@ namespace Crysc.Presentation
                     z: _elementsPositions[e].z
                 );
 
-            yield return CoroutineWaiter.RunConcurrently(
-                StartCoroutine(
-                    Mover.MoveToSmoothly(transform: elementTransform, end: _elementsPositions[e], duration: duration)
-                ),
-                StartCoroutine(
-                    Scaler.ScaleToSmoothly(transform: elementTransform, end: Vector3.one, duration: duration)
-                )
+            return new ConcurrentCryRoutine(
+                behaviour: this,
+                Mover.MoveToSmoothly(transform: elementTransform, end: _elementsPositions[e], duration: duration),
+                Scaler.ScaleToSmoothly(transform: elementTransform, end: Vector3.one, duration: duration)
             );
         }
 

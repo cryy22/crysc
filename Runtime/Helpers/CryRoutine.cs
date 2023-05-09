@@ -5,6 +5,8 @@ namespace Crysc.Helpers
 {
     public class CryRoutine : IEnumerator
     {
+        public bool IsComplete { get; private set; }
+        public object Current => _child ?? _enumerator.Current;
         private readonly IEnumerator _enumerator;
         private CryRoutine _child;
 
@@ -15,9 +17,6 @@ namespace Crysc.Helpers
             _enumerator = enumerator;
             behaviour.StartCoroutine(this);
         }
-
-        public bool IsComplete { get; private set; }
-        public object Current => _child ?? _enumerator.Current;
 
         public bool MoveNext()
         {
