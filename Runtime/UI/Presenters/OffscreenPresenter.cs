@@ -26,33 +26,38 @@ namespace Crysc.UI.Presenters
 
         public void Present()
         {
+            if (PresentationState == PresentationState.Presented) return;
+
             _moveRoutine?.Stop();
             _moveRoutine = new CryRoutine(enumerator: RunPresent(), behaviour: this);
         }
 
         public IEnumerator PresentAndWait()
         {
+            if (PresentationState == PresentationState.Presented) yield break;
+
             Present();
             yield return new WaitUntil(() => _moveRoutine is { IsComplete: true });
         }
 
         public void Dismiss()
         {
+            if (PresentationState == PresentationState.Dismissed) return;
+
             _moveRoutine?.Stop();
             _moveRoutine = new CryRoutine(enumerator: RunDismiss(), behaviour: this);
         }
 
         public IEnumerator DismissAndWait()
         {
+            if (PresentationState == PresentationState.Dismissed) yield break;
+
             Dismiss();
             yield return new WaitUntil(() => _moveRoutine is { IsComplete: true });
         }
 
         private IEnumerator RunPresent()
         {
-            if (PresentationState == PresentationState.Presented) yield break;
-            if (PresentationState == PresentationState.Presenting) yield break;
-
             PresentationState = PresentationState.Presenting;
             yield return Mover.MoveToSmoothly(transform: Container, end: OnscreenPosition, duration: MoveTime);
             PresentationState = PresentationState.Presented;
@@ -60,9 +65,6 @@ namespace Crysc.UI.Presenters
 
         private IEnumerator RunDismiss()
         {
-            if (PresentationState == PresentationState.Dismissed) yield break;
-            if (PresentationState == PresentationState.Dismissing) yield break;
-
             PresentationState = PresentationState.Dismissing;
             yield return Mover.MoveToSmoothly(transform: Container, end: OffscreenPosition, duration: MoveTime);
             PresentationState = PresentationState.Dismissed;
