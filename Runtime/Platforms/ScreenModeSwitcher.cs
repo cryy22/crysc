@@ -23,7 +23,7 @@ namespace Crysc.Platforms
             }
 
             Dropdown.options = options;
-
+            // select the option that matches the current state
             Dropdown.onValueChanged.AddListener(OnValueChanged);
         }
 
