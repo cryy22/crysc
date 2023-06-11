@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -7,7 +8,11 @@ namespace Crysc.Platforms
 {
     public class ResolutionSwitcher : MonoBehaviour
     {
+        private const string _custom = "Custom";
+
         [SerializeField] private TMP_Dropdown Dropdown;
+        [SerializeField] private float MinAspectRatio = 16f / 10f;
+        [SerializeField] private float MaxAspectRatio = 16f / 9f;
 
         private Resolution[] _resolutions;
 
@@ -21,17 +26,38 @@ namespace Crysc.Platforms
             }
 
             Dropdown.options = options;
-            // select the option that matches the current state
+
+            string currentResolution = StringForResolution(width: Screen.width, height: Screen.height);
+            int selected = options.FindIndex(o => o.text == currentResolution);
+            if (selected < 0)
+            {
+                Array.Resize(array: ref _resolutions, newSize: _resolutions.Length + 1);
+                _resolutions[^1] = Screen.currentResolution;
+
+                selected = Dropdown.options.Count;
+                Dropdown.options.Add(new TMP_Dropdown.OptionData(currentResolution));
+            }
+
+            Dropdown.SetValueWithoutNotify(selected);
             Dropdown.onValueChanged.AddListener(OnValueChanged);
         }
 
         private List<TMP_Dropdown.OptionData> GetOptions()
         {
-            _resolutions = Screen.resolutions.Reverse().ToArray();
+            _resolutions = Screen.resolutions
+                .Where(
+                    r => r.width / (float) r.height >= MinAspectRatio && r.width / (float) r.height <= MaxAspectRatio
+                )
+                .OrderByDescending(
+                    r => (r.width * (10 ^ 6)) + (r.height * (10 ^ 3)) + Convert.ToInt32(r.refreshRateRatio.value)
+                )
+                .GroupBy(r => r.width ^ r.height)
+                .Select(g => g.First())
+                .ToArray();
 
             return _resolutions
-                .Select(resolution => $"{resolution.width.ToString()}x{resolution.height.ToString()}")
-                .Select(resolutionName => new TMP_Dropdown.OptionData(resolutionName))
+                .Select(r => StringForResolution(width: r.width, height: r.height))
+                .Select(rName => new TMP_Dropdown.OptionData(rName))
                 .ToList();
         }
 
@@ -43,6 +69,11 @@ namespace Crysc.Platforms
                 height: resolution.height,
                 fullscreenMode: Screen.fullScreenMode
             );
+        }
+
+        private static string StringForResolution(int width, int height)
+        {
+            return $"{width.ToString()}x{height.ToString()}";
         }
     }
 }
