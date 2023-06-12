@@ -8,8 +8,6 @@ namespace Crysc.Platforms
 {
     public class ResolutionSwitcher : MonoBehaviour
     {
-        private const string _custom = "Custom";
-
         [SerializeField] private TMP_Dropdown Dropdown;
         [SerializeField] private float MinAspectRatio = 16f / 10f;
         [SerializeField] private float MaxAspectRatio = 16f / 9f;
