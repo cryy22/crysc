@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 namespace Crysc.Helpers
@@ -38,18 +39,11 @@ namespace Crysc.Helpers
             bool isLocal = true
         )
         {
-            Vector3 start = GetPosition(transform: transform, isLocal: isLocal);
-            Vector3 delta = end - start;
-
-            yield return MoveSine(
-                transform: transform,
-                delta: delta,
-                duration: duration,
-                period: duration * 4,
-                isLocal: isLocal
-            );
-
-            SetPosition(transform: transform, position: end, isLocal: isLocal);
+            yield return (
+                isLocal
+                    ? transform.DOLocalMove(endValue: end, duration: duration)
+                    : transform.DOMove(endValue: end, duration: duration)
+            ).WaitForCompletion();
         }
 
         public static IEnumerator MoveSine(
