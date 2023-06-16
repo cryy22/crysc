@@ -6,7 +6,7 @@ namespace Crysc.Presentation
 {
     public interface IArrangement<in T>
     {
-        public bool IsCentered { get; set; }
+        public Arrangement.Alignment HorizontalAlignment { get; set; }
         public bool IsInverted { get; set; }
         public Vector2 MaxSize { get; set; }
         public Vector2 PreferredSpacingRatio { get; set; }

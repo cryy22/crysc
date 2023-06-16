@@ -11,6 +11,13 @@ namespace Crysc.Presentation
 
     public class Arrangement : MonoBehaviour, IArrangement<IElement>, IElement
     {
+        public enum Alignment
+        {
+            Left,
+            Center,
+            Right,
+        }
+
         private const float _zOffset = 0.0001f;
 
         [SerializeField] private Transform ElementsParent;
@@ -19,7 +26,7 @@ namespace Crysc.Presentation
         [SerializeField] private bool UpdateZInstantly = true;
 
         // IArrangement
-        [field: SerializeField] public bool IsCentered { get; set; }
+        [field: SerializeField] public Alignment HorizontalAlignment { get; set; } = Alignment.Left;
         [field: SerializeField] public bool IsInverted { get; set; }
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
@@ -35,7 +42,7 @@ namespace Crysc.Presentation
         private readonly List<ConcurrentCryRoutine> _rearrangeRoutines = new();
 
         private Vector2 _spacing = Vector2.zero;
-        private Vector2 _centeringOffset;
+        private Vector2 _alignmentOffset;
 
         private Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
 
@@ -134,11 +141,21 @@ namespace Crysc.Presentation
                 x: BaseElementSize.x > 0 ? size.x / BaseElementSize.x : 0,
                 y: BaseElementSize.y > 0 ? size.y / BaseElementSize.y : 0
             );
-            _centeringOffset = IsCentered ? size / 2 : Vector2.zero;
+            _alignmentOffset = HorizontalAlignment switch
+            {
+                Alignment.Left   => Vector2.zero,
+                Alignment.Center => size / 2,
+                Alignment.Right  => size,
+                _                => throw new ArgumentOutOfRangeException(),
+            };
 
-            if (IsCentered) Pivot = new Vector2(x: 0.5f, y: 0.5f);
-            else if (IsInverted) Pivot = new Vector2(x: 1, y: 1);
-            else Pivot = Vector2.zero;
+            Pivot = HorizontalAlignment switch
+            {
+                Alignment.Left   => IsInverted ? Vector2.one : Vector2.zero,
+                Alignment.Center => new Vector2(x: 0.5f, y: 0.5f),
+                Alignment.Right  => IsInverted ? Vector2.zero : Vector2.one,
+                _                => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
@@ -190,7 +207,7 @@ namespace Crysc.Presentation
         {
             Vector2 startPoint2d = BaseElementSize * weightedIndexes;
             startPoint2d += _spacing * index;
-            startPoint2d -= _centeringOffset;
+            startPoint2d -= _alignmentOffset;
             if (index % 2 == 1) startPoint2d += OddElementStagger;
             startPoint2d *= Direction;
 
