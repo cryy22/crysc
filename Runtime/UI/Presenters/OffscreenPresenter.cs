@@ -1,4 +1,5 @@
 using System.Collections;
+using Crysc.Common;
 using Crysc.Helpers;
 using UnityEngine;
 
@@ -6,21 +7,30 @@ namespace Crysc.UI.Presenters
 {
     public class OffscreenPresenter : MonoBehaviour, IPresenter
     {
-        [SerializeField] private Transform OffscreenPoint;
-        [SerializeField] private Transform OnscreenPoint;
-        [SerializeField] private Transform Container;
+        public enum Origin
+        {
+            None,
+            Left,
+            Right,
+            Top,
+            Bottom,
+        }
 
-        [SerializeField] private float MoveTime = .25f;
-
+        [SerializeField] private RectTransform Container;
+        [SerializeField] private Origin ScreenOrigin;
+        [SerializeField] private float OffscreenBuffer = 100f;
+        [SerializeField] private float MoveTime = 0.25f;
         public PresentationState PresentationState { get; private set; }
 
         private CryRoutine _moveRoutine;
-        private Vector3 OffscreenPosition => OffscreenPoint ? OffscreenPoint.localPosition : transform.localPosition;
-        private Vector3 OnscreenPosition => OnscreenPoint ? OnscreenPoint.localPosition : transform.localPosition;
+        private Vector3 _dismissedPosition;
 
-        private void Awake()
+        private void Start()
         {
-            Container.localPosition = OffscreenPosition;
+            _dismissedPosition = CalculateOffscreenPosition();
+            Container.position = _dismissedPosition;
+            Container.gameObject.SetActive(false);
+
             PresentationState = PresentationState.Dismissed;
         }
 
@@ -59,15 +69,45 @@ namespace Crysc.UI.Presenters
         private IEnumerator RunPresent()
         {
             PresentationState = PresentationState.Presenting;
-            yield return Mover.MoveToSmoothly(transform: Container, end: OnscreenPosition, duration: MoveTime);
+
+            Container.gameObject.SetActive(true);
+            yield return Mover.MoveToSmoothly(
+                transform: Container,
+                end: Vector3.zero,
+                duration: MoveTime,
+                isLocal: true
+            );
+
             PresentationState = PresentationState.Presented;
         }
 
         private IEnumerator RunDismiss()
         {
             PresentationState = PresentationState.Dismissing;
-            yield return Mover.MoveToSmoothly(transform: Container, end: OffscreenPosition, duration: MoveTime);
+
+            yield return Mover.MoveToSmoothly(
+                transform: Container,
+                end: _dismissedPosition,
+                duration: MoveTime,
+                isLocal: false
+            );
+            Container.gameObject.SetActive(false);
+
             PresentationState = PresentationState.Dismissed;
+        }
+
+        private Vector3 CalculateOffscreenPosition()
+        {
+            Bounds bounds = new GenericSizeCalculator(Container).Calculate().ScreenBounds;
+
+            return Container.position + ScreenOrigin switch
+            {
+                Origin.Left   => (bounds.max.x + OffscreenBuffer) * Vector3.left,
+                Origin.Right  => ((Screen.width - bounds.min.x) + OffscreenBuffer) * Vector3.right,
+                Origin.Top    => ((Screen.height - bounds.min.y) + OffscreenBuffer) * Vector3.up,
+                Origin.Bottom => (bounds.max.y + OffscreenBuffer) * Vector3.down,
+                _             => Vector3.zero,
+            };
         }
     }
 }
