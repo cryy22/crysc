@@ -12,11 +12,11 @@ namespace Crysc.Presentation
         [FormerlySerializedAs("PresentersParent")] [SerializeField] private Transform ItemsParent;
         [SerializeField] private Transform NoElementsIndicator;
 
-        private readonly List<TItem> _items = new();
-
         public IEnumerable<TItem> Items => _items;
 
-        public void SetElements(IEnumerable<T> elements)
+        private readonly List<TItem> _items = new();
+
+        public virtual void SetElements(IEnumerable<T> elements)
         {
             bool hasElements = elements.Any();
             ItemsParent.gameObject.SetActive(hasElements);
