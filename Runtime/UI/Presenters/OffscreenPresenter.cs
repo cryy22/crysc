@@ -32,13 +32,7 @@ namespace Crysc.UI.Presenters
             if (_canvasRect is null) Debug.LogError("OffscreenPresenter's Container must be a child of a Canvas.");
 
             _dismissedPosition = CalculateOffscreenPosition();
-            Debug.Log($"{gameObject.name} dismissed position: {_dismissedPosition}");
-
-            Debug.Log($"container pre-move position {Container.position}");
-            Debug.Log($"container pre-move local position {Container.localPosition}");
             Container.position = _dismissedPosition;
-            Debug.Log($"container local position {Container.localPosition}");
-            Debug.Log($"container distance from edge {Container.localPosition.x - _canvasRect.rect.width}");
             Container.gameObject.SetActive(false);
 
             PresentationState = PresentationState.Dismissed;
