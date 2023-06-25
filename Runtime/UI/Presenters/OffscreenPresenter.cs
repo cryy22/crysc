@@ -24,12 +24,22 @@ namespace Crysc.UI.Presenters
 
         private CryRoutine _moveRoutine;
         private Vector3 _dismissedPosition;
+        private Camera _camera;
+        private Canvas _canvas;
         private RectTransform _canvasRect;
 
         private void Start()
         {
-            _canvasRect = Container.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
-            if (_canvasRect is null) Debug.LogError("OffscreenPresenter's Container must be a child of a Canvas.");
+            _camera = Camera.main;
+
+            _canvas = Container.GetComponentInParent<Canvas>();
+            if (_canvas is null)
+            {
+                Debug.LogError("OffscreenPresenter's Container must be a child of a Canvas.");
+                return;
+            }
+
+            _canvasRect = _canvas.GetComponent<RectTransform>();
 
             _dismissedPosition = CalculateOffscreenPosition();
             Container.position = _dismissedPosition;
@@ -102,18 +112,17 @@ namespace Crysc.UI.Presenters
 
         private Vector3 CalculateOffscreenPosition()
         {
-            Bounds bounds = new GenericSizeCalculator(Container).Calculate().ScreenBounds;
+            Bounds bounds = GetCanvasScaledBounds();
 
-            Vector3 difference = _canvasRect.TransformPoint(
-                ScreenOrigin switch
-                {
-                    Origin.Left   => (bounds.max.x + OffscreenBuffer) * Vector3.left,
-                    Origin.Right  => ((_canvasRect.rect.width - bounds.min.x) + OffscreenBuffer) * Vector3.right,
-                    Origin.Top    => ((_canvasRect.rect.height - bounds.min.y) + OffscreenBuffer) * Vector3.up,
-                    Origin.Bottom => (bounds.max.y + OffscreenBuffer) * Vector3.down,
-                    _             => Vector3.zero,
-                }
-            );
+            Vector3 difference = ScreenOrigin switch
+            {
+                Origin.Left   => (bounds.max.x + OffscreenBuffer) * Vector3.left,
+                Origin.Right  => ((_canvasRect.rect.width - bounds.min.x) + OffscreenBuffer) * Vector3.right,
+                Origin.Top    => ((_canvasRect.rect.height - bounds.min.y) + OffscreenBuffer) * Vector3.up,
+                Origin.Bottom => (bounds.max.y + OffscreenBuffer) * Vector3.down,
+                _             => Vector3.zero,
+            };
+
             difference.Scale(
                 ScreenOrigin switch
                 {
@@ -123,11 +132,35 @@ namespace Crysc.UI.Presenters
                 }
             );
 
-            return new Vector3(
-                x: Container.position.x + difference.x,
-                y: Container.position.y + difference.y,
-                z: Container.position.z
+            Vector3 containerPosition = Container.position;
+            if (_canvas.renderMode == RenderMode.ScreenSpaceCamera)
+                containerPosition = _canvasRect.InverseTransformPoint(containerPosition);
+
+            Vector3 offscreenPosition = containerPosition + difference;
+
+            return _canvas.renderMode == RenderMode.ScreenSpaceCamera
+                ? _canvasRect.TransformPoint(offscreenPosition)
+                : offscreenPosition;
+        }
+
+        private Bounds GetCanvasScaledBounds()
+        {
+            var cameraToCanvasScale = new Vector3(
+                x: _canvasRect.rect.width / _camera.pixelWidth,
+                y: _canvasRect.rect.height / _camera.pixelHeight
             );
+
+            Bounds cameraScaledBounds = new GenericSizeCalculator(Container).Calculate().ScreenBounds;
+            Vector3 min = cameraScaledBounds.min;
+            Vector3 max = cameraScaledBounds.max;
+
+            min.Scale(cameraToCanvasScale);
+            max.Scale(cameraToCanvasScale);
+
+            Bounds canvasScaledBounds = new();
+            canvasScaledBounds.SetMinMax(min: min, max: max);
+
+            return canvasScaledBounds;
         }
     }
 }
