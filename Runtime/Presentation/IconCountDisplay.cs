@@ -17,7 +17,7 @@ namespace Crysc.Presentation
 
         public void Set(int count)
         {
-            if (count >= NumeralCounterThreshold && NumeralCounter)
+            if ((count >= NumeralCounterThreshold || count <= 0) && NumeralCounter)
             {
                 DisplayIconCount(1);
                 NumeralCounter.text = $"x {count.ToString()}";
