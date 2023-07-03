@@ -40,8 +40,9 @@ namespace Crysc.UI.Presenters
             }
 
             _canvasRect = _canvas.GetComponent<RectTransform>();
-
             _dismissedPosition = CalculateOffscreenPosition();
+
+            if (PresentationState is not PresentationState.None) return;
             Container.position = _dismissedPosition;
             Container.gameObject.SetActive(false);
 
