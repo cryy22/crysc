@@ -30,6 +30,19 @@ namespace Crysc.Presentation
             if (NumeralCounter) NumeralCounter.gameObject.SetActive(false);
         }
 
+        public void SetUnknown()
+        {
+            if (!NumeralCounter)
+            {
+                DisplayIconCount(0);
+                return;
+            }
+
+            DisplayIconCount(1);
+            NumeralCounter.text = "x ?";
+            NumeralCounter.gameObject.SetActive(true);
+        }
+
         private void DisplayIconCount(int count)
         {
             int difference = count - _icons.Count;
