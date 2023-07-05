@@ -12,12 +12,13 @@ namespace Crysc.Presentation
         [SerializeField] private TMP_Text NumeralCounter;
 
         [SerializeField] private int NumeralCounterThreshold = 4;
+        [SerializeField] private bool HiddenOnZero = true;
 
         private readonly List<T> _icons = new();
 
         public void Set(int count)
         {
-            if ((count >= NumeralCounterThreshold || count <= 0) && NumeralCounter)
+            if ((count >= NumeralCounterThreshold || count < (HiddenOnZero ? 0 : 1)) && NumeralCounter)
             {
                 DisplayIconCount(1);
                 NumeralCounter.text = $"x {count.ToString()}";
