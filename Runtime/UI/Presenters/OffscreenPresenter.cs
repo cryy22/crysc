@@ -24,13 +24,17 @@ namespace Crysc.UI.Presenters
         [SerializeField] private Origin ScreenOrigin;
         [SerializeField] private float OffscreenBuffer = 100f;
         [SerializeField] private float MoveTime = 0.25f;
+        [SerializeField] private bool DismissedContainersAreActive;
         public PresentationState PresentationState { get; private set; }
 
+        private bool _isInitialized;
         private CryRoutine _moveRoutine;
         private Vector3 _dismissedPosition;
         private Camera _camera;
         private Canvas _canvas;
         private RectTransform _canvasRect;
+
+        private void Awake() { Container.gameObject.SetActive(DismissedContainersAreActive); }
 
         private void Start()
         {
@@ -46,11 +50,10 @@ namespace Crysc.UI.Presenters
             _canvasRect = _canvas.GetComponent<RectTransform>();
             _dismissedPosition = CalculateOffscreenPosition();
 
-            if (PresentationState is not PresentationState.None) return;
+            // if (PresentationState is not PresentationState.None) return; -- replaced with initialization
             Container.position = _dismissedPosition;
-            Container.gameObject.SetActive(false);
-
             PresentationState = PresentationState.Dismissed;
+            _isInitialized = true;
         }
 
         public void Present()
@@ -87,6 +90,7 @@ namespace Crysc.UI.Presenters
 
         private IEnumerator RunPresent()
         {
+            yield return new WaitUntil(() => _isInitialized);
             PresentationState = PresentationState.Presenting;
 
             Container.gameObject.SetActive(true);
@@ -103,6 +107,7 @@ namespace Crysc.UI.Presenters
 
         private IEnumerator RunDismiss()
         {
+            yield return new WaitUntil(() => _isInitialized);
             PresentationState = PresentationState.Dismissing;
 
             yield return Mover.MoveToSmoothly(
@@ -111,7 +116,7 @@ namespace Crysc.UI.Presenters
                 duration: MoveTime,
                 isLocal: false
             );
-            Container.gameObject.SetActive(false);
+            Container.gameObject.SetActive(DismissedContainersAreActive);
 
             PresentationState = PresentationState.Dismissed;
             Dismissed?.Invoke(sender: this, e: EventArgs.Empty);
