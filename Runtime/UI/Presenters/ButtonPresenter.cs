@@ -8,6 +8,18 @@ namespace Crysc.UI.Presenters
 {
     public class ButtonPresenter : MonoBehaviour, IPresenter
     {
+        public event EventHandler Dismissed
+        {
+            add => Presenter.Dismissed += value;
+            remove => Presenter.Dismissed -= value;
+        }
+
+        public event EventHandler Presented
+        {
+            add => Presenter.Presented += value;
+            remove => Presenter.Presented -= value;
+        }
+
         [SerializeField] private Button ButtonInput;
         [SerializeField] private TMP_Text TextInput;
         [SerializeField] private Component PresenterInput;

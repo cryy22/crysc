@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Crysc.Common;
 using Crysc.Helpers;
@@ -15,6 +16,9 @@ namespace Crysc.UI.Presenters
             Top,
             Bottom,
         }
+
+        public event EventHandler Dismissed;
+        public event EventHandler Presented;
 
         [SerializeField] private RectTransform Container;
         [SerializeField] private Origin ScreenOrigin;
@@ -94,6 +98,7 @@ namespace Crysc.UI.Presenters
             );
 
             PresentationState = PresentationState.Presented;
+            Presented?.Invoke(sender: this, e: EventArgs.Empty);
         }
 
         private IEnumerator RunDismiss()
@@ -109,6 +114,7 @@ namespace Crysc.UI.Presenters
             Container.gameObject.SetActive(false);
 
             PresentationState = PresentationState.Dismissed;
+            Dismissed?.Invoke(sender: this, e: EventArgs.Empty);
         }
 
         private Vector3 CalculateOffscreenPosition()
