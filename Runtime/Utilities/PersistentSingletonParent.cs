@@ -8,15 +8,14 @@ namespace Crysc.Utilities
 
         private void Awake()
         {
-            if (_instance == null)
-            {
-                _instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
+            if (_instance != null)
             {
                 Destroy(gameObject);
+                return;
             }
+
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
         }
     }
 }
