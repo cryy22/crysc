@@ -28,10 +28,13 @@ namespace Crysc.Presentation
 
         private void Start()
         {
-            Color initialColor = CurtainPanel.color;
-            _curtainClosedColor = new Color(r: initialColor.r, g: initialColor.g, b: initialColor.b, a: 0.5f);
-            _curtainOpenColor = new Color(r: initialColor.r, g: initialColor.g, b: initialColor.b, a: 0);
-            CurtainPanel.color = _curtainOpenColor;
+            if (CurtainPanel)
+            {
+                Color initialColor = CurtainPanel.color;
+                _curtainClosedColor = new Color(r: initialColor.r, g: initialColor.g, b: initialColor.b, a: 0.5f);
+                _curtainOpenColor = new Color(r: initialColor.r, g: initialColor.g, b: initialColor.b, a: 0);
+                CurtainPanel.color = _curtainOpenColor;
+            }
         }
 
         private void Update()
