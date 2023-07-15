@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Crysc.Presentation
@@ -9,14 +10,14 @@ namespace Crysc.Presentation
         [SerializeField] private Transform FocalPoint;
         [SerializeField] private List<ParallaxLayer> Layers = new();
 
-        private readonly Dictionary<ParallaxLayer, Vector3> _layersInitialPositions = new();
+        private readonly Dictionary<Transform, Vector3> _transformsInitialPositions = new();
         private Camera _camera;
 
         private void Awake()
         {
             _camera = Camera.main;
-            foreach (ParallaxLayer layer in Layers)
-                _layersInitialPositions.Add(key: layer, value: layer.Transform.position);
+            foreach (Transform layerTransform in Layers.SelectMany(layer => layer.Transforms))
+                _transformsInitialPositions.Add(key: layerTransform, value: layerTransform.position);
         }
 
         private void Update()
@@ -32,17 +33,19 @@ namespace Crysc.Presentation
 
         private void UpdateLayer(ParallaxLayer layer, Vector2 vocalDeltaRatio)
         {
-            layer.Transform.position = _layersInitialPositions[layer] + new Vector3(
-                x: vocalDeltaRatio.x * layer.Speed,
-                y: vocalDeltaRatio.y * layer.Speed,
-                z: 0
-            );
+            foreach (Transform layerTransform in layer.Transforms)
+                layerTransform.position = _transformsInitialPositions[layerTransform] + new Vector3(
+                    x: vocalDeltaRatio.x * layer.Speed,
+                    y: vocalDeltaRatio.y * layer.Speed,
+                    z: 0
+                );
         }
 
         [Serializable]
         public struct ParallaxLayer
         {
-            public Transform Transform;
+            public string Name;
+            public Transform[] Transforms;
             public float Speed;
         }
     }
