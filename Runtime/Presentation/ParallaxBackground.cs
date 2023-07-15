@@ -42,7 +42,7 @@ namespace Crysc.Presentation
             Vector2 focalPixelDelta = Input.mousePosition - _camera.WorldToScreenPoint(FocalPoint.position);
             Vector2 vocalDeltaRatio = Vector2.ClampMagnitude(
                 vector: focalPixelDelta / _camera.pixelWidth,
-                maxLength: 1
+                maxLength: .66f
             );
 
             foreach (ParallaxLayer layer in Layers) UpdateLayer(layer: layer, vocalDeltaRatio: vocalDeltaRatio);
