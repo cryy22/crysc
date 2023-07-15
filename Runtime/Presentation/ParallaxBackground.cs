@@ -17,7 +17,7 @@ namespace Crysc.Presentation
         {
             _camera = Camera.main;
             foreach (Transform layerTransform in Layers.SelectMany(layer => layer.Transforms))
-                _transformsInitialPositions.Add(key: layerTransform, value: layerTransform.position);
+                _transformsInitialPositions.Add(key: layerTransform, value: layerTransform.localPosition);
         }
 
         private void Update()
@@ -34,7 +34,7 @@ namespace Crysc.Presentation
         private void UpdateLayer(ParallaxLayer layer, Vector2 vocalDeltaRatio)
         {
             foreach (Transform layerTransform in layer.Transforms)
-                layerTransform.position = _transformsInitialPositions[layerTransform] + new Vector3(
+                layerTransform.localPosition = _transformsInitialPositions[layerTransform] + new Vector3(
                     x: vocalDeltaRatio.x * layer.Speed,
                     y: vocalDeltaRatio.y * layer.Speed,
                     z: 0
