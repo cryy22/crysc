@@ -35,8 +35,8 @@ namespace Crysc.Presentation
         {
             foreach (Transform layerTransform in layer.Transforms)
                 layerTransform.localPosition = _transformsInitialPositions[layerTransform] + new Vector3(
-                    x: vocalDeltaRatio.x * layer.Speed,
-                    y: vocalDeltaRatio.y * layer.Speed,
+                    x: vocalDeltaRatio.x * layer.Speed * layerTransform.lossyScale.x,
+                    y: vocalDeltaRatio.y * layer.Speed * layerTransform.lossyScale.y,
                     z: 0
                 );
         }
