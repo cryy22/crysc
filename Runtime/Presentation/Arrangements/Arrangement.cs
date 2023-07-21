@@ -5,7 +5,7 @@ using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
 
-namespace Crysc.Presentation
+namespace Crysc.Presentation.Arrangements
 {
     using IElement = IArrangementElement;
 
@@ -18,12 +18,14 @@ namespace Crysc.Presentation
             Right,
         }
 
-        private const float _zOffset = 0.0001f;
+        public const float ZOffset = 0.0001f;
 
         [SerializeField] private Transform ElementsParent;
         [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
         [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
         [SerializeField] private bool UpdateZInstantly = true;
+
+        [SerializeField] private SplineArrangementCalculator SplineArrangementCalculator;
 
         // IArrangement
         [field: SerializeField] public Alignment HorizontalAlignment { get; set; } = Alignment.Left;
@@ -37,7 +39,7 @@ namespace Crysc.Presentation
         public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
 
         private readonly List<IElement> _elements = new();
-        private readonly Dictionary<IElement, Vector3> _elementsPositions = new();
+        private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
         private readonly HashSet<IElement> _excludedFromRearrange = new();
         private readonly List<ConcurrentCryRoutine> _rearrangeRoutines = new();
 
@@ -56,19 +58,19 @@ namespace Crysc.Presentation
         {
             _elements.Clear();
             _elements.AddRange(elements);
-            List<IElement> existingElements = _elementsPositions.Keys.ToList();
+            List<IElement> existingElements = _elementsPlacements.Keys.ToList();
 
             _excludedFromRearrange.IntersectWith(_elements);
             foreach (IElement element in _elements.Except(existingElements)) AddElement(element);
-            foreach (IElement element in existingElements.Except(_elements)) _elementsPositions.Remove(element);
+            foreach (IElement element in existingElements.Except(_elements)) _elementsPlacements.Remove(element);
         }
 
         public void Rearrange()
         {
             UpdateElementsAndPositions();
-            foreach (IElement element in _elementsPositions.Keys.Except(_excludedFromRearrange))
+            foreach (IElement element in _elementsPlacements.Keys.Except(_excludedFromRearrange))
             {
-                element.Transform.localPosition = _elementsPositions[element];
+                element.Transform.localPosition = _elementsPlacements[element].Position;
                 element.Transform.localScale = Vector3.one;
             }
         }
@@ -81,7 +83,7 @@ namespace Crysc.Presentation
             _rearrangeRoutines.Clear();
 
             _rearrangeRoutines.AddRange(
-                _elementsPositions.Keys
+                _elementsPlacements.Keys
                     .Except(_excludedFromRearrange)
                     .Select(e => MoveElementPosition(e: e, duration: duration))
             );
@@ -97,8 +99,9 @@ namespace Crysc.Presentation
 
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (!_elementsPositions.TryGetValue(key: _elements[i], value: out Vector3 elementPosition)) continue;
-                float distance = Vector2.Distance(a: localPosition, b: elementPosition);
+                if (!_elementsPlacements.TryGetValue(key: _elements[i], value: out ElementPlacement placement))
+                    continue;
+                float distance = Vector2.Distance(a: localPosition, b: placement.Position);
 
                 if (!(distance < closestDistance)) continue;
 
@@ -117,10 +120,11 @@ namespace Crysc.Presentation
             IElement closestElement = _elements.ElementAtOrDefault(closestIndex);
 
             if (closestElement == null) return closestIndex;
-            if (!_elementsPositions.TryGetValue(key: closestElement, value: out Vector3 closestPosition))
+            if (!_elementsPlacements.TryGetValue(key: closestElement, value: out ElementPlacement placement))
                 return closestIndex;
 
-            float closestAxialPosition = (useXAxis ? closestPosition.x : closestPosition.y) * (IsInverted ? -1 : 1);
+            float closestAxialPosition =
+                (useXAxis ? placement.Position.x : placement.Position.y) * (IsInverted ? -1 : 1);
             float axialPosition = (useXAxis ? localPosition.x : localPosition.y) * (IsInverted ? -1 : 1);
 
             return axialPosition < closestAxialPosition ? closestIndex : closestIndex + 1;
@@ -168,12 +172,16 @@ namespace Crysc.Presentation
                 e.Transform.localPosition = new Vector3(
                     x: elementTransform.localPosition.x,
                     y: elementTransform.localPosition.y,
-                    z: _elementsPositions[e].z
+                    z: _elementsPlacements[e].Position.z
                 );
 
             return new ConcurrentCryRoutine(
                 behaviour: this,
-                Mover.MoveToSmoothly(transform: elementTransform, end: _elementsPositions[e], duration: duration),
+                Mover.MoveToSmoothly(
+                    transform: elementTransform,
+                    end: _elementsPlacements[e].Position,
+                    duration: duration
+                ),
                 Scaler.ScaleToSmoothly(transform: elementTransform, end: Vector3.one, duration: duration)
             );
         }
@@ -181,13 +189,30 @@ namespace Crysc.Presentation
         private void UpdateElementsAndPositions()
         {
             UpdateProperties();
+            if (SplineArrangementCalculator)
+            {
+                foreach (
+                    ElementPlacement placement in SplineArrangementCalculator.CalculateElementPlacements(
+                        elements: _elements,
+                        elementWidth: BaseElementSize.x,
+                        preferredSpacingRatio: PreferredSpacingRatio.x
+                    )
+                )
+                    _elementsPlacements[placement.Element] = placement;
+                return;
+            }
+
 
             Vector2 weightedIndexes = Vector2.zero;
             var index = 0;
             foreach (IElement element in _elements)
             {
                 Vector3 startPoint = CalculateElementStartPoint(weightedIndexes: weightedIndexes, index: index);
-                _elementsPositions[element] = CalculateElementAnchorPoint(element: element, startPoint: startPoint);
+                _elementsPlacements[element] = new ElementPlacement(
+                    element: element,
+                    position: CalculateElementAnchorPoint(element: element, startPoint: startPoint),
+                    rotation: Quaternion.identity
+                );
 
                 weightedIndexes += element.SizeMultiplier;
                 index++;
@@ -200,7 +225,12 @@ namespace Crysc.Presentation
             elementTransform.SetParent(ElementsParent);
             elementTransform.gameObject.SetActive(true);
 
-            _elementsPositions[element] = elementTransform.localPosition;
+            _elementsPlacements[element] =
+                new ElementPlacement(
+                    element: element,
+                    position: elementTransform.localPosition,
+                    rotation: elementTransform.localRotation
+                );
         }
 
         private Vector3 CalculateElementStartPoint(Vector2 weightedIndexes, int index)
@@ -214,7 +244,7 @@ namespace Crysc.Presentation
             return new Vector3(
                 x: startPoint2d.x,
                 y: startPoint2d.y,
-                z: _zOffset * index
+                z: ZOffset * index
             );
         }
 

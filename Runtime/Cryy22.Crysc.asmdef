@@ -7,7 +7,9 @@
     "GUID:6055be8ebefd69e48b49212b09b47b2f",
     "GUID:9d5fab96f471742b89638684eb17e60c",
     "GUID:71d8c94f2554c4adeb08e7d60f24986f",
-    "GUID:15fc0a57446b3144c949da3e2b9737a9"
+    "GUID:15fc0a57446b3144c949da3e2b9737a9",
+    "Unity.Splines",
+    "GUID:d8b63aba1907145bea998dd612889d6b"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

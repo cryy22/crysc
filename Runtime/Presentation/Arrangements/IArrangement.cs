@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Crysc.Presentation
+namespace Crysc.Presentation.Arrangements
 {
     public interface IArrangement<in T>
     {
