@@ -18,7 +18,7 @@ namespace Crysc.Presentation.Arrangements
             Right,
         }
 
-        public const float ZOffset = 0.0001f;
+        public const float ZOffset = 0.01f;
 
         [SerializeField] private Transform ElementsParent;
         [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative

@@ -75,17 +75,11 @@ namespace Crysc.UI.Tooltips
             float xInset = targetDimensions.WorldBounds.extents.x * (1 - XFromCenter);
             float yInset = targetDimensions.WorldBounds.extents.y * (1 - YFromCenter);
 
-            float xValue = ShouldTooltipBeOnRight(
-                targetDimensions: targetDimensions,
-                tooltipDimensions: tooltipDimensions
-            )
+            float xValue = ShouldTooltipBeOnRight(targetDimensions: targetDimensions)
                 ? targetDimensions.WorldBounds.max.x - xInset
                 : (targetDimensions.WorldBounds.min.x - tooltipDimensions.WorldBounds.size.x) + xInset;
 
-            float yValue = ShouldTooltipBeAbove(
-                targetDimensions: targetDimensions,
-                tooltipDimensions: tooltipDimensions
-            )
+            float yValue = ShouldTooltipBeAbove(targetDimensions: targetDimensions)
                 ? targetDimensions.WorldBounds.max.y - yInset
                 : (targetDimensions.WorldBounds.min.y - tooltipDimensions.WorldBounds.size.y) + yInset;
 
@@ -94,18 +88,20 @@ namespace Crysc.UI.Tooltips
                 y: yValue
             );
 
-            return EnsureTooltipIsOnScreen(
-                screenPoint: Camera.WorldToScreenPoint(worldPoint),
-                tooltipScreenSize: tooltipDimensions.ScreenBounds.size
+            return Camera.ScreenToWorldPoint(
+                EnsureTooltipIsOnScreen(
+                    screenPoint: Camera.WorldToScreenPoint(worldPoint),
+                    tooltipScreenSize: tooltipDimensions.ScreenBounds.size
+                )
             );
         }
 
-        private static bool ShouldTooltipBeOnRight(Dimensions targetDimensions, Dimensions tooltipDimensions)
+        private static bool ShouldTooltipBeOnRight(Dimensions targetDimensions)
         {
             return targetDimensions.ScreenBounds.center.x <= (Screen.width / 5f) * 3;
         }
 
-        private static bool ShouldTooltipBeAbove(Dimensions targetDimensions, Dimensions tooltipDimensions)
+        private static bool ShouldTooltipBeAbove(Dimensions targetDimensions)
         {
             return targetDimensions.ScreenBounds.center.y <= (Screen.height / 5f) * 3;
         }
