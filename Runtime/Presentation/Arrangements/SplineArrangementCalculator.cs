@@ -41,19 +41,17 @@ namespace Crysc.Presentation.Arrangements
                 Spline.Evaluate(
                     t: currentRatio,
                     position: out float3 position,
-                    tangent: out _,
-                    upVector: out float3 upVector
+                    tangent: out float3 tangent,
+                    upVector: out _
                 );
 
                 placements[i] = new ElementPlacement(
                     element: elements.ElementAt(i),
                     position: new Vector3(x: position.x, y: position.y, z: Arrangement.ZOffset * i),
-                    rotation: Quaternion.FromToRotation(fromDirection: Vector3.up, toDirection: upVector)
+                    rotation: Quaternion.FromToRotation(fromDirection: Vector3.right, toDirection: tangent)
                 );
 
                 Debug.Log(currentRatio);
-                Debug.Log(placements[i].Position);
-
                 currentRatio += perUnitDistance;
             }
 
@@ -70,7 +68,7 @@ namespace Crysc.Presentation.Arrangements
             elements = elements.ToArray();
             if (elements.Count() <= 1) return 0;
 
-            float maxElementSplineRatioWidth = splineLength / (elements.Count() - 1);
+            float maxElementSplineRatioWidth = 1f / (elements.Count() - 1);
 
             float elementSplineRatioWidth = elementWidth / splineLength;
             float preferredElementSplineRatioWidth = elementSplineRatioWidth * (1 + preferredSpacingRatio);

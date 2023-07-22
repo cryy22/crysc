@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 namespace Crysc.Helpers
@@ -50,6 +51,20 @@ namespace Crysc.Helpers
             );
 
             SetRotation(transform: transform, rotation: end, isLocal: isLocal);
+        }
+
+        public static IEnumerator RotateToSmoothly(
+            Transform transform,
+            Quaternion end,
+            float duration = 0.25f,
+            bool isLocal = true
+        )
+        {
+            yield return (
+                isLocal
+                    ? transform.DOLocalRotateQuaternion(endValue: end, duration: duration)
+                    : transform.DORotateQuaternion(endValue: end, duration: duration)
+            ).WaitForCompletion();
         }
 
         public static IEnumerator RotateSine(

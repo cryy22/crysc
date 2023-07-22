@@ -85,7 +85,7 @@ namespace Crysc.Presentation.Arrangements
             _rearrangeRoutines.AddRange(
                 _elementsPlacements.Keys
                     .Except(_excludedFromRearrange)
-                    .Select(e => MoveElementPosition(e: e, duration: duration))
+                    .Select(e => AnimateElementPlacement(e: e, duration: duration))
             );
 
             yield return CoroutineWaiter.RunConcurrently(_rearrangeRoutines.ToArray());
@@ -165,7 +165,7 @@ namespace Crysc.Presentation.Arrangements
         public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
         public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
 
-        private ConcurrentCryRoutine MoveElementPosition(IElement e, float duration)
+        private ConcurrentCryRoutine AnimateElementPlacement(IElement e, float duration)
         {
             Transform elementTransform = e.Transform;
             if (UpdateZInstantly)
@@ -180,6 +180,11 @@ namespace Crysc.Presentation.Arrangements
                 Mover.MoveToSmoothly(
                     transform: elementTransform,
                     end: _elementsPlacements[e].Position,
+                    duration: duration
+                ),
+                Rotator.RotateToSmoothly(
+                    transform: elementTransform,
+                    end: _elementsPlacements[e].Rotation,
                     duration: duration
                 ),
                 Scaler.ScaleToSmoothly(transform: elementTransform, end: Vector3.one, duration: duration)
