@@ -7,13 +7,19 @@ namespace Crysc.Helpers
     {
         public static void AddCameraToStack(Camera overlayCamera)
         {
-            UniversalAdditionalCameraData baseCameraData = Camera.main.GetUniversalAdditionalCameraData();
+            Camera mainCamera = Camera.main;
+            if (!mainCamera || !overlayCamera) return;
+
+            UniversalAdditionalCameraData baseCameraData = mainCamera.GetUniversalAdditionalCameraData();
             baseCameraData.cameraStack.Add(overlayCamera);
         }
 
         public static void RemoveCameraFromStack(Camera overlayCamera)
         {
-            UniversalAdditionalCameraData baseCameraData = Camera.main.GetUniversalAdditionalCameraData();
+            Camera mainCamera = Camera.main;
+            if (!mainCamera || !overlayCamera) return;
+
+            UniversalAdditionalCameraData baseCameraData = mainCamera.GetUniversalAdditionalCameraData();
             baseCameraData.cameraStack.Remove(overlayCamera);
         }
     }
