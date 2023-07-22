@@ -18,6 +18,12 @@ namespace Crysc.Helpers
             );
         }
 
+        public static IEnumerator RunConcurrently(this MonoBehaviour behaviour, params IEnumerator[] enumerators)
+        {
+            Coroutine[] coroutines = enumerators.Select(behaviour.StartCoroutine).ToArray();
+            return RunConcurrently(coroutines);
+        }
+
         public static IEnumerator RunConcurrently(params Coroutine[] coroutines) { return coroutines.GetEnumerator(); }
 
         public static IEnumerator RunConcurrently(params CryRoutine[] routines)
