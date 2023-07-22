@@ -11,7 +11,7 @@ namespace Crysc.UI.Tooltips
     public abstract class Tooltip<T> : MonoBehaviour
     {
         private const float _hoverLockTime = 0.75f;
-        private const float _unhoverUnlockTime = 0.0625f;
+        private const float _unhoverUnlockTime = 0.125f;
 
         [SerializeField] private TooltipHoverPublisher PublisherInput;
         [SerializeField] protected RectTransform Container;
