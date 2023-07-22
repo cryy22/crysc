@@ -1,3 +1,4 @@
+using Crysc.Patterns.OverlayCameras;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -12,6 +13,7 @@ namespace Crysc.Helpers
 
             UniversalAdditionalCameraData baseCameraData = mainCamera.GetUniversalAdditionalCameraData();
             baseCameraData.cameraStack.Add(overlayCamera);
+            baseCameraData.cameraStack.Sort((a, b) => a.GetOverlayIndex().CompareTo(b.GetOverlayIndex()));
         }
 
         public static void RemoveCameraFromStack(Camera overlayCamera)
@@ -22,5 +24,7 @@ namespace Crysc.Helpers
             UniversalAdditionalCameraData baseCameraData = mainCamera.GetUniversalAdditionalCameraData();
             baseCameraData.cameraStack.Remove(overlayCamera);
         }
+
+        private static int GetOverlayIndex(this Camera camera) { return camera.GetComponent<OverlayIndexer>().Index; }
     }
 }
