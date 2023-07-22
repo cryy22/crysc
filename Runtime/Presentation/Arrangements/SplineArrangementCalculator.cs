@@ -51,7 +51,6 @@ namespace Crysc.Presentation.Arrangements
                     rotation: Quaternion.FromToRotation(fromDirection: Vector3.right, toDirection: tangent)
                 );
 
-                Debug.Log(currentRatio);
                 currentRatio += perUnitDistance;
             }
 
