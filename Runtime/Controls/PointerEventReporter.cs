@@ -7,11 +7,11 @@ namespace Crysc.Controls
     public class PointerEventReporter : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
-        public event EventHandler<PointerEventArgs> Dragged;
         public event EventHandler<PointerEventArgs> Hovered;
-        public event EventHandler<PointerEventArgs> Pressed;
         public event EventHandler<PointerEventArgs> Unhovered;
+        public event EventHandler<PointerEventArgs> Pressed;
         public event EventHandler<PointerEventArgs> Unpressed;
+        public event EventHandler<PointerEventArgs> Dragged;
 
         [SerializeField] private Component SenderOverrideInput;
 
