@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crysc.Patterns.Coordination
+namespace Crysc.Patterns.Managers
 {
     public class ManagerConfig : ScriptableObject
     { }

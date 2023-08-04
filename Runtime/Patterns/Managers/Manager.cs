@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace Crysc.Patterns.Coordination
+namespace Crysc.Patterns.Managers
 {
     public class Manager<TConfig, TState> : MonoBehaviour
         where TConfig : ManagerConfig

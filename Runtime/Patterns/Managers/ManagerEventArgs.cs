@@ -1,6 +1,6 @@
 using System;
 
-namespace Crysc.Patterns.Coordination
+namespace Crysc.Patterns.Managers
 {
     public class ManagerEventArgs : EventArgs
     {
