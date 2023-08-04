@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Crysc.Patterns.Coordination
 {
-    public class Coordinator<TConfig, TState> : MonoBehaviour
+    public class Manager<TConfig, TState> : MonoBehaviour
         where TConfig : CoordinationConfig
         where TState : CoordinationState
     {
@@ -63,6 +63,6 @@ namespace Crysc.Patterns.Coordination
         }
     }
 
-    public class Coordinator : Coordinator<CoordinationConfig, CoordinationState>
+    public class Manager : Manager<CoordinationConfig, CoordinationState>
     { }
 }
