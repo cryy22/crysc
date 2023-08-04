@@ -5,11 +5,11 @@ using UnityEngine;
 namespace Crysc.Patterns.Coordination
 {
     public class Manager<TConfig, TState> : MonoBehaviour
-        where TConfig : CoordinationConfig
-        where TState : CoordinationState
+        where TConfig : ManagerConfig
+        where TState : ManagerState
     {
+        public event EventHandler<ManagerEventArgs> Changed;
         [SerializeField] private GameObject Container;
-        private bool _isActive;
 
         public bool IsActive
         {
@@ -17,14 +17,13 @@ namespace Crysc.Patterns.Coordination
             private set
             {
                 _isActive = value;
-                Changed?.Invoke(sender: this, e: new CoordinationEventArgs(value));
+                Changed?.Invoke(sender: this, e: new ManagerEventArgs(value));
             }
         }
 
         protected TConfig Config { get; private set; }
         protected TState State { get; private set; }
-
-        public event EventHandler<CoordinationEventArgs> Changed;
+        private bool _isActive;
 
         protected virtual void Awake()
         {
@@ -63,6 +62,6 @@ namespace Crysc.Patterns.Coordination
         }
     }
 
-    public class Manager : Manager<CoordinationConfig, CoordinationState>
+    public class Manager : Manager<ManagerConfig, ManagerState>
     { }
 }
