@@ -5,12 +5,14 @@ using UnityEngine.EventSystems;
 namespace Crysc.Controls
 {
     public class PointerEventReporter : MonoBehaviour,
-        IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler, IDragHandler
+        IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler,
+        IDragHandler
     {
         public event EventHandler<PointerEventArgs> Hovered;
         public event EventHandler<PointerEventArgs> Unhovered;
         public event EventHandler<PointerEventArgs> Pressed;
         public event EventHandler<PointerEventArgs> Unpressed;
+        public event EventHandler<PointerEventArgs> Clicked;
         public event EventHandler<PointerEventArgs> Dragged;
 
         [SerializeField] private Component SenderOverrideInput;
@@ -55,6 +57,12 @@ namespace Crysc.Controls
         {
             _latestScreenPosition = data.position;
             Unpressed?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+        }
+
+        public void OnPointerClick(PointerEventData data)
+        {
+            _latestScreenPosition = data.position;
+            Clicked?.Invoke(sender: Sender, e: CreatePointerEventArgs());
         }
 
         public void OnDrag(PointerEventData data)
