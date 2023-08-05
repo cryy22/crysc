@@ -6,7 +6,7 @@ namespace Crysc.Patterns.Managers
 {
     public class Manager<TConfig, TState> : MonoBehaviour
         where TConfig : ManagerConfig
-        where TState : ManagerState
+        where TState : ScriptableObject
     {
         public event EventHandler<ManagerEventArgs> Changed;
         [SerializeField] private GameObject Container;

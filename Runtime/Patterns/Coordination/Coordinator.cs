@@ -8,12 +8,12 @@ namespace Crysc.Patterns.Coordination
         where TEvent : Enum
         where TState : class
     {
-        public event EventHandler<CoordinationEventArgs<TEvent, TState>> Announced;
+        public event EventHandler<CoordinationEventArgs<TEvent, TState>> Announcement;
         private readonly WaitGroup _waitGroup = new();
 
         protected IEnumerator AnnounceAndWait(TEvent eventEnum, TState state)
         {
-            Announced?.Invoke(
+            Announcement?.Invoke(
                 sender: this,
                 e: new CoordinationEventArgs<TEvent, TState>(
                     eventEnum: eventEnum,
