@@ -90,8 +90,8 @@ namespace Crysc.UI.Presenters
 
         private IEnumerator RunPresent()
         {
-            yield return new WaitUntil(() => _isInitialized);
             PresentationState = PresentationState.Presenting;
+            yield return new WaitUntil(() => _isInitialized);
 
             Container.gameObject.SetActive(true);
             yield return Mover.MoveToSmoothly(
@@ -107,8 +107,8 @@ namespace Crysc.UI.Presenters
 
         private IEnumerator RunDismiss()
         {
-            yield return new WaitUntil(() => _isInitialized);
             PresentationState = PresentationState.Dismissing;
+            yield return new WaitUntil(() => _isInitialized);
 
             yield return Mover.MoveToSmoothly(
                 transform: Container,
