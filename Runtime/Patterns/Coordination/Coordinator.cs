@@ -11,7 +11,7 @@ namespace Crysc.Patterns.Coordination
         public event EventHandler<CoordinationEventArgs<TEvent, TState>> Announcement;
         private readonly WaitGroup _waitGroup = new();
 
-        protected IEnumerator AnnounceAndWait(TEvent eventEnum, TState state)
+        protected IEnumerator Coordinate(TEvent eventEnum, TState state)
         {
             Announcement?.Invoke(
                 sender: this,
