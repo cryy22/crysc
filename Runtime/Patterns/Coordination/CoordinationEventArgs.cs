@@ -10,7 +10,7 @@ namespace Crysc.Patterns.Coordination
         public TEvent Event { get; }
         public TState State { get; }
 
-        public CoordinationEventArgs(TEvent eventEnum, TState state, WaitGroup waitGroup)
+        protected CoordinationEventArgs(TEvent eventEnum, TState state, WaitGroup waitGroup)
         {
             Event = eventEnum;
             State = state;
