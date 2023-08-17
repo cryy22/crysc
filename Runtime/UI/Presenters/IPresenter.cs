@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UnityEngine;
 
 namespace Crysc.UI.Presenters
 {
@@ -10,8 +11,21 @@ namespace Crysc.UI.Presenters
 
         PresentationState PresentationState { get; }
         void Present();
-        IEnumerator PresentAndWait();
         void Dismiss();
-        IEnumerator DismissAndWait();
+    }
+
+    public static class PresenterExtensions
+    {
+        public static IEnumerator PresentAndWait(this IPresenter presenter)
+        {
+            presenter.Present();
+            yield return new WaitUntil(() => presenter.PresentationState != PresentationState.Presenting);
+        }
+
+        public static IEnumerator DismissAndWait(this IPresenter presenter)
+        {
+            presenter.Dismiss();
+            yield return new WaitUntil(() => presenter.PresentationState != PresentationState.Dismissing);
+        }
     }
 }

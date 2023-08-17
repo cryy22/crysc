@@ -36,28 +36,12 @@ namespace Crysc.UI.Presenters
             _moveRoutine = new CryRoutine(enumerator: RunPresent(), behaviour: this);
         }
 
-        public IEnumerator PresentAndWait()
-        {
-            if (PresentationState == PresentationState.Presented) yield break;
-
-            Present();
-            yield return new WaitUntil(() => _moveRoutine is { IsComplete: true });
-        }
-
         public void Dismiss()
         {
             if (PresentationState == PresentationState.Dismissed) return;
 
             _moveRoutine?.Stop();
             _moveRoutine = new CryRoutine(enumerator: RunDismiss(), behaviour: this);
-        }
-
-        public IEnumerator DismissAndWait()
-        {
-            if (PresentationState == PresentationState.Dismissed) yield break;
-
-            Dismiss();
-            yield return new WaitUntil(() => _moveRoutine is { IsComplete: true });
         }
 
         private IEnumerator RunPresent()

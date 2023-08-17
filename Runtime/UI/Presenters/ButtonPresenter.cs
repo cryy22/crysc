@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -36,22 +35,10 @@ namespace Crysc.UI.Presenters
             Presenter.Present();
         }
 
-        public IEnumerator PresentAndWait()
-        {
-            Button.interactable = true;
-            return Presenter.PresentAndWait();
-        }
-
         public void Dismiss()
         {
             Button.interactable = false;
             Presenter.Dismiss();
-        }
-
-        public IEnumerator DismissAndWait()
-        {
-            Button.interactable = false;
-            return Presenter.DismissAndWait();
         }
 
         #region Lazily-Initialized Properties
