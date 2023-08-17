@@ -9,22 +9,18 @@ namespace Crysc.Patterns.Coordination
         where TState : class
     {
         public event EventHandler<EventArgs> Announcement;
-        private readonly WaitGroup _waitGroup = new();
 
         protected virtual IEnumerator Coordinate(TEvent eventEnum, TState state)
         {
-            _waitGroup.Join();
+            WaitGroup waitGroup = new();
+            waitGroup.Join();
             Announcement?.Invoke(
                 sender: this,
-                e: new EventArgs(
-                    eventEnum: eventEnum,
-                    state: state,
-                    waitGroup: _waitGroup
-                )
+                e: new EventArgs(eventEnum: eventEnum, state: state, waitGroup: waitGroup)
             );
-            _waitGroup.Leave();
+            waitGroup.Leave();
 
-            yield return _waitGroup.Wait();
+            yield return waitGroup.Wait();
         }
 
         public class EventArgs : CoordinationEventArgs<TEvent, TState>
