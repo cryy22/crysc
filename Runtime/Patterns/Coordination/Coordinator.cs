@@ -13,6 +13,7 @@ namespace Crysc.Patterns.Coordination
 
         protected virtual IEnumerator Coordinate(TEvent eventEnum, TState state)
         {
+            _waitGroup.Join();
             Announcement?.Invoke(
                 sender: this,
                 e: new EventArgs(
@@ -21,6 +22,8 @@ namespace Crysc.Patterns.Coordination
                     waitGroup: _waitGroup
                 )
             );
+            _waitGroup.Leave();
+
             yield return _waitGroup.Wait();
         }
 
