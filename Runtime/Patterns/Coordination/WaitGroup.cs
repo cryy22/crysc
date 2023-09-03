@@ -15,6 +15,6 @@ namespace Crysc.Patterns.Coordination
         public void Leave() { _count = Math.Max(val1: _count - 1, val2: 0); }
 
         public IEnumerator Wait() { yield return _waitUntilEmpty; }
-        private bool IsEmpty() { return _count == 0; }
+        public bool IsEmpty() { return _count == 0; }
     }
 }

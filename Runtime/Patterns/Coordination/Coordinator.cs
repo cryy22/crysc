@@ -20,7 +20,11 @@ namespace Crysc.Patterns.Coordination
             );
             waitGroup.Leave();
 
-            yield return waitGroup.Wait();
+            while (waitGroup.IsEmpty() == false)
+            {
+                yield return waitGroup.Wait();
+                yield return null;
+            }
         }
 
         public class EventArgs : CoordinationEventArgs<TEvent, TState>
