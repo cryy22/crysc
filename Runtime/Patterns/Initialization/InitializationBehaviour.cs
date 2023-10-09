@@ -4,8 +4,8 @@ namespace Crysc.Patterns.Initialization
 {
     public abstract class InitializationBehaviour<TInitParams> : MonoBehaviour
     {
-        protected bool IsInitialized { get; private set; }
-        protected TInitParams InitParams { get; private set; }
+        public bool IsInitialized { get; private set; }
+        public TInitParams InitParams { get; private set; }
 
         public virtual void Initialize(TInitParams initParams)
         {
