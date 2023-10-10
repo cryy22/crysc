@@ -2,12 +2,12 @@ using UnityEngine;
 
 namespace Crysc.Patterns.Initialization
 {
-    public abstract class InitializationBehaviour<TInitParams> : MonoBehaviour
+    public abstract class InitializationBehaviour<TConfig> : MonoBehaviour
     {
         public bool IsInitialized { get; private set; }
-        public TInitParams InitParams { get; private set; }
+        public TConfig Config { get; private set; }
 
-        public virtual void Initialize(TInitParams initParams)
+        public virtual void Initialize(TConfig config)
         {
             if (IsInitialized)
             {
@@ -15,7 +15,7 @@ namespace Crysc.Patterns.Initialization
                 return;
             }
 
-            InitParams = initParams;
+            Config = config;
             IsInitialized = true;
         }
     }

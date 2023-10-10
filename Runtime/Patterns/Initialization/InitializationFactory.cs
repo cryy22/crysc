@@ -2,22 +2,18 @@ using UnityEngine;
 
 namespace Crysc.Patterns.Initialization
 {
-    public abstract class InitializationFactory<T, TConfig, TInitParams> : ScriptableObject
-        where T : InitializationBehaviour<TInitParams>
-    {
-        [SerializeField] private T Prefab;
-        public abstract T Create(TConfig config);
-        protected T Instantiate() { return Instantiate(Prefab); }
-    }
-
-    public abstract class InitializationFactory<T, TConfig> : InitializationFactory<T, TConfig, TConfig>
+    public abstract class InitializationFactory<T, TConfig> : ScriptableObject
         where T : InitializationBehaviour<TConfig>
     {
-        public override T Create(TConfig config)
+        [SerializeField] private T Prefab;
+
+        public virtual T CreateEnemy(TConfig config)
         {
             T instance = Instantiate();
             instance.Initialize(config);
             return instance;
         }
+
+        protected T Instantiate() { return Instantiate(Prefab); }
     }
 }
