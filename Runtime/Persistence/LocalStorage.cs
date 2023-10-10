@@ -9,6 +9,8 @@ namespace Crysc.Persistence
         private const string _indexedDBDirectory = "/idbfs";
         private static string _dataPath;
 
+        public static bool Exists(string path) { return File.Exists(Path.Combine(path1: DataPath(), path2: path)); }
+
         public static string Read(string path)
         {
             try

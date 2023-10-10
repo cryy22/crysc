@@ -4,6 +4,8 @@ namespace Crysc.Persistence
 {
     public static class LocalDataSaver
     {
+        public static bool Exists(string path) { return LocalStorage.Exists($"{path}.json"); }
+
         public static void Save(string path, object data)
         {
             LocalStorage.Write(
