@@ -30,5 +30,7 @@ namespace Crysc.Persistence
 
             return data;
         }
+
+        public static void Delete(string path) { LocalStorage.Delete($"{path}.json"); }
     }
 }

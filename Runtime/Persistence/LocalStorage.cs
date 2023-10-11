@@ -43,6 +43,8 @@ namespace Crysc.Persistence
             if (IsIndexedDB()) Crysc_SyncDB();
         }
 
+        public static void Delete(string path) { File.Delete(Path.Combine(path1: DataPath(), path2: path)); }
+
         private static string DataPath()
         {
             return _dataPath ??= IsIndexedDB()
