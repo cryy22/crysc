@@ -16,7 +16,7 @@ namespace Crysc.Presentation
 
         private readonly List<TItem> _items = new();
 
-        public virtual void SetElements(IEnumerable<T> elements)
+        public virtual void SetElements(IEnumerable<T> elements, bool ignoreNullElements = true)
         {
             bool hasElements = elements.Any();
             ItemsParent.gameObject.SetActive(hasElements);
@@ -36,8 +36,9 @@ namespace Crysc.Presentation
                 }
 
                 T element = elementsAry.ElementAtOrDefault(i);
-                presenter.gameObject.SetActive(element != null);
-                if (element != null) SetElement(presenter: presenter, element: element, index: i);
+                bool ignore = ignoreNullElements && element == null;
+                presenter.gameObject.SetActive(ignore == false);
+                if (ignore == false) SetElement(presenter: presenter, element: element, index: i);
             }
         }
 
