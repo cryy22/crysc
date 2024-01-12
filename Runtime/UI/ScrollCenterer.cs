@@ -16,15 +16,12 @@ namespace Crysc.UI
         private void Update()
         {
             if (EventSystem.current.currentSelectedGameObject == _selected) return;
-            Debug.Log("new thing selected!!");
 
             _selected = EventSystem.current.currentSelectedGameObject;
             if (ListItemParent.Cast<Transform>().Any(item => item.gameObject == _selected) == false) return;
-            Debug.Log("new thing is in the list of things we care about!!");
 
             var target = _selected.GetComponent<RectTransform>();
             if (!target) return;
-            Debug.Log("new thing has a recttransform!!");
 
             float viewportWidth = ScrollRect.viewport.rect.width;
             float contentWidth = ScrollRect.content.rect.width;
