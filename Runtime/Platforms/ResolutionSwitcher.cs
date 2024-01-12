@@ -46,9 +46,9 @@ namespace Crysc.Platforms
                 .Where(
                     r => r.width / (float) r.height >= MinAspectRatio && r.width / (float) r.height <= MaxAspectRatio
                 )
-                .OrderByDescending(
-                    r => (r.width * (10 ^ 6)) + (r.height * (10 ^ 3)) + Convert.ToInt32(r.refreshRateRatio.value)
-                )
+                .OrderByDescending(r => r.width)
+                .ThenByDescending(r => r.height)
+                .ThenByDescending(r => r.refreshRateRatio.value)
                 .GroupBy(r => r.width ^ r.height)
                 .Select(g => g.First())
                 .ToArray();
