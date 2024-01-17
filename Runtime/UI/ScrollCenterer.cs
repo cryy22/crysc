@@ -23,9 +23,6 @@ namespace Crysc.UI
             var target = _selected.GetComponent<RectTransform>();
             if (!target) return;
 
-            float viewportWidth = ScrollRect.viewport.rect.width;
-            float contentWidth = ScrollRect.content.rect.width;
-
             var targetCorners = new Vector3[4];
             target.GetWorldCorners(targetCorners);
 
@@ -41,12 +38,31 @@ namespace Crysc.UI
             minPosition -= target.rect.size * OffsetPercentage;
             maxPosition += target.rect.size * OffsetPercentage;
 
-            float minHorizontalScroll = Mathf.Clamp01((maxPosition.x - viewportWidth) / (contentWidth - viewportWidth));
-            float maxHorizontalScroll = Mathf.Clamp01(minPosition.x / (contentWidth - viewportWidth));
+            float viewportWidth = ScrollRect.viewport.rect.width;
+            float contentWidth = ScrollRect.content.rect.width;
+            float viewportHeight = ScrollRect.viewport.rect.height;
+            float contentHeight = ScrollRect.content.rect.height;
+
+            float leftmostHorizontalScroll =
+                Mathf.Clamp01((maxPosition.x - viewportWidth) / (contentWidth - viewportWidth));
+            float rightmostHorizontalScroll =
+                Mathf.Clamp01(minPosition.x / (contentWidth - viewportWidth));
             ScrollRect.horizontalNormalizedPosition = Mathf.Clamp(
                 value: ScrollRect.horizontalNormalizedPosition,
-                min: minHorizontalScroll,
-                max: maxHorizontalScroll
+                min: leftmostHorizontalScroll,
+                max: rightmostHorizontalScroll
+            );
+
+            // this is specifically for handling dropdown scroll centering.
+            // may need to parameterize to handle different vertical centering scenarios.
+            float downmostVerticalScroll =
+                Mathf.Clamp01(((maxPosition.y + contentHeight) - viewportHeight) / (contentHeight - viewportHeight));
+            float upmostVerticalScroll =
+                Mathf.Clamp01((minPosition.y + contentHeight) / (contentHeight - viewportHeight));
+            ScrollRect.verticalNormalizedPosition = Mathf.Clamp(
+                value: ScrollRect.verticalNormalizedPosition,
+                min: downmostVerticalScroll,
+                max: upmostVerticalScroll
             );
         }
     }
