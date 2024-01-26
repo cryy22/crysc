@@ -1,11 +1,14 @@
 using System;
-using UnityEngine;
 
 namespace Crysc.UI.Tooltips
 {
-    [CreateAssetMenu(fileName = "TooltipHoverPublisher", menuName = "crysc/Publishers/Tooltip Hover")]
-    public class TooltipHoverPublisher : ScriptableObject
+    public class TooltipHoverPublisher
     {
+        public event EventHandler<TooltipHoverEventArgs> Hovered;
+
+        private static TooltipHoverPublisher _instance;
+        public static TooltipHoverPublisher I => _instance ??= new TooltipHoverPublisher();
+
         public void RegisterHover(ITooltipTargetProvider targetProvider)
         {
             Hovered?.Invoke(
@@ -17,7 +20,5 @@ namespace Crysc.UI.Tooltips
                 )
             );
         }
-
-        public event EventHandler<TooltipHoverEventArgs> Hovered;
     }
 }

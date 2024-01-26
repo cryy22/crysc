@@ -12,8 +12,8 @@ namespace Crysc.UI.Tooltips
     {
         private const float _hoverLockTime = 0.75f;
         private const float _unhoverUnlockTime = 0.125f;
+        private static TooltipHoverPublisher Publisher => TooltipHoverPublisher.I;
 
-        [SerializeField] private TooltipHoverPublisher PublisherInput;
         [SerializeField] protected RectTransform Container;
         [SerializeField] protected Image LockingImageInput;
         [SerializeField] protected Color LockingImageInactiveColor;
@@ -23,7 +23,6 @@ namespace Crysc.UI.Tooltips
 
         protected virtual IEnumerable<Image> LockingImages =>
             LockingImageInput ? new[] { LockingImageInput } : Enumerable.Empty<Image>();
-        private TooltipHoverPublisher Publisher => PublisherInput;
         private TooltipPositioner _positioner;
         private TooltipPositioner Positioner => _positioner ??= GetComponent<TooltipPositioner>();
 
