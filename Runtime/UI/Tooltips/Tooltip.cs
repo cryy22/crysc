@@ -12,7 +12,7 @@ namespace Crysc.UI.Tooltips
     {
         private const float _hoverLockTime = 0.75f;
         private const float _unhoverUnlockTime = 0.125f;
-        private static TooltipHoverPublisher Publisher => TooltipHoverPublisher.I;
+        private static TooltipPublisher Publisher => TooltipPublisher.I;
 
         [SerializeField] protected RectTransform Container;
         [SerializeField] protected Image LockingImageInput;

@@ -2,12 +2,13 @@ using System;
 
 namespace Crysc.UI.Tooltips
 {
-    public class TooltipHoverPublisher
+    public class TooltipPublisher
     {
         public event EventHandler<TooltipHoverEventArgs> Hovered;
+        public event EventHandler Clicked;
 
-        private static TooltipHoverPublisher _instance;
-        public static TooltipHoverPublisher I => _instance ??= new TooltipHoverPublisher();
+        private static TooltipPublisher _instance;
+        public static TooltipPublisher I => _instance ??= new TooltipPublisher();
 
         public bool Enabled { get; set; } = true;
 
@@ -23,6 +24,13 @@ namespace Crysc.UI.Tooltips
                     dimensions: targetProvider.GetSize()
                 )
             );
+        }
+
+        public void RegisterClick()
+        {
+            if (!Enabled) return;
+
+            Clicked?.Invoke(sender: this, e: EventArgs.Empty);
         }
     }
 }
