@@ -18,8 +18,7 @@ namespace Crysc.UI.Tooltips
         public bool IsHovered { get; private set; }
         public bool IgnoreRaycastBlocking => IgnoreRaycastBlockingInput;
 
-        protected virtual TooltipPublisher Publisher => PublisherInput;
-        [SerializeField] private TooltipPublisher PublisherInput;
+        protected virtual TooltipPublisher Publisher => TooltipPublisher.I;
 
         private readonly List<ITooltipContentProvider> _contentProviders = new();
         private GenericSizeCalculator _sizeCalculator;

@@ -4,8 +4,8 @@ namespace Crysc.UI.Tooltips
 {
     public class TooltipPublisher
     {
-        public event EventHandler<TooltipHoverEventArgs> Hovered;
-        public event EventHandler Clicked;
+        public event EventHandler<TooltipEventArgs> Hovered;
+        public event EventHandler<TooltipEventArgs> Clicked;
 
         private static TooltipPublisher _instance;
         public static TooltipPublisher I => _instance ??= new TooltipPublisher();
@@ -18,7 +18,7 @@ namespace Crysc.UI.Tooltips
 
             Hovered?.Invoke(
                 sender: this,
-                e: new TooltipHoverEventArgs(
+                e: new TooltipEventArgs(
                     targetProvider: targetProvider,
                     tooltipContent: targetProvider.GetTooltipContent(),
                     dimensions: targetProvider.GetSize()
@@ -26,11 +26,18 @@ namespace Crysc.UI.Tooltips
             );
         }
 
-        public void RegisterClick()
+        public void RegisterClick(ITooltipTargetProvider targetProvider)
         {
             if (!Enabled) return;
 
-            Clicked?.Invoke(sender: this, e: EventArgs.Empty);
+            Clicked?.Invoke(
+                sender: this,
+                e: new TooltipEventArgs(
+                    targetProvider: targetProvider,
+                    tooltipContent: targetProvider.GetTooltipContent(),
+                    dimensions: targetProvider.GetSize()
+                )
+            );
         }
     }
 }

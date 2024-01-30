@@ -3,13 +3,13 @@ using Crysc.Common;
 
 namespace Crysc.UI.Tooltips
 {
-    public class TooltipHoverEventArgs : EventArgs
+    public class TooltipEventArgs : EventArgs
     {
         public ITooltipTargetProvider TargetProvider { get; }
         public object[] TooltipContent { get; }
         public Dimensions Dimensions { get; }
 
-        public TooltipHoverEventArgs(
+        public TooltipEventArgs(
             ITooltipTargetProvider targetProvider,
             object[] tooltipContent,
             Dimensions dimensions

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Crysc.UI.Tooltips
 {
     [RequireComponent(typeof(TooltipPositioner))]
-    public abstract class Tooltip<T> : MonoBehaviour
+    public abstract class Tooltip<T> : MonoBehaviour, IPointerClickHandler
     {
         private const float _hoverLockTime = 0.75f;
         private const float _unhoverUnlockTime = 0.125f;
@@ -31,12 +32,14 @@ namespace Crysc.UI.Tooltips
 
         private CryRoutine _tooltipPersistenceRoutine;
         private bool _isLocked;
-        private TooltipHoverEventArgs _eventDuringLock;
+        private TooltipEventArgs _eventDuringLock;
 
         private void Awake() { DismissTooltip(); }
 
         private void OnEnable() { Publisher.Hovered += TargetHoveredEventHandler; }
         private void OnDisable() { Publisher.Hovered -= TargetHoveredEventHandler; }
+
+        public void OnPointerClick(PointerEventData _) { Publisher.RegisterClick(_currentTarget); }
 
         public virtual void SetActive(bool active)
         {
@@ -66,7 +69,7 @@ namespace Crysc.UI.Tooltips
             _isLocked = false;
         }
 
-        private void TargetHoveredEventHandler(object sender, TooltipHoverEventArgs e)
+        private void TargetHoveredEventHandler(object sender, TooltipEventArgs e)
         {
             T[] contents = e.TooltipContent.Where(c => c is T).Cast<T>().ToArray();
             if (contents.Length == 0) return;
