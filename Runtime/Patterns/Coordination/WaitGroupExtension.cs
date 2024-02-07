@@ -10,5 +10,11 @@ namespace Crysc.Patterns.Coordination
             yield return enumerator;
             waitGroup.Leave();
         }
+
+        public static IEnumerator WithWaitGroupSynchronously(this IEnumerator enumerator, WaitGroup waitGroup)
+        {
+            yield return waitGroup.Wait();
+            yield return enumerator.WithWaitGroup(waitGroup);
+        }
     }
 }
