@@ -46,6 +46,7 @@ namespace Crysc.Patterns.Managers
             Config = config;
             State = state;
 
+
             IsActive = true;
             if (Container != null) Container.SetActive(true);
         }
