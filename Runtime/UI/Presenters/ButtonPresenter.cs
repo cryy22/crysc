@@ -29,17 +29,20 @@ namespace Crysc.UI.Presenters
 
         private void Awake() { Button.interactable = false; }
 
-        public void Present()
+        public void Present(bool interactable)
         {
-            Button.interactable = true;
+            Button.interactable = interactable;
             Presenter.Present();
         }
 
-        public void Dismiss()
+        public void Dismiss(bool interactable)
         {
-            Button.interactable = false;
+            Button.interactable = interactable;
             Presenter.Dismiss();
         }
+
+        public void Present() { Present(true); }
+        public void Dismiss() { Dismiss(false); }
 
         #region Lazily-Initialized Properties
 
