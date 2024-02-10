@@ -13,7 +13,7 @@ namespace Crysc.Presentation.Arrangements
 
         public void SetElements(IEnumerable<T> elements);
         public void Rearrange();
-        public IEnumerator AnimateRearrange(float duration);
+        public IEnumerator AnimateRearrange(float duration = 0.25f, float perElementDelay = 0.03125f);
     }
 
     public interface IArrangement : IArrangement<IArrangementElement>

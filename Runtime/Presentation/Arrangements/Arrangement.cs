@@ -9,7 +9,7 @@ namespace Crysc.Presentation.Arrangements
 {
     using IElement = IArrangementElement;
 
-    public class Arrangement : MonoBehaviour, IArrangement<IElement>, IElement
+    public class Arrangement : MonoBehaviour, IArrangement, IElement
     {
         public enum Alignment
         {
@@ -75,18 +75,22 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        public IEnumerator AnimateRearrange(float duration = 0.25f)
+        public IEnumerator AnimateRearrange(float duration) { return ((IArrangement) this).AnimateRearrange(duration); }
+
+        public IEnumerator AnimateRearrange(float duration, float perElementDelay)
         {
             UpdateElementsAndPositions();
 
             foreach (ConcurrentCryRoutine routine in _rearrangeRoutines) routine.Stop();
             _rearrangeRoutines.Clear();
 
-            _rearrangeRoutines.AddRange(
-                _elementsPlacements.Keys
-                    .Except(_excludedFromRearrange)
-                    .Select(e => AnimateElementPlacement(e: e, duration: duration))
-            );
+            IElement[] elements = _elementsPlacements.Keys.Except(_excludedFromRearrange).ToArray();
+            float perElementDuration = Mathf.Max(a: 0, b: duration - (perElementDelay * (elements.Length - 1)));
+            foreach (IElement e in elements)
+            {
+                _rearrangeRoutines.Add(AnimateElementPlacement(e: e, duration: perElementDuration));
+                yield return new WaitForSeconds(perElementDelay);
+            }
 
             yield return CoroutineWaiter.RunConcurrently(_rearrangeRoutines.ToArray());
         }
