@@ -12,8 +12,10 @@ namespace Crysc.Presentation.Arrangements
         public Vector2 PreferredSpacingRatio { get; set; }
 
         public void SetElements(IEnumerable<T> elements);
+
         public void Rearrange();
-        public IEnumerator AnimateRearrange(float duration = 0.25f, float perElementDelay = 0.03125f);
+
+        public IEnumerator AnimateRearrange(float duration = 0.25f, float? perElementDelay = null);
     }
 
     public interface IArrangement : IArrangement<IArrangementElement>

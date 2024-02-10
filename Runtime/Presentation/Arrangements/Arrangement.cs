@@ -77,7 +77,7 @@ namespace Crysc.Presentation.Arrangements
 
         public IEnumerator AnimateRearrange(float duration) { return ((IArrangement) this).AnimateRearrange(duration); }
 
-        public IEnumerator AnimateRearrange(float duration, float perElementDelay)
+        public IEnumerator AnimateRearrange(float duration, float? perElementDelay)
         {
             UpdateElementsAndPositions();
 
@@ -85,11 +85,14 @@ namespace Crysc.Presentation.Arrangements
             _rearrangeRoutines.Clear();
 
             IElement[] elements = _elementsPlacements.Keys.Except(_excludedFromRearrange).ToArray();
-            float perElementDuration = Mathf.Max(a: 0, b: duration - (perElementDelay * (elements.Length - 1)));
+            float perElementDelayValue =
+                perElementDelay ?? CalculateDefaultPerElementDelay(duration: duration, elementCount: elements.Length);
+            float perElementDuration = Mathf.Max(a: 0, b: duration - (perElementDelayValue * (elements.Length - 1)));
+
             foreach (IElement e in elements)
             {
                 _rearrangeRoutines.Add(AnimateElementPlacement(e: e, duration: perElementDuration));
-                yield return new WaitForSeconds(perElementDelay);
+                yield return new WaitForSeconds(perElementDelayValue);
             }
 
             yield return CoroutineWaiter.RunConcurrently(_rearrangeRoutines.ToArray());
@@ -168,6 +171,11 @@ namespace Crysc.Presentation.Arrangements
 
         public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
         public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
+
+        private static float CalculateDefaultPerElementDelay(float duration, int elementCount)
+        {
+            return duration / (elementCount + 1);
+        }
 
         private ConcurrentCryRoutine AnimateElementPlacement(IElement e, float duration)
         {
