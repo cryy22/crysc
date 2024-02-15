@@ -10,6 +10,7 @@ namespace Crysc.Presentation.Arrangements
         public bool IsInverted { get; set; }
         public Vector2 MaxSize { get; set; }
         public Vector2 PreferredSpacingRatio { get; set; }
+        public bool IsAnimating { get; }
 
         public void SetElements(IEnumerable<T> elements);
 

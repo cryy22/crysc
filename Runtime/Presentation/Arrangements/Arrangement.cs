@@ -37,6 +37,7 @@ namespace Crysc.Presentation.Arrangements
         public Transform Transform => transform;
         public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
         public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
+        public bool IsAnimating => _rearrangeRoutines.Any(r => !r.IsComplete);
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
@@ -67,6 +68,9 @@ namespace Crysc.Presentation.Arrangements
 
         public void Rearrange()
         {
+            foreach (ConcurrentCryRoutine routine in _rearrangeRoutines) routine.Stop();
+            _rearrangeRoutines.Clear();
+
             UpdateElementsAndPositions();
             foreach (IElement element in _elementsPlacements.Keys.Except(_excludedFromRearrange))
             {
