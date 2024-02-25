@@ -7,7 +7,7 @@ namespace Crysc.Patterns.Initialization
     {
         [SerializeField] private T Prefab;
 
-        public virtual T CreateEnemy(TConfig config)
+        public virtual T Create(TConfig config)
         {
             T instance = Instantiate();
             instance.Initialize(config);
