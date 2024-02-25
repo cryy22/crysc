@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -5,6 +6,12 @@ namespace GulchGuardians.Editor
 {
     public static class SerializedPropertyExtensions
     {
+        public static IEnumerable<T> GetElements<T>(this SerializedProperty property) where T : Object
+        {
+            for (var i = 0; i < property.arraySize; i++)
+                yield return property.GetArrayElementAtIndex(i).objectReferenceValue as T;
+        }
+
         public static int GetIndexOfArrayElement(this SerializedProperty array, Object element)
         {
             if (!array.isArray)
