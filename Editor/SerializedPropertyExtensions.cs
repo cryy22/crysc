@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,22 +13,33 @@ namespace GulchGuardians.Editor
                 yield return property.GetArrayElementAtIndex(i).objectReferenceValue as T;
         }
 
+        public static int CountElementInArray(this SerializedProperty array, Object element)
+        {
+            return GetIndexesOfArrayElementInternal(array: array, element: element).Count();
+        }
+
         public static int GetIndexOfArrayElement(this SerializedProperty array, Object element)
+        {
+            int[] indexes = GetIndexesOfArrayElementInternal(array: array, element: element).ToArray();
+            if (indexes.Length > 0) return indexes[0];
+
+            Debug.LogWarning($"element {element} not found in array property {array.name}");
+            return -1;
+        }
+
+        private static IEnumerable<int> GetIndexesOfArrayElementInternal(SerializedProperty array, Object element)
         {
             if (!array.isArray)
             {
                 Debug.LogWarning($"property {array.name} is not an array");
-                return -1;
+                yield break;
             }
 
             for (var i = 0; i < array.arraySize; i++)
             {
                 SerializedProperty candidate = array.GetArrayElementAtIndex(i);
-                if (candidate.objectReferenceValue == element) return i;
+                if (candidate.objectReferenceValue == element) yield return i;
             }
-
-            Debug.LogWarning($"element {element} not found in array property {array.name}");
-            return -1;
         }
     }
 }
