@@ -13,6 +13,13 @@ namespace GulchGuardians.Editor
                 yield return property.GetArrayElementAtIndex(i).objectReferenceValue as T;
         }
 
+        public static void AddElementToArray(this SerializedProperty property, Object obj)
+        {
+            int newIndex = property.arraySize;
+            property.InsertArrayElementAtIndex(newIndex);
+            property.GetArrayElementAtIndex(newIndex).objectReferenceValue = obj;
+        }
+
         public static int CountElementInArray(this SerializedProperty array, Object element)
         {
             return GetIndexesOfArrayElementInternal(array: array, element: element).Count();
