@@ -8,6 +8,49 @@ namespace Crysc.Helpers
 {
     public static class CoroutineWaiter
     {
+        private const float _initialDelay = 1.5f;
+        private const float _perInstanceDelayPct = 0.9f;
+
+        public static IEnumerator RunExponentially(
+            this MonoBehaviour behaviour,
+            float initialDelay = _initialDelay,
+            float perInstanceDelayPct = _perInstanceDelayPct,
+            params IEnumerator[] enumerators
+        )
+        {
+            List<Coroutine> routines = new();
+            float delay = initialDelay;
+            foreach (IEnumerator enumerator in enumerators)
+            {
+                routines.Add(behaviour.StartCoroutine(enumerator));
+                yield return new WaitForSeconds(delay);
+                delay *= perInstanceDelayPct;
+            }
+
+            yield return RunConcurrently(routines.ToArray());
+        }
+
+        public static IEnumerator RunExponentially<T>(
+            this IEnumerable<T> behaviours,
+            Func<T, IEnumerator> enumerator,
+            float initialDelay = _initialDelay,
+            float perInstanceDelayPct = _perInstanceDelayPct
+        )
+            where T : MonoBehaviour
+        {
+            List<Coroutine> routines = new();
+            float delay = initialDelay;
+            foreach (T behaviour in behaviours)
+            {
+                routines.Add(behaviour.StartCoroutine(enumerator(behaviour)));
+                Debug.Log($"delaying next routine for {delay} seconds");
+                yield return new WaitForSeconds(delay);
+                delay *= perInstanceDelayPct;
+            }
+
+            yield return RunConcurrently(routines.ToArray());
+        }
+
         public static IEnumerator RunConcurrently(params Coroutine[] coroutines) { return coroutines.GetEnumerator(); }
 
         public static IEnumerator RunConcurrently<T>(this IEnumerable<T> behaviours, Func<T, IEnumerator> enumerator)
