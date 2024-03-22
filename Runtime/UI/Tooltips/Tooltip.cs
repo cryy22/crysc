@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace Crysc.UI.Tooltips
         private static TooltipPublisher Publisher => TooltipPublisher.I;
 
         [SerializeField] protected RectTransform Container;
+        [SerializeField] protected CanvasGroup CanvasGroup;
         [SerializeField] protected Image LockingImageInput;
         [SerializeField] protected Color LockingImageInactiveColor;
 
@@ -55,6 +57,8 @@ namespace Crysc.UI.Tooltips
                 image.color = LockingImageInactiveColor;
                 image.gameObject.SetActive(LocksOnExtendedHover);
             }
+
+            if (CanvasGroup) CanvasGroup.alpha = 0.0625f;
         }
 
         protected virtual bool ShouldPresentTooltip(T[] contents) { return _isActive; }
@@ -103,11 +107,23 @@ namespace Crysc.UI.Tooltips
                     yield break;
                 }
 
-                if (LocksOnExtendedHover == false) continue;
+                if (time >= _hoverLockTime && !LocksOnExtendedHover) continue;
 
                 time += Time.deltaTime;
-                if (time >= _hoverLockTime) _isLocked = true;
-                foreach (Image image in LockingImages) image.fillAmount = time / _hoverLockTime;
+                if (CanvasGroup)
+                    CanvasGroup.alpha = Mathf.Lerp(
+                        a: 0.0625f,
+                        b: 0.1875f,
+                        t: (float) (Math.Truncate((time * 2) / _hoverLockTime) / 2f)
+                    );
+                if (LocksOnExtendedHover)
+                    foreach (Image image in LockingImages)
+                        image.fillAmount = time / _hoverLockTime;
+
+                if (time < _hoverLockTime) continue;
+
+                if (CanvasGroup) CanvasGroup.alpha = 1f;
+                _isLocked = LocksOnExtendedHover;
             }
 
             foreach (Image image in LockingImages)
