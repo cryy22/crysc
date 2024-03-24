@@ -41,6 +41,7 @@ namespace Crysc.Presentation.Arrangements
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
+        private readonly Dictionary<IElement, float> _elementsDistances = new();
         private readonly HashSet<IElement> _excludedFromRearrange = new();
         private readonly List<ConcurrentCryRoutine> _rearrangeRoutines = new();
 
@@ -83,20 +84,29 @@ namespace Crysc.Presentation.Arrangements
 
         public IEnumerator AnimateRearrange(float duration, float? perElementDelay)
         {
-            UpdateElementsAndPositions();
-
             foreach (ConcurrentCryRoutine routine in _rearrangeRoutines) routine.Stop();
             _rearrangeRoutines.Clear();
+            _elementsDistances.Clear();
+            UpdateElementsAndPositions();
 
             IElement[] elements = _elementsPlacements.Keys.Except(_excludedFromRearrange).ToArray();
-            float perElementDelayValue =
-                perElementDelay ?? CalculateDefaultPerElementDelay(duration: duration, elementCount: elements.Length);
-            float perElementDuration = Mathf.Max(a: 0, b: duration - (perElementDelayValue * (elements.Length - 1)));
+            if (elements.Length == 0) yield break;
 
-            foreach (IElement e in elements)
+            UpdateElementsDistances(elements);
+            float overlapAwareDistance =
+                elements.Select(e => _elementsDistances[e] * 0.5f).Sum() +
+                (_elementsDistances[elements.First()] * 0.5f);
+            overlapAwareDistance = Mathf.Max(a: overlapAwareDistance, b: Mathf.Epsilon);
+
+            var previousDuration = 0f;
+            for (var i = 0; i < elements.Length; i++)
             {
-                _rearrangeRoutines.Add(AnimateElementPlacement(e: e, duration: perElementDuration));
-                yield return new WaitForSeconds(perElementDelayValue);
+                IElement e = elements[i];
+                float elementDuration = (_elementsDistances[e] / overlapAwareDistance) * duration;
+
+                if (i > 0) yield return new WaitForSeconds(previousDuration - (0.5f * elementDuration));
+                _rearrangeRoutines.Add(AnimateElementPlacement(e: e, duration: elementDuration));
+                previousDuration = elementDuration;
             }
 
             yield return CoroutineWaiter.RunConcurrently(_rearrangeRoutines.ToArray());
@@ -176,11 +186,6 @@ namespace Crysc.Presentation.Arrangements
         public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
         public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
 
-        private static float CalculateDefaultPerElementDelay(float duration, int elementCount)
-        {
-            return duration / (elementCount + 1);
-        }
-
         private ConcurrentCryRoutine AnimateElementPlacement(IElement e, float duration)
         {
             Transform elementTransform = e.Transform;
@@ -223,7 +228,6 @@ namespace Crysc.Presentation.Arrangements
                 return;
             }
 
-
             Vector2 weightedIndexes = Vector2.zero;
             var index = 0;
             foreach (IElement element in _elements)
@@ -238,6 +242,15 @@ namespace Crysc.Presentation.Arrangements
                 weightedIndexes += element.SizeMultiplier;
                 index++;
             }
+        }
+
+        private void UpdateElementsDistances(IElement[] elements)
+        {
+            foreach (IElement element in elements)
+                _elementsDistances[element] = Vector2.Distance(
+                    a: element.Transform.localPosition,
+                    b: _elementsPlacements[element].Position
+                );
         }
 
         private void AddElement(IElement element)
