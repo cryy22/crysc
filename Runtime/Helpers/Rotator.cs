@@ -19,17 +19,25 @@ namespace Crysc.Helpers
             while (t < 1)
             {
                 t += Time.deltaTime / duration;
-
-                SetRotation(
-                    transform: transform,
-                    rotation: Vector3.Lerp(a: start, b: end, t: t),
-                    isLocal: isLocal
-                );
-
+                SetRotation(transform: transform, rotation: Vector3.Lerp(a: start, b: end, t: t), isLocal: isLocal);
                 yield return null;
             }
 
             SetRotation(transform: transform, rotation: end, isLocal: isLocal);
+        }
+
+        public static void RotateToStep(
+            Transform transform,
+            Quaternion start,
+            Quaternion end,
+            float t,
+            bool isLocal = true
+        )
+        {
+            if (isLocal)
+                transform.localRotation = Quaternion.Lerp(a: start, b: end, t: t);
+            else
+                transform.rotation = Quaternion.Lerp(a: start, b: end, t: t);
         }
 
         public static IEnumerator RotateToSmoothly(

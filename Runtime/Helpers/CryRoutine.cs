@@ -40,6 +40,11 @@ namespace Crysc.Helpers
 
         public void Reset() { _enumerator.Reset(); }
 
+        public IEnumerator WaitForCompletion()
+        {
+            while (!IsComplete) yield return null;
+        }
+
         public static CryRoutine Start(MonoBehaviour behaviour, IEnumerator enumerator)
         {
             return new CryRoutine(behaviour: behaviour, enumerator: enumerator);

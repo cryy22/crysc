@@ -19,17 +19,16 @@ namespace Crysc.Helpers
             while (t < 1)
             {
                 t += Time.deltaTime / duration;
-
-                SetPosition(
-                    transform: transform,
-                    position: Vector3.Lerp(a: start, b: end, t: t),
-                    isLocal: isLocal
-                );
-
+                MoveToStep(transform: transform, start: start, end: end, t: t, isLocal: isLocal);
                 yield return null;
             }
 
             SetPosition(transform: transform, position: end, isLocal: isLocal);
+        }
+
+        public static void MoveToStep(Transform transform, Vector3 start, Vector3 end, float t, bool isLocal = true)
+        {
+            SetPosition(transform: transform, position: Vector3.Lerp(a: start, b: end, t: t), isLocal: isLocal);
         }
 
         public static IEnumerator MoveToSmoothly(

@@ -17,12 +17,16 @@ namespace Crysc.Helpers
             while (t < 1)
             {
                 t += Time.deltaTime / duration;
-                transform.localScale = Vector3.Lerp(a: start, b: end, t: t);
-
+                ScaleToStep(transform: transform, start: start, end: end, t: t);
                 yield return null;
             }
 
             transform.localScale = end;
+        }
+
+        public static void ScaleToStep(Transform transform, Vector3 start, Vector3 end, float t)
+        {
+            transform.localScale = Vector3.Lerp(a: start, b: end, t: t);
         }
 
         public static IEnumerator ScaleToSmoothly(
