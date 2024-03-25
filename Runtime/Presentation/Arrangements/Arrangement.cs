@@ -39,6 +39,8 @@ namespace Crysc.Presentation.Arrangements
         public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
         public bool IsAnimating => _rearrangeRoutines.Any(r => !r.IsComplete);
 
+        public Action PreElementArrangeHook { get; set; }
+
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
         private readonly Dictionary<IElement, float> _elementsDistances = new();
@@ -196,6 +198,7 @@ namespace Crysc.Presentation.Arrangements
                     z: _elementsPlacements[e].Position.z
                 );
 
+            PreElementArrangeHook?.Invoke();
             return new ConcurrentCryRoutine(
                 behaviour: this,
                 Mover.MoveToSmoothly(
