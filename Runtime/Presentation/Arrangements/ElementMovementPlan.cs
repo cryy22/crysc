@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Crysc.Presentation.Arrangements
 {
-    public struct ElementMovementPlan
+    public readonly struct ElementMovementPlan
     {
         public IArrangementElement Element { get; }
         public float BeginTime { get; }

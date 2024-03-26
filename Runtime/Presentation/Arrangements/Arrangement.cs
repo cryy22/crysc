@@ -149,8 +149,6 @@ namespace Crysc.Presentation.Arrangements
                         }
                     }
                 }
-
-                Debug.Log("we made it...");
             }
         }
 
