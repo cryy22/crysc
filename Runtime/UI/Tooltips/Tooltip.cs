@@ -73,6 +73,11 @@ namespace Crysc.UI.Tooltips
             _isLocked = false;
         }
 
+        protected virtual void OnTooltipFullyDisclosed()
+        {
+            if (CanvasGroup) CanvasGroup.alpha = 1f;
+        }
+
         private void TargetHoveredEventHandler(object sender, TooltipEventArgs e)
         {
             T[] contents = e.TooltipContent.Where(c => c is T).Cast<T>().ToArray();
@@ -122,7 +127,7 @@ namespace Crysc.UI.Tooltips
 
                 if (time < _hoverLockTime) continue;
 
-                if (CanvasGroup) CanvasGroup.alpha = 1f;
+                OnTooltipFullyDisclosed();
                 _isLocked = LocksOnExtendedHover;
             }
 
