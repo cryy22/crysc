@@ -1,4 +1,5 @@
 using System.Collections;
+using Crysc.Presentation.Arrangements;
 using DG.Tweening;
 using UnityEngine;
 
@@ -28,7 +29,15 @@ namespace Crysc.Helpers
 
         public static void MoveToStep(Transform transform, Vector3 start, Vector3 end, float t, bool isLocal = true)
         {
-            SetPosition(transform: transform, position: Vector3.Lerp(a: start, b: end, t: t), isLocal: isLocal);
+            SetPosition(
+                transform: transform,
+                position: Vector3.LerpUnclamped(
+                    a: start,
+                    b: end,
+                    t: Easings.Ease(t: t, easing: Easings.Enum.EaseOutElastic)
+                ),
+                isLocal: isLocal
+            );
         }
 
         public static IEnumerator MoveToSmoothly(
