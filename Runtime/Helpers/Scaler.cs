@@ -1,4 +1,5 @@
 using System.Collections;
+using Crysc.Presentation.Arrangements;
 using UnityEngine;
 
 namespace Crysc.Helpers
@@ -24,9 +25,15 @@ namespace Crysc.Helpers
             transform.localScale = end;
         }
 
-        public static void ScaleToStep(Transform transform, Vector3 start, Vector3 end, float t)
+        public static void ScaleToStep(
+            Transform transform,
+            Vector3 start,
+            Vector3 end,
+            float t,
+            Easings.Enum easing = Easings.Enum.Linear
+        )
         {
-            transform.localScale = Vector3.Lerp(a: start, b: end, t: t);
+            transform.localScale = Vector3.LerpUnclamped(a: start, b: end, t: Easings.Ease(t: t, easing: easing));
         }
 
         public static IEnumerator ScaleToSmoothly(

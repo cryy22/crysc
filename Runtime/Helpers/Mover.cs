@@ -27,14 +27,21 @@ namespace Crysc.Helpers
             SetPosition(transform: transform, position: end, isLocal: isLocal);
         }
 
-        public static void MoveToStep(Transform transform, Vector3 start, Vector3 end, float t, bool isLocal = true)
+        public static void MoveToStep(
+            Transform transform,
+            Vector3 start,
+            Vector3 end,
+            float t,
+            bool isLocal = true,
+            Easings.Enum easing = Easings.Enum.Linear
+        )
         {
             SetPosition(
                 transform: transform,
                 position: Vector3.LerpUnclamped(
                     a: start,
                     b: end,
-                    t: Easings.Ease(t: t, easing: Easings.Enum.EaseOutElastic)
+                    t: Easings.Ease(t: t, easing: easing)
                 ),
                 isLocal: isLocal
             );

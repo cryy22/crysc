@@ -1,4 +1,5 @@
 using System.Collections;
+using Crysc.Presentation.Arrangements;
 using DG.Tweening;
 using UnityEngine;
 
@@ -31,13 +32,15 @@ namespace Crysc.Helpers
             Quaternion start,
             Quaternion end,
             float t,
-            bool isLocal = true
+            bool isLocal = true,
+            Easings.Enum easings = Easings.Enum.Linear
         )
         {
+            Quaternion rotation = Quaternion.LerpUnclamped(a: start, b: end, t: Easings.Ease(t: t, easing: easings));
             if (isLocal)
-                transform.localRotation = Quaternion.Lerp(a: start, b: end, t: t);
+                transform.localRotation = rotation;
             else
-                transform.rotation = Quaternion.Lerp(a: start, b: end, t: t);
+                transform.rotation = rotation;
         }
 
         public static IEnumerator RotateToSmoothly(
