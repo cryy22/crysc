@@ -247,21 +247,21 @@ namespace Crysc.Presentation.Arrangements
                 (_elementsDistances[elements.First()] * 0.5f);
             overlapAwareDistance = Mathf.Max(a: overlapAwareDistance, b: Mathf.Epsilon);
 
-            var beginTime = 0f;
+            var startTime = 0f;
             var endTime = 0f;
             foreach (IElement e in elements)
             {
                 float duration = (_elementsDistances[e] / overlapAwareDistance) * totalDuration;
-                beginTime = Mathf.Max(
+                startTime = Mathf.Max(
                     a: endTime - (0.5f * duration),
-                    b: beginTime
+                    b: startTime
                 );
-                endTime = beginTime + duration;
+                endTime = startTime + duration;
 
                 _elementsMovementPlans[e] = ArrangementAnimation.CreateMovementPlan(
                     arrangement: this,
                     element: e,
-                    startTime: beginTime,
+                    startTime: startTime,
                     endTime: endTime,
                     extraRotations: 0,
                     easing: Easings.Enum.Linear

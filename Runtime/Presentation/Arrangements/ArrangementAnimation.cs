@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
 
@@ -28,11 +29,11 @@ namespace Crysc.Presentation.Arrangements
                 easing: easing
             );
 
-            var t = 0f;
-            while (t < duration)
+            var time = 0f;
+            while (time <= duration)
             {
-                t += Time.deltaTime;
-                IncrementPlan(plan: plan, time: t);
+                time += Time.deltaTime;
+                IncrementPlan(plan: plan, time: time);
                 yield return null;
             }
 
@@ -43,10 +44,34 @@ namespace Crysc.Presentation.Arrangements
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
+            int extraRotations = 0,
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            yield break;
+            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
+            arrangement.AnimatingElements.UnionWith(elementsAry);
+            var plans = new ElementMovementPlan[elementsAry.Length];
+
+            for (var i = 0; i < elementsAry.Length; i++)
+                plans[i] = CreateMovementPlan(
+                    arrangement: arrangement,
+                    element: elementsAry[i],
+                    startTime: 0f,
+                    endTime: duration,
+                    extraRotations: extraRotations,
+                    easing: easing
+                );
+
+            var time = 0f;
+            while (time <= duration)
+            {
+                time += Time.deltaTime;
+                foreach (ElementMovementPlan plan in plans)
+                    IncrementPlan(plan: plan, time: time);
+                yield return null;
+            }
+
+            arrangement.AnimatingElements.ExceptWith(elementsAry);
         }
 
         public static IEnumerator AnimateElementsSerially(
@@ -58,6 +83,30 @@ namespace Crysc.Presentation.Arrangements
         )
         {
             yield break;
+        }
+
+        public static ElementMovementPlan CreateMovementPlan(
+            Arrangement arrangement,
+            IElement element,
+            float startTime,
+            float endTime,
+            int extraRotations,
+            Easings.Enum easing
+        )
+        {
+            return new ElementMovementPlan(
+                element: element,
+                startTime: startTime,
+                endTime: endTime,
+                startPosition: element.Transform.localPosition,
+                endPosition: arrangement.ElementsPlacements[element].Position,
+                startRotation: element.Transform.localRotation,
+                endRotation: arrangement.ElementsPlacements[element].Rotation,
+                startScale: element.Transform.localScale,
+                endScale: Vector3.one,
+                extraRotations: extraRotations,
+                easing: easing
+            );
         }
 
         public static void IncrementPlan(ElementMovementPlan plan, float time)
@@ -85,30 +134,6 @@ namespace Crysc.Presentation.Arrangements
                 end: plan.EndScale,
                 t: t,
                 easing: plan.Easing
-            );
-        }
-
-        public static ElementMovementPlan CreateMovementPlan(
-            Arrangement arrangement,
-            IElement element,
-            float startTime,
-            float endTime,
-            int extraRotations,
-            Easings.Enum easing
-        )
-        {
-            return new ElementMovementPlan(
-                element: element,
-                startTime: startTime,
-                endTime: endTime,
-                startPosition: element.Transform.localPosition,
-                endPosition: arrangement.ElementsPlacements[element].Position,
-                startRotation: element.Transform.localRotation,
-                endRotation: arrangement.ElementsPlacements[element].Rotation,
-                startScale: element.Transform.localScale,
-                endScale: Vector3.one,
-                extraRotations: extraRotations,
-                easing: easing
             );
         }
     }
