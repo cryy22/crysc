@@ -9,7 +9,7 @@ namespace Crysc.Presentation.Arrangements
 {
     using IElement = IArrangementElement;
 
-    public class Arrangement : MonoBehaviour, IArrangement, IElement
+    public class Arrangement : MonoBehaviour, IElement
     {
         public enum Alignment
         {
@@ -83,9 +83,7 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        public IEnumerator AnimateRearrange(float duration) { return ((IArrangement) this).AnimateRearrange(duration); }
-
-        public IEnumerator AnimateRearrange(float duration, float? perElementDelay)
+        public IEnumerator AnimateRearrange(float duration, float? perElementDelay = null)
         {
             _mainRearrangeRoutine?.Stop();
             _elementsDistances.Clear();
