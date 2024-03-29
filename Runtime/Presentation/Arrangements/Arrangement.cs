@@ -34,6 +34,7 @@ namespace Crysc.Presentation.Arrangements
         [field: SerializeField] public bool IsInverted { get; set; }
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
+        public HashSet<IElement> AnimatingElements = new();
 
         public IEnumerable<IElement> Elements => _elements;
         public IReadOnlyDictionary<IElement, ElementPlacement> ElementsPlacements => _elementsPlacements;
@@ -133,20 +134,14 @@ namespace Crysc.Presentation.Arrangements
                         ElementMovementPlan plan = _elementsMovementPlans[e];
 
                         if (plan.IsCompleted) continue;
-                        if (time < plan.BeginTime) continue;
+                        if (time < plan.StartTime) continue;
                         if (!plan.IsBegun)
                         {
                             PreElementArrangeHook?.Invoke();
                             _elementsMovementPlans[e] = plan.Copy(isBegun: true);
                         }
 
-                        Vector3 endPosition = _elementsPlacements[e].Position;
-                        Quaternion endRotation = _elementsPlacements[e].Rotation;
-                        float t = Mathf.Clamp01((time - plan.BeginTime) / plan.Duration);
-
-                        Mover.MoveToStep(transform: e.Transform, start: plan.StartPosition, end: endPosition, t: t);
-                        Rotator.RotateToStep(transform: e.Transform, start: plan.StartRotation, end: endRotation, t: t);
-                        Scaler.ScaleToStep(transform: e.Transform, start: plan.StartScale, end: Vector3.one, t: t);
+                        ArrangementAnimation.IncrementPlan(plan: plan, time: time);
 
                         if (time > plan.EndTime)
                         {
@@ -263,13 +258,13 @@ namespace Crysc.Presentation.Arrangements
                 );
                 endTime = beginTime + duration;
 
-                _elementsMovementPlans[e] = new ElementMovementPlan(
+                _elementsMovementPlans[e] = ArrangementAnimation.CreateMovementPlan(
+                    arrangement: this,
                     element: e,
-                    beginTime: beginTime,
+                    startTime: beginTime,
                     endTime: endTime,
-                    startPosition: e.Transform.localPosition,
-                    startRotation: e.Transform.localRotation,
-                    startScale: e.Transform.localScale
+                    extraRotations: 0,
+                    easing: Easings.Enum.Linear
                 );
             }
         }
