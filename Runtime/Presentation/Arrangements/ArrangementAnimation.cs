@@ -45,13 +45,14 @@ namespace Crysc.Presentation.Arrangements
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
             int extraRotations = 0,
+            bool consistentSpeed = true,
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
             arrangement.AnimatingElements.UnionWith(elementsAry);
-            var plans = new ElementMovementPlan[elementsAry.Length];
 
+            var plans = new ElementMovementPlan[elementsAry.Length];
             for (var i = 0; i < elementsAry.Length; i++)
                 plans[i] = CreateMovementPlan(
                     arrangement: arrangement,
@@ -61,6 +62,13 @@ namespace Crysc.Presentation.Arrangements
                     extraRotations: extraRotations,
                     easing: easing
                 );
+
+            if (consistentSpeed)
+            {
+                float maxDistance = plans.Max(p => p.Distance);
+                for (var i = 0; i < plans.Length; i++)
+                    plans[i] = plans[i].Copy(endTime: duration * (plans[i].Distance / maxDistance));
+            }
 
             var time = 0f;
             while (time <= duration)
@@ -78,7 +86,7 @@ namespace Crysc.Presentation.Arrangements
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
-            float spacing = 0f,
+            float spacingPct = 0f,
             Easings.Enum easing = Easings.Enum.Linear
         )
         {

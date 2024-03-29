@@ -20,6 +20,7 @@ namespace Crysc.Presentation.Arrangements
         public bool IsCompleted { get; }
 
         public float Duration => EndTime - StartTime;
+        public float Distance => Vector2.Distance(a: StartPosition, b: EndPosition);
 
         public ElementMovementPlan(
             IArrangementElement element,
