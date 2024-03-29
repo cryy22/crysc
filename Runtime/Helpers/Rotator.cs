@@ -32,11 +32,14 @@ namespace Crysc.Helpers
             Quaternion start,
             Quaternion end,
             float t,
+            int rotations = 0,
             bool isLocal = true,
             Easings.Enum easings = Easings.Enum.Linear
         )
         {
-            Quaternion rotation = Quaternion.LerpUnclamped(a: start, b: end, t: Easings.Ease(t: t, easing: easings));
+            float easedT = Easings.Ease(t: t, easing: easings);
+            Quaternion rotation = Quaternion.LerpUnclamped(a: start, b: end, t: easedT);
+            rotation *= Quaternion.Euler(x: 0, y: 0, z: 360 * -rotations * easedT);
             if (isLocal)
                 transform.localRotation = rotation;
             else

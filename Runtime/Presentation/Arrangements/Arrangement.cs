@@ -36,6 +36,7 @@ namespace Crysc.Presentation.Arrangements
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
 
         public IEnumerable<IElement> Elements => _elements;
+        public IReadOnlyDictionary<IElement, ElementPlacement> ElementsPlacements => _elementsPlacements;
         public Transform ElementsParent => ElementsParentInput;
         public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
 
