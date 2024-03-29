@@ -18,6 +18,8 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
+            if (arrangement.AnimatingElements.Contains(element))
+                Debug.LogWarning($"element already being animated, attempted second animation {element}");
             arrangement.AnimatingElements.Add(element);
 
             ElementMovementPlan plan = CreateMovementPlan(
@@ -50,6 +52,11 @@ namespace Crysc.Presentation.Arrangements
         )
         {
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
+            if (elementsAry.Length == 0) yield break;
+
+            if (elementsAry.Any(e => arrangement.AnimatingElements.Contains(e)))
+                foreach (IElement e in elementsAry.Where(e => arrangement.AnimatingElements.Contains(e)))
+                    Debug.LogWarning($"element already being animated, attempted second animation {e}");
             arrangement.AnimatingElements.UnionWith(elementsAry);
 
             var plans = new ElementMovementPlan[elementsAry.Length];
@@ -87,10 +94,72 @@ namespace Crysc.Presentation.Arrangements
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
             float spacingPct = 0f,
+            int extraRotations = 0,
+            bool consistentSpeed = true,
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            yield break;
+            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
+            if (elementsAry.Length == 0) yield break;
+
+            if (elementsAry.Any(e => arrangement.AnimatingElements.Contains(e)))
+                foreach (IElement e in elementsAry.Where(e => arrangement.AnimatingElements.Contains(e)))
+                    Debug.LogWarning($"element already being animated, attempted second animation {e}");
+            arrangement.AnimatingElements.UnionWith(elementsAry);
+
+            var plans = new ElementMovementPlan[elementsAry.Length];
+            for (var i = 0; i < elementsAry.Length; i++)
+                plans[i] = CreateMovementPlan(
+                    arrangement: arrangement,
+                    element: elementsAry[i],
+                    startTime: 0f,
+                    endTime: duration,
+                    extraRotations: extraRotations,
+                    easing: easing
+                );
+
+            if (consistentSpeed)
+            {
+                var spacingAwareDistance = 0f;
+                for (var i = 0; i < plans.Length; i++)
+                    spacingAwareDistance += plans[i].Distance * (1 + (i > 0 ? spacingPct : 0));
+                spacingAwareDistance = Mathf.Max(a: spacingAwareDistance, b: Mathf.Epsilon);
+
+                var startTime = 0f;
+                var endTime = 0f;
+                for (var i = 0; i < plans.Length; i++)
+                {
+                    ElementMovementPlan plan = plans[i];
+                    float pDuration = (plan.Distance / spacingAwareDistance) * duration;
+                    startTime = Mathf.Max(a: endTime + (spacingPct * pDuration), b: startTime);
+                    endTime = startTime + pDuration;
+
+                    plans[i] = plan.Copy(startTime: startTime, endTime: endTime);
+                }
+            }
+            else
+            {
+                float pDuration = duration / (1 + ((plans.Length - 1) * (1 + spacingPct)));
+                var startTime = 0f;
+                var endTime = 0f;
+                for (var i = 0; i < plans.Length; i++)
+                {
+                    ElementMovementPlan plan = plans[i];
+                    startTime = Mathf.Max(a: endTime + (spacingPct * pDuration), b: startTime);
+                    endTime = startTime + pDuration;
+
+                    plans[i] = plan.Copy(startTime: startTime, endTime: endTime);
+                }
+            }
+
+            var time = 0f;
+            while (time <= duration)
+            {
+                time += Time.deltaTime;
+                foreach (ElementMovementPlan plan in plans)
+                    IncrementPlan(plan: plan, time: time);
+                yield return null;
+            }
         }
 
         public static ElementMovementPlan CreateMovementPlan(
