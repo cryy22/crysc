@@ -8,7 +8,7 @@ namespace Crysc.Presentation.Arrangements
 {
     using IElement = IArrangementElement;
 
-    public class SplineArrangementCalculator : MonoBehaviour
+    public class SplineArrangementCalculator : MonoBehaviour, IArrangementCalculator
     {
         [SerializeField] private SplineContainer SplineContainer;
 
@@ -17,19 +17,15 @@ namespace Crysc.Presentation.Arrangements
         // NB, several limitations:
         // - ignores element SizeMultiplier; all elements have the same size
         // - assumes anchor is in the center of the element
-        public ElementPlacement[] CalculateElementPlacements(
-            IEnumerable<IElement> elements,
-            float elementWidth = 1f,
-            float preferredSpacingRatio = 0f
-        )
+        public ElementPlacement[] CalculateElementPlacements(Arrangement arrangement)
         {
-            elements = elements.ToArray();
+            IArrangementElement[] elements = arrangement.Elements.ToArray();
             float splineLength = SplineContainer.CalculateLength();
 
             float perUnitDistance = GetSplineDistanceBetweenElements(
                 elements: elements,
-                elementWidth: elementWidth,
-                preferredSpacingRatio: preferredSpacingRatio,
+                elementWidth: arrangement.BaseElementSize.x,
+                preferredSpacingRatio: arrangement.PreferredSpacingRatio.x,
                 splineLength: splineLength
             );
             float totalDistance = perUnitDistance * (elements.Count() - 1);
@@ -66,7 +62,7 @@ namespace Crysc.Presentation.Arrangements
             return placements;
         }
 
-        private float GetSplineDistanceBetweenElements(
+        private static float GetSplineDistanceBetweenElements(
             IEnumerable<IElement> elements,
             float elementWidth,
             float preferredSpacingRatio,

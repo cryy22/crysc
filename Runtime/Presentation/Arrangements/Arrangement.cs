@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crysc.Helpers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Crysc.Presentation.Arrangements
 {
@@ -20,18 +21,26 @@ namespace Crysc.Presentation.Arrangements
 
         public const float ZOffset = 0.01f;
 
-        [SerializeField] private Transform ElementsParent;
-        [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
+        [FormerlySerializedAs("ElementsParent")]
+        [SerializeField] private Transform ElementsParentInput;
+        [FormerlySerializedAs("BaseElementSizeInput")]
+        [SerializeField] public Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
+        [FormerlySerializedAs("OddElementStaggerInput")]
         [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
-        [SerializeField] private bool UpdateZInstantly = true;
+        [FormerlySerializedAs("UpdateZInstantlyInput")]
+        [SerializeField] public bool UpdateZInstantly = true;
 
-        [SerializeField] private SplineArrangementCalculator SplineArrangementCalculator;
-
-        // IArrangement
         [field: SerializeField] public Alignment HorizontalAlignment { get; set; } = Alignment.Left;
         [field: SerializeField] public bool IsInverted { get; set; }
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
+
+        public IEnumerable<IElement> Elements => _elements;
+        public Transform ElementsParent => ElementsParentInput;
+        public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
+
+        public Vector2 AlignmentOffset { get; private set; }
+        public Vector2 Spacing { get; private set; } = Vector2.zero;
 
         // IArrangementElement
         public Transform Transform => transform;
@@ -49,15 +58,13 @@ namespace Crysc.Presentation.Arrangements
         private readonly HashSet<IElement> _excludedFromRearrange = new();
 
         private CryRoutine _mainRearrangeRoutine;
-        private Vector2 _spacing = Vector2.zero;
-        private Vector2 _alignmentOffset;
-
-        private Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
+        private IArrangementCalculator _arrangementCalculator;
 
         private void Awake()
         {
             if (BaseElementSize.x < 0 || BaseElementSize.y < 0)
                 throw new Exception("BaseElementSize cannot be negative");
+            _arrangementCalculator = GetComponent<IArrangementCalculator>() ?? new DefaultArrangementCalculator();
         }
 
         public void SetElements(IEnumerable<IElement> elements)
@@ -198,13 +205,13 @@ namespace Crysc.Presentation.Arrangements
 
             UpdateSpacing(totalSize: totalSize, count: _elements.Count);
 
-            Vector2 size = totalSize + (_spacing * (_elements.Count - 1));
+            Vector2 size = totalSize + (Spacing * (_elements.Count - 1));
 
             SizeMultiplier = new Vector2(
                 x: BaseElementSize.x > 0 ? size.x / BaseElementSize.x : 0,
                 y: BaseElementSize.y > 0 ? size.y / BaseElementSize.y : 0
             );
-            _alignmentOffset = HorizontalAlignment switch
+            AlignmentOffset = HorizontalAlignment switch
             {
                 Alignment.Left   => Vector2.zero,
                 Alignment.Center => size / 2,
@@ -227,33 +234,8 @@ namespace Crysc.Presentation.Arrangements
         private void UpdateElementsAndPositions()
         {
             UpdateProperties();
-            if (SplineArrangementCalculator)
-            {
-                foreach (
-                    ElementPlacement placement in SplineArrangementCalculator.CalculateElementPlacements(
-                        elements: _elements,
-                        elementWidth: BaseElementSize.x,
-                        preferredSpacingRatio: PreferredSpacingRatio.x
-                    )
-                )
-                    _elementsPlacements[placement.Element] = placement;
-                return;
-            }
-
-            Vector2 weightedIndexes = Vector2.zero;
-            var index = 0;
-            foreach (IElement element in _elements)
-            {
-                Vector3 startPoint = CalculateElementStartPoint(weightedIndexes: weightedIndexes, index: index);
-                _elementsPlacements[element] = new ElementPlacement(
-                    element: element,
-                    position: CalculateElementAnchorPoint(element: element, startPoint: startPoint),
-                    rotation: Quaternion.identity
-                );
-
-                weightedIndexes += element.SizeMultiplier;
-                index++;
-            }
+            foreach (ElementPlacement placement in _arrangementCalculator.CalculateElementPlacements(this))
+                _elementsPlacements[placement.Element] = placement;
         }
 
         private void UpdateElementsMovementPlans(IElement[] elements, float totalDuration)
@@ -294,7 +276,7 @@ namespace Crysc.Presentation.Arrangements
         private void AddElement(IElement element)
         {
             Transform elementTransform = element.Transform;
-            elementTransform.SetParent(ElementsParent);
+            elementTransform.SetParent(ElementsParentInput);
             elementTransform.gameObject.SetActive(true);
 
             _elementsPlacements[element] =
@@ -303,21 +285,6 @@ namespace Crysc.Presentation.Arrangements
                     position: elementTransform.localPosition,
                     rotation: elementTransform.localRotation
                 );
-        }
-
-        private Vector3 CalculateElementStartPoint(Vector2 weightedIndexes, int index)
-        {
-            Vector2 startPoint2d = BaseElementSize * weightedIndexes;
-            startPoint2d += _spacing * index;
-            startPoint2d -= _alignmentOffset;
-            if (index % 2 == 1) startPoint2d += OddElementStagger;
-            startPoint2d *= Direction;
-
-            return new Vector3(
-                x: startPoint2d.x,
-                y: startPoint2d.y,
-                z: ZOffset * index
-            );
         }
 
         private void UpdateSpacing(Vector2 totalSize, int count)
@@ -331,16 +298,7 @@ namespace Crysc.Presentation.Arrangements
             Vector2 maxSpacing = (maxSize - totalSize) / (count - 1);
             Vector2 preferredSpacing = PreferredSpacingRatio * BaseElementSize;
 
-            _spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
-        }
-
-        private Vector3 CalculateElementAnchorPoint(IElement element, Vector3 startPoint)
-        {
-            Vector2 elementSize = BaseElementSize * element.SizeMultiplier;
-            Vector2 directionalPivot = element.Pivot - (IsInverted ? Vector2.one : Vector2.zero);
-            Vector2 midpoint2d = (Vector2) startPoint + (elementSize * directionalPivot);
-
-            return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z) + element.ArrangementOffset;
+            Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
         }
     }
 }
