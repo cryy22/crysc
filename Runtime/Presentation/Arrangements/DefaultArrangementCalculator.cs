@@ -18,17 +18,13 @@ namespace Crysc.Presentation.Arrangements
             {
                 IElement element = elementsAry[i];
 
-                Vector3 startPoint = CalculateElementStartPoint(
-                    arrangement: arrangement,
-                    weightedIndexes: weightedIndexes,
-                    i: i
-                );
                 placements[i] = new ElementPlacement(
                     element: element,
                     position: CalculateElementAnchorPoint(
                         arrangement: arrangement,
                         element: element,
-                        startPoint: startPoint
+                        weightedIndexes: weightedIndexes,
+                        i: i
                     ),
                     rotation: Quaternion.identity
                 );
@@ -37,6 +33,26 @@ namespace Crysc.Presentation.Arrangements
             }
 
             return placements;
+        }
+
+        private static Vector3 CalculateElementAnchorPoint(
+            Arrangement arrangement,
+            IElement element,
+            Vector2 weightedIndexes,
+            int i
+        )
+        {
+            Vector2 elementSize = arrangement.BaseElementSize * element.SizeMultiplier;
+            Vector2 directionalPivot = element.Pivot - (arrangement.IsInverted ? Vector2.one : Vector2.zero);
+
+            Vector3 startPoint = CalculateElementStartPoint(
+                arrangement: arrangement,
+                weightedIndexes: weightedIndexes,
+                i: i
+            );
+            Vector2 midpoint2d = (Vector2) startPoint + (elementSize * directionalPivot);
+
+            return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z) + element.ArrangementOffset;
         }
 
         private static Vector3 CalculateElementStartPoint(Arrangement arrangement, Vector2 weightedIndexes, int i)
@@ -52,19 +68,6 @@ namespace Crysc.Presentation.Arrangements
                 y: startPoint2d.y,
                 z: Arrangement.ZOffset * i
             );
-        }
-
-        private static Vector3 CalculateElementAnchorPoint(
-            Arrangement arrangement,
-            IElement element,
-            Vector3 startPoint
-        )
-        {
-            Vector2 elementSize = arrangement.BaseElementSize * element.SizeMultiplier;
-            Vector2 directionalPivot = element.Pivot - (arrangement.IsInverted ? Vector2.one : Vector2.zero);
-            Vector2 midpoint2d = (Vector2) startPoint + (elementSize * directionalPivot);
-
-            return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z) + element.ArrangementOffset;
         }
     }
 }
