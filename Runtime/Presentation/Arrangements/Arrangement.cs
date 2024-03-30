@@ -34,11 +34,10 @@ namespace Crysc.Presentation.Arrangements
         [field: SerializeField] public bool IsInverted { get; set; }
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
-        public HashSet<IElement> AnimatingElements = new();
 
         public IEnumerable<IElement> Elements => _elements;
         public IReadOnlyDictionary<IElement, ElementPlacement> ElementsPlacements => _elementsPlacements;
-        public Transform ElementsParent => ElementsParentInput;
+        public IReadOnlyDictionary<IElement, ElementMovementPlan> ElementsMovementPlans => _elementsMovementPlans;
         public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
 
         public Vector2 AlignmentOffset { get; private set; }
@@ -62,6 +61,9 @@ namespace Crysc.Presentation.Arrangements
         private CryRoutine _mainRearrangeRoutine;
         private IArrangementCalculator _arrangementCalculator;
 
+        private float _animationTime;
+        private CryRoutine _animationRoutine;
+
         private void Awake()
         {
             if (BaseElementSize.x < 0 || BaseElementSize.y < 0)
@@ -82,6 +84,49 @@ namespace Crysc.Presentation.Arrangements
             UpdateElementsAndPositions();
         }
 
+        public void SetMovementPlans(IEnumerable<ElementMovementPlan> plans)
+        {
+            foreach (ElementMovementPlan plan in plans)
+            {
+                if (!plan.RequiresMovement) continue;
+
+                _elementsMovementPlans[plan.Element] = plan.Copy(
+                    startTime: plan.StartTime + _animationTime,
+                    endTime: plan.EndTime + _animationTime
+                );
+            }
+        }
+
+        public IEnumerator ExecuteMovementPlans()
+        {
+            _animationRoutine?.Stop();
+            _animationRoutine = new CryRoutine(enumerator: Run(), behaviour: this);
+            yield return _animationRoutine.WaitForCompletion();
+            yield break;
+
+            IEnumerator Run()
+            {
+                var expiredPlans = new HashSet<ElementMovementPlan>();
+                while (_elementsMovementPlans.Count > 0)
+                {
+                    foreach (ElementMovementPlan plan in _elementsMovementPlans.Values)
+                    {
+                        IncrementPlan(plan: plan, time: _animationTime);
+                        if (_animationTime > plan.EndTime) expiredPlans.Add(plan);
+                    }
+
+                    foreach (ElementMovementPlan plan in expiredPlans)
+                        _elementsMovementPlans.Remove(plan.Element);
+                    expiredPlans.Clear();
+
+                    yield return null;
+                    _animationTime += Time.deltaTime;
+                }
+
+                _animationTime = 0f;
+            }
+        }
+
         public void Rearrange()
         {
             _mainRearrangeRoutine?.Stop();
@@ -90,6 +135,7 @@ namespace Crysc.Presentation.Arrangements
             foreach (IElement element in _elementsPlacements.Keys.Except(_excludedFromRearrange))
             {
                 element.Transform.localPosition = _elementsPlacements[element].Position;
+                element.Transform.localRotation = _elementsPlacements[element].Rotation;
                 element.Transform.localScale = Vector3.one;
             }
         }
@@ -143,7 +189,7 @@ namespace Crysc.Presentation.Arrangements
                             _elementsMovementPlans[e] = plan.Copy(isBegun: true);
                         }
 
-                        ArrangementAnimation.IncrementPlan(plan: plan, time: time);
+                        IncrementPlan(plan: plan, time: time);
 
                         if (time > plan.EndTime)
                         {
@@ -229,6 +275,34 @@ namespace Crysc.Presentation.Arrangements
         public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
         public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
 
+        public static void IncrementPlan(ElementMovementPlan plan, float time)
+        {
+            float t = Mathf.Clamp01((time - plan.StartTime) / plan.Duration);
+
+            Mover.MoveToStep(
+                transform: plan.Element.Transform,
+                start: plan.StartPosition,
+                end: plan.EndPosition,
+                t: t,
+                easing: plan.Easing
+            );
+            Rotator.RotateToStep(
+                transform: plan.Element.Transform,
+                start: plan.StartRotation,
+                end: plan.EndRotation,
+                t: t,
+                rotations: plan.ExtraRotations,
+                easings: plan.Easing
+            );
+            Scaler.ScaleToStep(
+                transform: plan.Element.Transform,
+                start: plan.StartScale,
+                end: plan.EndScale,
+                t: t,
+                easing: plan.Easing
+            );
+        }
+
         private void UpdateElementsAndPositions()
         {
             UpdateProperties();
@@ -260,7 +334,7 @@ namespace Crysc.Presentation.Arrangements
                 );
                 endTime = startTime + duration;
 
-                _elementsMovementPlans[e] = ArrangementAnimation.CreateMovementPlan(
+                _elementsMovementPlans[e] = ArrangementMovementScheduler.CreateMovementPlan(
                     arrangement: this,
                     element: e,
                     startTime: startTime,

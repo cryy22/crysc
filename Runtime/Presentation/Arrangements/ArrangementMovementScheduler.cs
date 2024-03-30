@@ -1,16 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Crysc.Helpers;
 using UnityEngine;
 
 namespace Crysc.Presentation.Arrangements
 {
     using IElement = IArrangementElement;
 
-    public static class ArrangementAnimation
+    public static class ArrangementMovementScheduler
     {
-        public static IEnumerator AnimateElement(
+        public static void ScheduleElementMovement(
             this Arrangement arrangement,
             IElement element,
             float duration = 0.25f,
@@ -18,10 +17,6 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            if (arrangement.AnimatingElements.Contains(element))
-                Debug.LogWarning($"element already being animated, attempted second animation {element}");
-            arrangement.AnimatingElements.Add(element);
-
             ElementMovementPlan plan = CreateMovementPlan(
                 arrangement: arrangement,
                 element: element,
@@ -31,18 +26,10 @@ namespace Crysc.Presentation.Arrangements
                 easing: easing
             );
 
-            var time = 0f;
-            while (time <= duration)
-            {
-                time += Time.deltaTime;
-                IncrementPlan(plan: plan, time: time);
-                yield return null;
-            }
-
-            arrangement.AnimatingElements.Remove(element);
+            arrangement.SetMovementPlans(new[] { plan });
         }
 
-        public static IEnumerator AnimateElementsSimultaneously(
+        public static void ScheduleSimultaneousMovement(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
@@ -51,14 +38,8 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            IElement[] elementsToAnimate = (elements ?? arrangement.Elements)
-                .ToArray();
-            if (elementsToAnimate.Length == 0) yield break;
-
-            if (elementsToAnimate.Any(e => arrangement.AnimatingElements.Contains(e)))
-                foreach (IElement e in elementsToAnimate.Where(e => arrangement.AnimatingElements.Contains(e)))
-                    Debug.LogWarning($"element already being animated, attempted second animation {e}");
-            arrangement.AnimatingElements.UnionWith(elementsToAnimate);
+            IElement[] elementsToAnimate = (elements ?? arrangement.Elements).ToArray();
+            if (elementsToAnimate.Length == 0) return;
 
             var plans = new ElementMovementPlan[elementsToAnimate.Length];
             for (var i = 0; i < elementsToAnimate.Length; i++)
@@ -78,20 +59,10 @@ namespace Crysc.Presentation.Arrangements
                     plans[i] = plans[i].Copy(endTime: duration * (plans[i].Distance / maxDistance));
             }
 
-            var time = 0f;
-            while (time <= duration)
-            {
-                time += Time.deltaTime;
-                foreach (ElementMovementPlan plan in plans)
-                    if (plan.RequiresMovement)
-                        IncrementPlan(plan: plan, time: time);
-                yield return null;
-            }
-
-            arrangement.AnimatingElements.ExceptWith(elementsToAnimate);
+            arrangement.SetMovementPlans(plans);
         }
 
-        public static IEnumerator AnimateElementsSerially(
+        public static IEnumerator ScheduleSerialMovement(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
@@ -103,11 +74,6 @@ namespace Crysc.Presentation.Arrangements
         {
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
             if (elementsAry.Length == 0) yield break;
-
-            if (elementsAry.Any(e => arrangement.AnimatingElements.Contains(e)))
-                foreach (IElement e in elementsAry.Where(e => arrangement.AnimatingElements.Contains(e)))
-                    Debug.LogWarning($"element already being animated, attempted second animation {e}");
-            arrangement.AnimatingElements.UnionWith(elementsAry);
 
             var plans = new ElementMovementPlan[elementsAry.Length];
             for (var i = 0; i < elementsAry.Length; i++)
@@ -154,16 +120,7 @@ namespace Crysc.Presentation.Arrangements
                 }
             }
 
-            var time = 0f;
-            while (time <= duration)
-            {
-                time += Time.deltaTime;
-                foreach (ElementMovementPlan plan in plans)
-                    IncrementPlan(plan: plan, time: time);
-                yield return null;
-            }
-
-            arrangement.AnimatingElements.ExceptWith(elementsAry);
+            arrangement.SetMovementPlans(plans);
         }
 
         public static ElementMovementPlan CreateMovementPlan(
@@ -187,34 +144,6 @@ namespace Crysc.Presentation.Arrangements
                 endScale: Vector3.one,
                 extraRotations: extraRotations,
                 easing: easing
-            );
-        }
-
-        public static void IncrementPlan(ElementMovementPlan plan, float time)
-        {
-            float t = Mathf.Clamp01((time - plan.StartTime) / plan.Duration);
-
-            Mover.MoveToStep(
-                transform: plan.Element.Transform,
-                start: plan.StartPosition,
-                end: plan.EndPosition,
-                t: t,
-                easing: plan.Easing
-            );
-            Rotator.RotateToStep(
-                transform: plan.Element.Transform,
-                start: plan.StartRotation,
-                end: plan.EndRotation,
-                t: t,
-                rotations: plan.ExtraRotations,
-                easings: plan.Easing
-            );
-            Scaler.ScaleToStep(
-                transform: plan.Element.Transform,
-                start: plan.StartScale,
-                end: plan.EndScale,
-                t: t,
-                easing: plan.Easing
             );
         }
     }
