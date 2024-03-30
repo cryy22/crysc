@@ -51,19 +51,20 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
-            if (elementsAry.Length == 0) yield break;
+            IElement[] elementsToAnimate = (elements ?? arrangement.Elements)
+                .ToArray();
+            if (elementsToAnimate.Length == 0) yield break;
 
-            if (elementsAry.Any(e => arrangement.AnimatingElements.Contains(e)))
-                foreach (IElement e in elementsAry.Where(e => arrangement.AnimatingElements.Contains(e)))
+            if (elementsToAnimate.Any(e => arrangement.AnimatingElements.Contains(e)))
+                foreach (IElement e in elementsToAnimate.Where(e => arrangement.AnimatingElements.Contains(e)))
                     Debug.LogWarning($"element already being animated, attempted second animation {e}");
-            arrangement.AnimatingElements.UnionWith(elementsAry);
+            arrangement.AnimatingElements.UnionWith(elementsToAnimate);
 
-            var plans = new ElementMovementPlan[elementsAry.Length];
-            for (var i = 0; i < elementsAry.Length; i++)
+            var plans = new ElementMovementPlan[elementsToAnimate.Length];
+            for (var i = 0; i < elementsToAnimate.Length; i++)
                 plans[i] = CreateMovementPlan(
                     arrangement: arrangement,
-                    element: elementsAry[i],
+                    element: elementsToAnimate[i],
                     startTime: 0f,
                     endTime: duration,
                     extraRotations: extraRotations,
@@ -72,7 +73,7 @@ namespace Crysc.Presentation.Arrangements
 
             if (consistentSpeed)
             {
-                float maxDistance = plans.Max(p => p.Distance);
+                float maxDistance = Mathf.Max(a: plans.Max(p => p.Distance), b: Mathf.Epsilon);
                 for (var i = 0; i < plans.Length; i++)
                     plans[i] = plans[i].Copy(endTime: duration * (plans[i].Distance / maxDistance));
             }
@@ -82,11 +83,12 @@ namespace Crysc.Presentation.Arrangements
             {
                 time += Time.deltaTime;
                 foreach (ElementMovementPlan plan in plans)
-                    IncrementPlan(plan: plan, time: time);
+                    if (plan.RequiresMovement)
+                        IncrementPlan(plan: plan, time: time);
                 yield return null;
             }
 
-            arrangement.AnimatingElements.ExceptWith(elementsAry);
+            arrangement.AnimatingElements.ExceptWith(elementsToAnimate);
         }
 
         public static IEnumerator AnimateElementsSerially(
@@ -160,6 +162,8 @@ namespace Crysc.Presentation.Arrangements
                     IncrementPlan(plan: plan, time: time);
                 yield return null;
             }
+
+            arrangement.AnimatingElements.ExceptWith(elementsAry);
         }
 
         public static ElementMovementPlan CreateMovementPlan(

@@ -78,6 +78,8 @@ namespace Crysc.Presentation.Arrangements
             _excludedFromRearrange.IntersectWith(_elements);
             foreach (IElement element in _elements.Except(existingElements)) AddElement(element);
             foreach (IElement element in existingElements.Except(_elements)) _elementsPlacements.Remove(element);
+
+            UpdateElementsAndPositions();
         }
 
         public void Rearrange()
