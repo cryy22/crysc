@@ -102,6 +102,25 @@ namespace Crysc.Presentation.Arrangements
 
             IEnumerator Run()
             {
+                if (UpdateZInstantly)
+                    foreach ((IElement element, ElementMovementPlan plan) in _elementsMovementPlans)
+                    {
+                        Vector3 currentPosition = plan.Element.Transform.localPosition;
+                        plan.Element.Transform.localPosition = new Vector3(
+                            x: currentPosition.x,
+                            y: currentPosition.y,
+                            z: plan.EndPosition.z
+                        );
+
+                        _elementsMovementPlans[element] = plan.Copy(
+                            startPosition: new Vector3(
+                                x: plan.StartPosition.x,
+                                y: plan.StartPosition.y,
+                                z: plan.EndPosition.z
+                            )
+                        );
+                    }
+
                 var expiredPlans = new HashSet<ElementMovementPlan>();
                 while (_elementsMovementPlans.Count > 0)
                 {
