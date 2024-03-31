@@ -35,7 +35,7 @@ namespace Crysc.Presentation.Arrangements
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
 
-        public IEnumerable<IElement> Elements => _elements;
+        public IReadOnlyList<IElement> Elements => _elements;
         public IReadOnlyDictionary<IElement, ElementPlacement> ElementsPlacements => _elementsPlacements;
         public IReadOnlyDictionary<IElement, ElementMovementPlan> ElementsMovementPlans => _elementsMovementPlans;
         public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
@@ -58,9 +58,7 @@ namespace Crysc.Presentation.Arrangements
         private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
         private readonly HashSet<IElement> _excludedFromRearrange = new();
 
-        private CryRoutine _mainRearrangeRoutine;
         private IArrangementCalculator _arrangementCalculator;
-
         private float _animationTime;
         private CryRoutine _animationRoutine;
 
@@ -103,8 +101,9 @@ namespace Crysc.Presentation.Arrangements
             IEnumerator Run()
             {
                 if (UpdateZInstantly)
-                    foreach ((IElement element, ElementMovementPlan plan) in _elementsMovementPlans)
+                    foreach (IElement element in _elementsMovementPlans.Keys.ToArray())
                     {
+                        ElementMovementPlan plan = _elementsMovementPlans[element];
                         Vector3 currentPosition = plan.Element.Transform.localPosition;
                         plan.Element.Transform.localPosition = new Vector3(
                             x: currentPosition.x,
@@ -154,6 +153,105 @@ namespace Crysc.Presentation.Arrangements
                 element.Transform.localScale = Vector3.one;
             }
         }
+
+        public void UpdateProperties()
+        {
+            Vector2 totalSize = _elements.Aggregate(
+                seed: Vector2.zero,
+                (acc, e) => acc + e.SizeMultiplier
+            ) * BaseElementSize;
+
+            UpdateSpacing(totalSize: totalSize, count: _elements.Count);
+
+            Vector2 size = totalSize + (Spacing * (_elements.Count - 1));
+
+            SizeMultiplier = new Vector2(
+                x: BaseElementSize.x > 0 ? size.x / BaseElementSize.x : 0,
+                y: BaseElementSize.y > 0 ? size.y / BaseElementSize.y : 0
+            );
+            AlignmentOffset = HorizontalAlignment switch
+            {
+                Alignment.Left   => Vector2.zero,
+                Alignment.Center => size / 2,
+                Alignment.Right  => size,
+                _                => throw new ArgumentOutOfRangeException(),
+            };
+
+            Pivot = HorizontalAlignment switch
+            {
+                Alignment.Left   => IsInverted ? Vector2.one : Vector2.zero,
+                Alignment.Center => new Vector2(x: 0.5f, y: 0.5f),
+                Alignment.Right  => IsInverted ? Vector2.zero : Vector2.one,
+                _                => throw new ArgumentOutOfRangeException(),
+            };
+        }
+
+        public static void IncrementPlan(ElementMovementPlan plan, float time)
+        {
+            float t = Mathf.Clamp01((time - plan.StartTime) / plan.Duration);
+
+            Mover.MoveToStep(
+                transform: plan.Element.Transform,
+                start: plan.StartPosition,
+                end: plan.EndPosition,
+                t: t,
+                easing: plan.Easing
+            );
+            Rotator.RotateToStep(
+                transform: plan.Element.Transform,
+                start: plan.StartRotation,
+                end: plan.EndRotation,
+                t: t,
+                rotations: plan.ExtraRotations,
+                easings: plan.Easing
+            );
+            Scaler.ScaleToStep(
+                transform: plan.Element.Transform,
+                start: plan.StartScale,
+                end: plan.EndScale,
+                t: t,
+                easing: plan.Easing
+            );
+        }
+
+        private void UpdateElementsAndPositions()
+        {
+            UpdateProperties();
+            foreach (ElementPlacement placement in _arrangementCalculator.CalculateElementPlacements(this))
+                _elementsPlacements[placement.Element] = placement;
+        }
+
+        private void AddElement(IElement element)
+        {
+            Transform eTransform = element.Transform;
+            eTransform.SetParent(ElementsParentInput);
+            eTransform.gameObject.SetActive(true);
+
+            _elementsPlacements[element] =
+                new ElementPlacement(
+                    element: element,
+                    position: eTransform.localPosition,
+                    rotation: eTransform.localRotation
+                );
+        }
+
+        private void UpdateSpacing(Vector2 totalSize, int count)
+        {
+            if (count <= 1) return;
+
+            var maxSize = new Vector2(
+                x: MaxSize.x > 0 ? MaxSize.x : float.PositiveInfinity,
+                y: MaxSize.y > 0 ? MaxSize.y : float.PositiveInfinity
+            );
+            Vector2 maxSpacing = (maxSize - totalSize) / (count - 1);
+            Vector2 preferredSpacing = PreferredSpacingRatio * BaseElementSize;
+
+            Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
+        }
+
+        #region obsolete
+
+        private CryRoutine _mainRearrangeRoutine;
 
         public IEnumerator AnimateRearrange(float duration, float? perElementDelay = null)
         {
@@ -216,115 +314,6 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        public int GetClosestIndex(Vector2 position, bool isLocal = true)
-        {
-            var closestIndex = 0;
-            var closestDistance = float.MaxValue;
-            Vector2 localPosition = isLocal ? position : transform.InverseTransformPoint(position);
-
-            for (var i = 0; i < _elements.Count; i++)
-            {
-                if (!_elementsPlacements.TryGetValue(key: _elements[i], value: out ElementPlacement placement))
-                    continue;
-                float distance = Vector2.Distance(a: localPosition, b: placement.Position);
-
-                if (!(distance < closestDistance)) continue;
-
-                closestDistance = distance;
-                closestIndex = i;
-            }
-
-            return closestIndex;
-        }
-
-        public int GetInsertionIndex(Vector2 position, bool isLocal = true, bool useXAxis = true)
-        {
-            Vector2 localPosition = isLocal ? position : transform.InverseTransformPoint(position);
-
-            int closestIndex = GetClosestIndex(position: localPosition);
-            IElement closestElement = _elements.ElementAtOrDefault(closestIndex);
-
-            if (closestElement == null) return closestIndex;
-            if (!_elementsPlacements.TryGetValue(key: closestElement, value: out ElementPlacement placement))
-                return closestIndex;
-
-            float closestAxialPosition =
-                (useXAxis ? placement.Position.x : placement.Position.y) * (IsInverted ? -1 : 1);
-            float axialPosition = (useXAxis ? localPosition.x : localPosition.y) * (IsInverted ? -1 : 1);
-
-            return axialPosition < closestAxialPosition ? closestIndex : closestIndex + 1;
-        }
-
-        public void UpdateProperties()
-        {
-            Vector2 totalSize = _elements.Aggregate(
-                seed: Vector2.zero,
-                (acc, e) => acc + e.SizeMultiplier
-            ) * BaseElementSize;
-
-            UpdateSpacing(totalSize: totalSize, count: _elements.Count);
-
-            Vector2 size = totalSize + (Spacing * (_elements.Count - 1));
-
-            SizeMultiplier = new Vector2(
-                x: BaseElementSize.x > 0 ? size.x / BaseElementSize.x : 0,
-                y: BaseElementSize.y > 0 ? size.y / BaseElementSize.y : 0
-            );
-            AlignmentOffset = HorizontalAlignment switch
-            {
-                Alignment.Left   => Vector2.zero,
-                Alignment.Center => size / 2,
-                Alignment.Right  => size,
-                _                => throw new ArgumentOutOfRangeException(),
-            };
-
-            Pivot = HorizontalAlignment switch
-            {
-                Alignment.Left   => IsInverted ? Vector2.one : Vector2.zero,
-                Alignment.Center => new Vector2(x: 0.5f, y: 0.5f),
-                Alignment.Right  => IsInverted ? Vector2.zero : Vector2.one,
-                _                => throw new ArgumentOutOfRangeException(),
-            };
-        }
-
-        public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
-        public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
-
-        public static void IncrementPlan(ElementMovementPlan plan, float time)
-        {
-            float t = Mathf.Clamp01((time - plan.StartTime) / plan.Duration);
-
-            Mover.MoveToStep(
-                transform: plan.Element.Transform,
-                start: plan.StartPosition,
-                end: plan.EndPosition,
-                t: t,
-                easing: plan.Easing
-            );
-            Rotator.RotateToStep(
-                transform: plan.Element.Transform,
-                start: plan.StartRotation,
-                end: plan.EndRotation,
-                t: t,
-                rotations: plan.ExtraRotations,
-                easings: plan.Easing
-            );
-            Scaler.ScaleToStep(
-                transform: plan.Element.Transform,
-                start: plan.StartScale,
-                end: plan.EndScale,
-                t: t,
-                easing: plan.Easing
-            );
-        }
-
-        private void UpdateElementsAndPositions()
-        {
-            UpdateProperties();
-            foreach (ElementPlacement placement in _arrangementCalculator.CalculateElementPlacements(this))
-                _elementsPlacements[placement.Element] = placement;
-        }
-
         private void UpdateElementsMovementPlans(IElement[] elements, float totalDuration)
         {
             foreach (IElement element in elements)
@@ -360,32 +349,9 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        private void AddElement(IElement element)
-        {
-            Transform elementTransform = element.Transform;
-            elementTransform.SetParent(ElementsParentInput);
-            elementTransform.gameObject.SetActive(true);
+        public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
+        public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
 
-            _elementsPlacements[element] =
-                new ElementPlacement(
-                    element: element,
-                    position: elementTransform.localPosition,
-                    rotation: elementTransform.localRotation
-                );
-        }
-
-        private void UpdateSpacing(Vector2 totalSize, int count)
-        {
-            if (count <= 1) return;
-
-            var maxSize = new Vector2(
-                x: MaxSize.x > 0 ? MaxSize.x : float.PositiveInfinity,
-                y: MaxSize.y > 0 ? MaxSize.y : float.PositiveInfinity
-            );
-            Vector2 maxSpacing = (maxSize - totalSize) / (count - 1);
-            Vector2 preferredSpacing = PreferredSpacingRatio * BaseElementSize;
-
-            Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
-        }
+        #endregion
     }
 }
