@@ -12,6 +12,7 @@ namespace Crysc.Presentation.Arrangements
         public static void ScheduleElementMovement(
             this Arrangement arrangement,
             IElement element,
+            float startTime = 0f,
             float duration = 0.25f,
             int extraRotations = 0,
             Easings.Enum easing = Easings.Enum.Linear
@@ -20,13 +21,13 @@ namespace Crysc.Presentation.Arrangements
             ElementMovementPlan plan = CreateMovementPlan(
                 arrangement: arrangement,
                 element: element,
-                startTime: 0f,
+                startTime: startTime,
                 endTime: duration,
                 extraRotations: extraRotations,
                 easing: easing
             );
 
-            arrangement.SetMovementPlans(new[] { plan });
+            arrangement.SetMovementPlan(plan);
         }
 
         public static void ScheduleSimultaneousMovement(
@@ -59,7 +60,7 @@ namespace Crysc.Presentation.Arrangements
                     plans[i] = plans[i].Copy(endTime: duration * (plans[i].Distance / maxDistance));
             }
 
-            arrangement.SetMovementPlans(plans);
+            foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
         }
 
         public static IEnumerator ScheduleSerialMovement(
@@ -120,7 +121,7 @@ namespace Crysc.Presentation.Arrangements
                 }
             }
 
-            arrangement.SetMovementPlans(plans);
+            foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
         }
 
         public static ElementMovementPlan CreateMovementPlan(

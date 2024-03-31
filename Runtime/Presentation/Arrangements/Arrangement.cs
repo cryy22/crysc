@@ -84,17 +84,13 @@ namespace Crysc.Presentation.Arrangements
             UpdateElementsAndPositions();
         }
 
-        public void SetMovementPlans(IEnumerable<ElementMovementPlan> plans)
+        public void SetMovementPlan(ElementMovementPlan plan)
         {
-            foreach (ElementMovementPlan plan in plans)
-            {
-                if (!plan.RequiresMovement) continue;
-
-                _elementsMovementPlans[plan.Element] = plan.Copy(
-                    startTime: plan.StartTime + _animationTime,
-                    endTime: plan.EndTime + _animationTime
-                );
-            }
+            if (!plan.RequiresMovement) return;
+            _elementsMovementPlans[plan.Element] = plan.Copy(
+                startTime: plan.StartTime + _animationTime,
+                endTime: plan.EndTime + _animationTime
+            );
         }
 
         public IEnumerator ExecuteMovementPlans()
