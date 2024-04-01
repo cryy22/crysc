@@ -19,6 +19,9 @@ namespace Crysc.Presentation.Arrangements
             Right,
         }
 
+        public event EventHandler ElementArrangeStarted;
+        public event EventHandler ElementArrangeEnded;
+
         public const float ZOffset = 0.01f;
 
         [FormerlySerializedAs("ElementsParent")]
@@ -48,9 +51,6 @@ namespace Crysc.Presentation.Arrangements
         public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
         public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
         public bool IsAnimating => _mainRearrangeRoutine is { IsComplete: false };
-
-        public Action PreElementArrangeHook { get; set; }
-        public Action PostElementArrangeHook { get; set; }
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
@@ -114,44 +114,65 @@ namespace Crysc.Presentation.Arrangements
         public IEnumerator ExecuteMovementPlans()
         {
             _animationRoutine?.Stop();
+
+            if (UpdateZInstantly)
+                foreach (IElement element in _elementsMovementPlans.Keys.ToArray())
+                {
+                    ElementMovementPlan plan = _elementsMovementPlans[element];
+                    Vector3 currentPosition = plan.Element.Transform.localPosition;
+                    plan.Element.Transform.localPosition = new Vector3(
+                        x: currentPosition.x,
+                        y: currentPosition.y,
+                        z: plan.EndPosition.z
+                    );
+
+                    _elementsMovementPlans[element] = plan.Copy(
+                        startPosition: new Vector3(
+                            x: plan.StartPosition.x,
+                            y: plan.StartPosition.y,
+                            z: plan.EndPosition.z
+                        )
+                    );
+                }
+
             _animationRoutine = new CryRoutine(enumerator: Run(), behaviour: this);
             yield return _animationRoutine.WaitForCompletion();
             yield break;
 
             IEnumerator Run()
             {
-                if (UpdateZInstantly)
-                    foreach (IElement element in _elementsMovementPlans.Keys.ToArray())
-                    {
-                        ElementMovementPlan plan = _elementsMovementPlans[element];
-                        Vector3 currentPosition = plan.Element.Transform.localPosition;
-                        plan.Element.Transform.localPosition = new Vector3(
-                            x: currentPosition.x,
-                            y: currentPosition.y,
-                            z: plan.EndPosition.z
-                        );
+                var startedPlans = new HashSet<ElementMovementPlan>();
+                var endedPlans = new HashSet<ElementMovementPlan>();
 
-                        _elementsMovementPlans[element] = plan.Copy(
-                            startPosition: new Vector3(
-                                x: plan.StartPosition.x,
-                                y: plan.StartPosition.y,
-                                z: plan.EndPosition.z
-                            )
-                        );
-                    }
-
-                var expiredPlans = new HashSet<ElementMovementPlan>();
                 while (_elementsMovementPlans.Count > 0)
                 {
                     foreach (ElementMovementPlan plan in _elementsMovementPlans.Values)
                     {
+                        if (!plan.IsStarted)
+                            if (_animationTime > plan.StartTime) startedPlans.Add(plan);
+                            else continue;
+
                         IncrementPlan(plan: plan, time: _animationTime);
-                        if (_animationTime > plan.EndTime) expiredPlans.Add(plan);
+
+                        if (_animationTime > plan.EndTime)
+                            endedPlans.Add(plan);
                     }
 
-                    foreach (ElementMovementPlan plan in expiredPlans)
+                    foreach (ElementMovementPlan plan in startedPlans)
+                    {
+                        _elementsMovementPlans[plan.Element] = plan.Copy(isStarted: true);
+                        ElementArrangeStarted?.Invoke(sender: this, e: EventArgs.Empty);
+                    }
+
+                    startedPlans.Clear();
+
+                    foreach (ElementMovementPlan plan in endedPlans)
+                    {
                         _elementsMovementPlans.Remove(plan.Element);
-                    expiredPlans.Clear();
+                        ElementArrangeEnded?.Invoke(sender: this, e: EventArgs.Empty);
+                    }
+
+                    endedPlans.Clear();
 
                     yield return null;
                     _animationTime += Time.deltaTime;
@@ -297,20 +318,20 @@ namespace Crysc.Presentation.Arrangements
                     {
                         ElementMovementPlan plan = _elementsMovementPlans[e];
 
-                        if (plan.IsCompleted) continue;
+                        if (plan.IsEnded) continue;
                         if (time < plan.StartTime) continue;
-                        if (!plan.IsBegun)
+                        if (!plan.IsStarted)
                         {
-                            PreElementArrangeHook?.Invoke();
-                            _elementsMovementPlans[e] = plan.Copy(isBegun: true);
+                            ElementArrangeStarted?.Invoke(sender: this, e: EventArgs.Empty);
+                            _elementsMovementPlans[e] = plan.Copy(isStarted: true);
                         }
 
                         IncrementPlan(plan: plan, time: time);
 
                         if (time > plan.EndTime)
                         {
-                            PostElementArrangeHook?.Invoke();
-                            _elementsMovementPlans[e] = plan.Copy(isCompleted: true);
+                            ElementArrangeEnded?.Invoke(sender: this, e: EventArgs.Empty);
+                            _elementsMovementPlans[e] = plan.Copy(isEnded: true);
                         }
                     }
                 }

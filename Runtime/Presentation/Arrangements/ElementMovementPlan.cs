@@ -16,8 +16,8 @@ namespace Crysc.Presentation.Arrangements
         public Vector3 EndScale { get; }
         public int ExtraRotations { get; }
         public Easings.Enum Easing { get; }
-        public bool IsBegun { get; }
-        public bool IsCompleted { get; }
+        public bool IsStarted { get; }
+        public bool IsEnded { get; }
 
         public float Duration => Mathf.Max(a: EndTime - StartTime, b: Mathf.Epsilon);
         public float Distance => Vector2.Distance(a: StartPosition, b: EndPosition);
@@ -34,8 +34,8 @@ namespace Crysc.Presentation.Arrangements
             Vector3 endScale,
             int extraRotations = 0,
             Easings.Enum easing = Easings.Enum.Linear,
-            bool isBegun = false,
-            bool isCompleted = false
+            bool isStarted = false,
+            bool isEnded = false
         )
         {
             Element = element;
@@ -49,8 +49,11 @@ namespace Crysc.Presentation.Arrangements
             EndScale = endScale;
             ExtraRotations = extraRotations;
             Easing = easing;
-            IsBegun = isBegun;
-            IsCompleted = isCompleted;
+            IsStarted = isStarted;
+            IsEnded = isEnded;
+
+            if (StartTime > EndTime)
+                Debug.LogWarning($"invalid ElementMovementTime: start time {StartTime} later than end time {EndTime}");
         }
 
         public ElementMovementPlan Copy(
@@ -64,9 +67,9 @@ namespace Crysc.Presentation.Arrangements
             Vector3? startScale = null,
             Vector3? endScale = null,
             int? extraRotations = null,
-            bool? isBegun = null,
-            Easings.Enum? easing = null,
-            bool? isCompleted = null
+            bool? isStarted = null,
+            bool? isEnded = null,
+            Easings.Enum? easing = null
         )
         {
             return new ElementMovementPlan(
@@ -81,8 +84,8 @@ namespace Crysc.Presentation.Arrangements
                 endScale: endScale ?? EndScale,
                 extraRotations: extraRotations ?? ExtraRotations,
                 easing: easing ?? Easing,
-                isBegun: isBegun ?? IsBegun,
-                isCompleted: isCompleted ?? IsCompleted
+                isStarted: isStarted ?? IsStarted,
+                isEnded: isEnded ?? IsEnded
             );
         }
     }
