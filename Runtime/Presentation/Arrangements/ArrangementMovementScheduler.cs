@@ -126,6 +126,49 @@ namespace Crysc.Presentation.Arrangements
             foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
         }
 
+        public static void ScheduleAcceleratingMovement(
+            this Arrangement arrangement,
+            IEnumerable<IElement> elements = null,
+            float elementDuration = 0.25f,
+            float initialDelay = 0.5f,
+            float delayReductionRate = 0.1f,
+            int extraRotations = 0,
+            Easings.Enum easing = Easings.Enum.Linear
+        )
+        {
+            arrangement.RecalculateElementPlacements();
+            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
+            if (elementsAry.Length == 0) return;
+
+            var plans = new ElementMovementPlan[elementsAry.Length];
+            for (var i = 0; i < elementsAry.Length; i++)
+                plans[i] = CreateMovementPlan(
+                    arrangement: arrangement,
+                    element: elementsAry[i],
+                    startTime: 0f,
+                    endTime: elementDuration,
+                    extraRotations: extraRotations,
+                    easing: easing
+                );
+
+            var startTime = 0f;
+            float delay = initialDelay;
+            for (var i = 1; i < plans.Length; i++)
+            {
+                ElementMovementPlan plan = plans[i];
+                startTime += delay;
+
+                plans[i] = plan.Copy(
+                    startTime: startTime,
+                    endTime: plans[i].EndTime + startTime
+                );
+
+                delay *= 1 - delayReductionRate;
+            }
+
+            foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
+        }
+
         public static ElementMovementPlan CreateMovementPlan(
             Arrangement arrangement,
             IElement element,

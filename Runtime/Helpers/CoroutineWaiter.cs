@@ -43,7 +43,6 @@ namespace Crysc.Helpers
             foreach (T behaviour in behaviours)
             {
                 routines.Add(behaviour.StartCoroutine(enumerator(behaviour)));
-                Debug.Log($"delaying next routine for {delay} seconds");
                 yield return new WaitForSeconds(delay);
                 delay *= perInstanceDelayPct;
             }
