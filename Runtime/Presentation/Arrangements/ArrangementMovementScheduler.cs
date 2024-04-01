@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -18,6 +17,7 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
+            arrangement.RecalculateElementPlacements();
             ElementMovementPlan plan = CreateMovementPlan(
                 arrangement: arrangement,
                 element: element,
@@ -39,6 +39,7 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
+            arrangement.RecalculateElementPlacements();
             IElement[] elementsToAnimate = (elements ?? arrangement.Elements).ToArray();
             if (elementsToAnimate.Length == 0) return;
 
@@ -63,7 +64,7 @@ namespace Crysc.Presentation.Arrangements
             foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
         }
 
-        public static IEnumerator ScheduleSerialMovement(
+        public static void ScheduleSerialMovement(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
@@ -73,8 +74,9 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
+            arrangement.RecalculateElementPlacements();
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
-            if (elementsAry.Length == 0) yield break;
+            if (elementsAry.Length == 0) return;
 
             var plans = new ElementMovementPlan[elementsAry.Length];
             for (var i = 0; i < elementsAry.Length; i++)

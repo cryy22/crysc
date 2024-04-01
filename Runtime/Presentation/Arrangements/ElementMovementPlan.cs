@@ -22,12 +22,6 @@ namespace Crysc.Presentation.Arrangements
         public float Duration => Mathf.Max(a: EndTime - StartTime, b: Mathf.Epsilon);
         public float Distance => Vector2.Distance(a: StartPosition, b: EndPosition);
 
-        public bool RequiresMovement =>
-            Distance > 0 ||
-            Quaternion.Angle(a: StartRotation, b: EndRotation) > 0 ||
-            Vector2.Distance(a: StartScale, b: EndScale) > 0 ||
-            ExtraRotations != 0;
-
         public ElementMovementPlan(
             IArrangementElement element,
             float startTime,

@@ -76,15 +76,35 @@ namespace Crysc.Presentation.Arrangements
             List<IElement> existingElements = _elementsPlacements.Keys.ToList();
 
             _excludedFromRearrange.IntersectWith(_elements);
-            foreach (IElement element in _elements.Except(existingElements)) AddElement(element);
-            foreach (IElement element in existingElements.Except(_elements)) _elementsPlacements.Remove(element);
 
-            UpdateElementsAndPositions();
+            foreach (IElement element in _elements.Except(existingElements))
+            {
+                Transform eTransform = element.Transform;
+                eTransform.SetParent(ElementsParentInput);
+                eTransform.gameObject.SetActive(true);
+
+                _elementsPlacements[element] = new ElementPlacement(
+                    element: element,
+                    position: eTransform.localPosition,
+                    rotation: eTransform.localRotation
+                );
+            }
+
+            foreach (IElement element in existingElements.Except(_elements))
+                _elementsPlacements.Remove(element);
+
+            RecalculateElementPlacements();
         }
 
         public void SetMovementPlan(ElementMovementPlan plan)
         {
-            if (!plan.RequiresMovement) return;
+            if (
+                Mathf.Approximately(a: Vector3.Distance(a: plan.StartPosition, b: plan.EndPosition), b: 0) &&
+                Mathf.Approximately(a: Quaternion.Angle(a: plan.StartRotation, b: plan.EndRotation), b: 0) &&
+                Mathf.Approximately(a: Vector2.Distance(a: plan.StartScale, b: plan.EndScale), b: 0) &&
+                plan.ExtraRotations == 0
+            ) return;
+
             _elementsMovementPlans[plan.Element] = plan.Copy(
                 startTime: plan.StartTime + _animationTime,
                 endTime: plan.EndTime + _animationTime
@@ -143,9 +163,10 @@ namespace Crysc.Presentation.Arrangements
 
         public void Rearrange()
         {
+            _animationRoutine?.Stop();
             _mainRearrangeRoutine?.Stop();
 
-            UpdateElementsAndPositions();
+            RecalculateElementPlacements();
             foreach (IElement element in _elementsPlacements.Keys.Except(_excludedFromRearrange))
             {
                 element.Transform.localPosition = _elementsPlacements[element].Position;
@@ -161,7 +182,17 @@ namespace Crysc.Presentation.Arrangements
                 (acc, e) => acc + e.SizeMultiplier
             ) * BaseElementSize;
 
-            UpdateSpacing(totalSize: totalSize, count: _elements.Count);
+            if (_elements.Count > 1)
+            {
+                var maxSize = new Vector2(
+                    x: MaxSize.x > 0 ? MaxSize.x : float.PositiveInfinity,
+                    y: MaxSize.y > 0 ? MaxSize.y : float.PositiveInfinity
+                );
+                Vector2 maxSpacing = (maxSize - totalSize) / (_elements.Count - 1);
+                Vector2 preferredSpacing = PreferredSpacingRatio * BaseElementSize;
+
+                Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
+            }
 
             Vector2 size = totalSize + (Spacing * (_elements.Count - 1));
 
@@ -214,39 +245,11 @@ namespace Crysc.Presentation.Arrangements
             );
         }
 
-        private void UpdateElementsAndPositions()
+        public void RecalculateElementPlacements()
         {
             UpdateProperties();
             foreach (ElementPlacement placement in _arrangementCalculator.CalculateElementPlacements(this))
                 _elementsPlacements[placement.Element] = placement;
-        }
-
-        private void AddElement(IElement element)
-        {
-            Transform eTransform = element.Transform;
-            eTransform.SetParent(ElementsParentInput);
-            eTransform.gameObject.SetActive(true);
-
-            _elementsPlacements[element] =
-                new ElementPlacement(
-                    element: element,
-                    position: eTransform.localPosition,
-                    rotation: eTransform.localRotation
-                );
-        }
-
-        private void UpdateSpacing(Vector2 totalSize, int count)
-        {
-            if (count <= 1) return;
-
-            var maxSize = new Vector2(
-                x: MaxSize.x > 0 ? MaxSize.x : float.PositiveInfinity,
-                y: MaxSize.y > 0 ? MaxSize.y : float.PositiveInfinity
-            );
-            Vector2 maxSpacing = (maxSize - totalSize) / (count - 1);
-            Vector2 preferredSpacing = PreferredSpacingRatio * BaseElementSize;
-
-            Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
         }
 
         #region obsolete
@@ -259,7 +262,7 @@ namespace Crysc.Presentation.Arrangements
             _elementsDistances.Clear();
             _elementsMovementPlans.Clear();
 
-            UpdateElementsAndPositions();
+            RecalculateElementPlacements();
             IElement[] elements = _elementsPlacements.Keys.Except(_excludedFromRearrange).ToArray();
             if (elements.Length == 0) yield break;
             UpdateElementsMovementPlans(elements: elements, totalDuration: duration);
