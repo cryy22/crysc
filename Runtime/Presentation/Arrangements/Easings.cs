@@ -7,7 +7,9 @@ namespace Crysc.Presentation.Arrangements
         public enum Enum
         {
             Linear,
+            EaseOutCubic,
             EaseOutElastic,
+            EaseInBack,
             EaseOutBack,
             EaseInOutBack,
         }
@@ -21,15 +23,19 @@ namespace Crysc.Presentation.Arrangements
         {
             return easing switch
             {
+                Enum.EaseOutCubic   => EaseOutCubic(t),
                 Enum.EaseOutElastic => EaseOutElastic(t),
-                Enum.EaseInOutBack  => EaseInOutBack(t),
+                Enum.EaseInBack     => EaseInBack(t),
                 Enum.EaseOutBack    => EaseOutBack(t),
+                Enum.EaseInOutBack  => EaseInOutBack(t),
                 Enum.Linear         => Linear(t),
                 _                   => Linear(t),
             };
         }
 
         private static float Linear(float t) { return t; }
+
+        private static float EaseOutCubic(float t) { return 1 - Mathf.Pow(f: 1 - t, p: 3); }
 
         private static float EaseOutElastic(float t)
         {
@@ -40,6 +46,8 @@ namespace Crysc.Presentation.Arrangements
                 _ => (Mathf.Pow(f: 2, p: -10 * t) * Mathf.Sin((float) (((t * 10) - 0.75) * _c4))) + 1,
             };
         }
+
+        private static float EaseInBack(float t) { return (_c3 * t * t * t) - (_c1 * t * t); }
 
         private static float EaseInOutBack(float t)
         {
