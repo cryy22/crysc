@@ -115,32 +115,32 @@ namespace Crysc.Presentation.Arrangements
         {
             _animationRoutine?.Stop();
 
-            if (UpdateZInstantly)
-                foreach (IElement element in _elementsMovementPlans.Keys.ToArray())
-                {
-                    ElementMovementPlan plan = _elementsMovementPlans[element];
-                    Vector3 currentPosition = plan.Element.Transform.localPosition;
-                    plan.Element.Transform.localPosition = new Vector3(
-                        x: currentPosition.x,
-                        y: currentPosition.y,
-                        z: plan.EndPosition.z
-                    );
-
-                    _elementsMovementPlans[element] = plan.Copy(
-                        startPosition: new Vector3(
-                            x: plan.StartPosition.x,
-                            y: plan.StartPosition.y,
-                            z: plan.EndPosition.z
-                        )
-                    );
-                }
-
             _animationRoutine = new CryRoutine(enumerator: Run(), behaviour: this);
             yield return _animationRoutine.WaitForCompletion();
             yield break;
 
             IEnumerator Run()
             {
+                if (UpdateZInstantly)
+                    foreach (IElement element in _elementsMovementPlans.Keys.ToArray())
+                    {
+                        ElementMovementPlan plan = _elementsMovementPlans[element];
+                        Vector3 currentPosition = plan.Element.Transform.localPosition;
+                        plan.Element.Transform.localPosition = new Vector3(
+                            x: currentPosition.x,
+                            y: currentPosition.y,
+                            z: plan.EndPosition.z
+                        );
+
+                        _elementsMovementPlans[element] = plan.Copy(
+                            startPosition: new Vector3(
+                                x: plan.StartPosition.x,
+                                y: plan.StartPosition.y,
+                                z: plan.EndPosition.z
+                            )
+                        );
+                    }
+
                 var startedPlans = new HashSet<ElementMovementPlan>();
                 var endedPlans = new HashSet<ElementMovementPlan>();
 
@@ -182,7 +182,7 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        public void Rearrange()
+        public void RearrangeInstantly()
         {
             _animationRoutine?.Stop();
             _mainRearrangeRoutine?.Stop();
@@ -194,6 +194,8 @@ namespace Crysc.Presentation.Arrangements
                 element.Transform.localRotation = _elementsPlacements[element].Rotation;
                 element.Transform.localScale = Vector3.one;
             }
+
+            _elementsMovementPlans.Clear();
         }
 
         public void UpdateProperties()
@@ -335,6 +337,8 @@ namespace Crysc.Presentation.Arrangements
                         }
                     }
                 }
+
+                _elementsMovementPlans.Clear();
             }
         }
 
