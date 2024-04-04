@@ -205,6 +205,22 @@ namespace Crysc.Presentation.Arrangements
             return arrangement;
         }
 
+        public static Arrangement EaseMovementPlanTimings(this Arrangement arrangement, Easings.Enum easing)
+        {
+            ElementMovementPlan[] plans = arrangement.ElementsMovementPlans.Values.ToArray();
+            float startDuration = plans.Max(p => p.StartTime);
+
+            foreach (ElementMovementPlan plan in plans)
+            {
+                float startTime = Easings.Ease(t: plan.StartTime / startDuration, easing: easing) * startDuration;
+                arrangement.SetMovementPlan(
+                    plan.Copy(startTime: startTime, endTime: startTime + plan.Duration)
+                );
+            }
+
+            return arrangement;
+        }
+
         public static ElementMovementPlan CreateMovementPlan(
             Arrangement arrangement,
             IElement element,
