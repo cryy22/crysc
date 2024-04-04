@@ -64,7 +64,7 @@ namespace Crysc.Presentation.Arrangements
 
         private void Awake()
         {
-            if (BaseElementSize.x < 0 || BaseElementSize.y < 0)
+            if ((BaseElementSize.x < 0) || (BaseElementSize.y < 0))
                 throw new Exception("BaseElementSize cannot be negative");
             _arrangementCalculator = GetComponent<IArrangementCalculator>() ?? new DefaultArrangementCalculator();
         }
@@ -102,7 +102,7 @@ namespace Crysc.Presentation.Arrangements
                 Mathf.Approximately(a: Vector3.Distance(a: plan.StartPosition, b: plan.EndPosition), b: 0) &&
                 Mathf.Approximately(a: Quaternion.Angle(a: plan.StartRotation, b: plan.EndRotation), b: 0) &&
                 Mathf.Approximately(a: Vector2.Distance(a: plan.StartScale, b: plan.EndScale), b: 0) &&
-                plan.ExtraRotations == 0
+                (plan.ExtraRotations == 0)
             ) return;
 
             _elementsMovementPlans[plan.Element] = plan.Copy(
@@ -187,15 +187,25 @@ namespace Crysc.Presentation.Arrangements
             _animationRoutine?.Stop();
             _mainRearrangeRoutine?.Stop();
 
+            foreach (IElement element in _elementsMovementPlans.Keys)
+            {
+                element.Transform.localPosition = _elementsMovementPlans[element].EndPosition;
+                element.Transform.localRotation = _elementsMovementPlans[element].EndRotation;
+                element.Transform.localScale = _elementsMovementPlans[element].EndScale;
+            }
+
+            IEnumerable<IElement> remainingElements = _elements.Except(_elementsMovementPlans.Keys).ToArray();
+            _elementsMovementPlans.Clear();
+
+            if (!remainingElements.Any()) return;
+
             RecalculateElementPlacements();
-            foreach (IElement element in _elementsPlacements.Keys.Except(_excludedFromRearrange))
+            foreach (IElement element in remainingElements)
             {
                 element.Transform.localPosition = _elementsPlacements[element].Position;
                 element.Transform.localRotation = _elementsPlacements[element].Rotation;
                 element.Transform.localScale = Vector3.one;
             }
-
-            _elementsMovementPlans.Clear();
         }
 
         public void UpdateProperties()
@@ -217,7 +227,7 @@ namespace Crysc.Presentation.Arrangements
                 Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
             }
 
-            Vector2 size = totalSize + (Spacing * (_elements.Count - 1));
+            Vector2 size = totalSize + Spacing * (_elements.Count - 1);
 
             SizeMultiplier = new Vector2(
                 x: BaseElementSize.x > 0 ? size.x / BaseElementSize.x : 0,
@@ -352,16 +362,16 @@ namespace Crysc.Presentation.Arrangements
 
             float overlapAwareDistance =
                 elements.Select(e => _elementsDistances[e] * 0.5f).Sum() +
-                (_elementsDistances[elements.First()] * 0.5f);
+                _elementsDistances[elements.First()] * 0.5f;
             overlapAwareDistance = Mathf.Max(a: overlapAwareDistance, b: Mathf.Epsilon);
 
             var startTime = 0f;
             var endTime = 0f;
             foreach (IElement e in elements)
             {
-                float duration = (_elementsDistances[e] / overlapAwareDistance) * totalDuration;
+                float duration = _elementsDistances[e] / overlapAwareDistance * totalDuration;
                 startTime = Mathf.Max(
-                    a: endTime - (0.5f * duration),
+                    a: endTime - 0.5f * duration,
                     b: startTime
                 );
                 endTime = startTime + duration;

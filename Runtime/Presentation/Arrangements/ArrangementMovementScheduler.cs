@@ -101,8 +101,8 @@ namespace Crysc.Presentation.Arrangements
                 for (var i = 0; i < plans.Length; i++)
                 {
                     ElementMovementPlan plan = plans[i];
-                    float pDuration = (plan.Distance / spacingAwareDistance) * duration;
-                    startTime = Mathf.Max(a: endTime + (spacingPct * pDuration), b: startTime);
+                    float pDuration = plan.Distance / spacingAwareDistance * duration;
+                    startTime = Mathf.Max(a: endTime + spacingPct * pDuration, b: startTime);
                     endTime = startTime + pDuration;
 
                     plans[i] = plan.Copy(startTime: startTime, endTime: endTime);
@@ -110,13 +110,13 @@ namespace Crysc.Presentation.Arrangements
             }
             else
             {
-                float pDuration = duration / (1 + ((plans.Length - 1) * (1 + spacingPct)));
+                float pDuration = duration / (1 + (plans.Length - 1) * (1 + spacingPct));
                 var startTime = 0f;
                 var endTime = 0f;
                 for (var i = 0; i < plans.Length; i++)
                 {
                     ElementMovementPlan plan = plans[i];
-                    startTime = Mathf.Max(a: endTime + (spacingPct * pDuration), b: startTime);
+                    startTime = Mathf.Max(a: endTime + spacingPct * pDuration, b: startTime);
                     endTime = startTime + pDuration;
 
                     plans[i] = plan.Copy(startTime: startTime, endTime: endTime);
@@ -167,6 +167,26 @@ namespace Crysc.Presentation.Arrangements
             }
 
             foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
+        }
+
+        public static void MussMovementPlans(
+            this Arrangement arrangement,
+            IEnumerable<IElement> elements = null,
+            float mussRadius = 0.75f
+        )
+        {
+            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
+            if (elementsAry.Length == 0) return;
+
+            foreach (IElement element in elementsAry)
+            {
+                arrangement.ElementsMovementPlans.TryGetValue(key: element, value: out ElementMovementPlan plan);
+                arrangement.SetMovementPlan(
+                    plan.Copy(
+                        endPosition: plan.EndPosition + (Vector3) (Random.insideUnitCircle * mussRadius)
+                    )
+                );
+            }
         }
 
         public static ElementMovementPlan CreateMovementPlan(
