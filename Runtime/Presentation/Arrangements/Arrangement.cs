@@ -50,17 +50,14 @@ namespace Crysc.Presentation.Arrangements
         public Transform Transform => transform;
         public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
         public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
-        public bool IsAnimating => _mainRearrangeRoutine is { IsComplete: false };
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
-        private readonly Dictionary<IElement, float> _elementsDistances = new();
         private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
-        private readonly HashSet<IElement> _excludedFromRearrange = new();
 
         private IArrangementCalculator _arrangementCalculator;
         private float _animationTime;
-        private CryRoutine _animationRoutine;
+        private CryRoutine _movementPlanRoutine;
 
         private void Awake()
         {
@@ -74,8 +71,6 @@ namespace Crysc.Presentation.Arrangements
             _elements.Clear();
             _elements.AddRange(elements);
             List<IElement> existingElements = _elementsPlacements.Keys.ToList();
-
-            _excludedFromRearrange.IntersectWith(_elements);
 
             foreach (IElement element in _elements.Except(existingElements))
             {
@@ -106,10 +101,10 @@ namespace Crysc.Presentation.Arrangements
 
         public IEnumerator ExecuteMovementPlans()
         {
-            _animationRoutine?.Stop();
+            _movementPlanRoutine?.Stop();
 
-            _animationRoutine = new CryRoutine(enumerator: Run(), behaviour: this);
-            yield return _animationRoutine.WaitForCompletion();
+            _movementPlanRoutine = new CryRoutine(enumerator: Run(), behaviour: this);
+            yield return _movementPlanRoutine.WaitForCompletion();
             yield break;
 
             IEnumerator Run()
@@ -177,8 +172,7 @@ namespace Crysc.Presentation.Arrangements
 
         public void RearrangeInstantly()
         {
-            _animationRoutine?.Stop();
-            _mainRearrangeRoutine?.Stop();
+            _movementPlanRoutine?.Stop();
 
             foreach (IElement element in _elementsMovementPlans.Keys)
             {
@@ -277,112 +271,5 @@ namespace Crysc.Presentation.Arrangements
             foreach (ElementPlacement placement in _arrangementCalculator.CalculateElementPlacements(this))
                 _elementsPlacements[placement.Element] = placement;
         }
-
-        #region obsolete
-
-        private CryRoutine _mainRearrangeRoutine;
-
-        public IEnumerator AnimateRearrange(float duration, float? perElementDelay = null)
-        {
-            _mainRearrangeRoutine?.Stop();
-            _elementsDistances.Clear();
-            _elementsMovementPlans.Clear();
-
-            RecalculateElementPlacements();
-            IElement[] elements = _elementsPlacements.Keys.Except(_excludedFromRearrange).ToArray();
-            if (elements.Length == 0) yield break;
-            UpdateElementsMovementPlans(elements: elements, totalDuration: duration);
-
-            if (UpdateZInstantly)
-                foreach (IElement e in elements)
-                {
-                    Transform elementTransform = e.Transform;
-                    e.Transform.localPosition = new Vector3(
-                        x: elementTransform.localPosition.x,
-                        y: elementTransform.localPosition.y,
-                        z: _elementsPlacements[e].Position.z
-                    );
-                }
-
-            _mainRearrangeRoutine = new CryRoutine(enumerator: Run(), behaviour: this);
-            yield return _mainRearrangeRoutine.WaitForCompletion();
-
-            yield break;
-
-            IEnumerator Run()
-            {
-                float trueDuration = _elementsMovementPlans[elements.Last()].EndTime;
-
-                var time = 0f;
-                while (time <= trueDuration)
-                {
-                    yield return null;
-                    time += Time.deltaTime;
-
-                    foreach (IElement e in elements)
-                    {
-                        ElementMovementPlan plan = _elementsMovementPlans[e];
-
-                        if (plan.IsEnded) continue;
-                        if (time < plan.StartTime) continue;
-                        if (!plan.IsStarted)
-                        {
-                            ElementArrangeStarted?.Invoke(sender: this, e: EventArgs.Empty);
-                            _elementsMovementPlans[e] = plan.Copy(isStarted: true);
-                        }
-
-                        IncrementPlan(plan: plan, time: time);
-
-                        if (time > plan.EndTime)
-                        {
-                            ElementArrangeEnded?.Invoke(sender: this, e: EventArgs.Empty);
-                            _elementsMovementPlans[e] = plan.Copy(isEnded: true);
-                        }
-                    }
-                }
-
-                _elementsMovementPlans.Clear();
-            }
-        }
-
-        private void UpdateElementsMovementPlans(IElement[] elements, float totalDuration)
-        {
-            foreach (IElement element in elements)
-                _elementsDistances[element] = Vector2.Distance(
-                    a: element.Transform.localPosition,
-                    b: _elementsPlacements[element].Position
-                );
-
-            float overlapAwareDistance =
-                elements.Select(e => _elementsDistances[e] * 0.5f).Sum() +
-                _elementsDistances[elements.First()] * 0.5f;
-            overlapAwareDistance = Mathf.Max(a: overlapAwareDistance, b: Mathf.Epsilon);
-
-            var startTime = 0f;
-            var endTime = 0f;
-            foreach (IElement e in elements)
-            {
-                float duration = _elementsDistances[e] / overlapAwareDistance * totalDuration;
-                startTime = Mathf.Max(
-                    a: endTime - 0.5f * duration,
-                    b: startTime
-                );
-                endTime = startTime + duration;
-
-                _elementsMovementPlans[e] = ArrangementMovementScheduler.CreateMovementPlan(
-                    arrangement: this,
-                    element: e,
-                    startTime: startTime,
-                    endTime: endTime,
-                    extraRotations: 0,
-                    easing: Easings.Enum.Linear
-                );
-            }
-        }
-
-        public void ExcludeFromRearrange(IElement element) { _excludedFromRearrange.Add(item: element); }
-        public void IncludeInRearrange(IElement element) { _excludedFromRearrange.Remove(item: element); }
-
-        #endregion
     }
 }
