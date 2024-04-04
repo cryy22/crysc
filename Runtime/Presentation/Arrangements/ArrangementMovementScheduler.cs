@@ -194,8 +194,8 @@ namespace Crysc.Presentation.Arrangements
             IElement element,
             float startTime,
             float endTime,
-            int extraRotations,
-            Easings.Enum easing
+            int extraRotations = 0,
+            Easings.Enum easing = Easings.Enum.Linear
         )
         {
             return new ElementMovementPlan(
@@ -210,6 +210,24 @@ namespace Crysc.Presentation.Arrangements
                 endScale: Vector3.one,
                 extraRotations: extraRotations,
                 easing: easing
+            );
+        }
+
+        public static ElementMovementPlan CreateNoopMovementPlan(IElement element)
+        {
+            Transform transform = element.Transform;
+            return new ElementMovementPlan(
+                element: element,
+                startTime: 0f,
+                endTime: 0f,
+                startPosition: transform.localPosition,
+                endPosition: transform.localPosition,
+                startRotation: transform.localRotation,
+                endRotation: transform.localRotation,
+                startScale: transform.localScale,
+                endScale: transform.localScale,
+                extraRotations: 0,
+                easing: Easings.Enum.Linear
             );
         }
     }
