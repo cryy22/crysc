@@ -181,6 +181,7 @@ namespace Crysc.Presentation.Arrangements
             foreach (IElement element in elementsAry)
             {
                 arrangement.ElementsMovementPlans.TryGetValue(key: element, value: out ElementMovementPlan plan);
+                plan = plan.Element == null ? CreateNoopMovementPlan(element) : plan;
                 arrangement.SetMovementPlan(
                     plan.Copy(
                         endPosition: plan.EndPosition + (Vector3) (Random.insideUnitCircle * mussRadius)

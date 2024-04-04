@@ -98,13 +98,6 @@ namespace Crysc.Presentation.Arrangements
 
         public void SetMovementPlan(ElementMovementPlan plan)
         {
-            if (
-                Mathf.Approximately(a: Vector3.Distance(a: plan.StartPosition, b: plan.EndPosition), b: 0) &&
-                Mathf.Approximately(a: Quaternion.Angle(a: plan.StartRotation, b: plan.EndRotation), b: 0) &&
-                Mathf.Approximately(a: Vector2.Distance(a: plan.StartScale, b: plan.EndScale), b: 0) &&
-                (plan.ExtraRotations == 0)
-            ) return;
-
             _elementsMovementPlans[plan.Element] = plan.Copy(
                 startTime: plan.StartTime + _animationTime,
                 endTime: plan.EndTime + _animationTime
