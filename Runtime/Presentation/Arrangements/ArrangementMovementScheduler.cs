@@ -172,7 +172,8 @@ namespace Crysc.Presentation.Arrangements
         public static void MussMovementPlans(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
-            float mussRadius = 0.75f
+            float mussRadius = 0.75f,
+            float mussRotationRange = 45f
         )
         {
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
@@ -184,7 +185,15 @@ namespace Crysc.Presentation.Arrangements
                 plan = plan.Element == null ? CreateNoopMovementPlan(element) : plan;
                 arrangement.SetMovementPlan(
                     plan.Copy(
-                        endPosition: plan.EndPosition + (Vector3) (Random.insideUnitCircle * mussRadius)
+                        endPosition: plan.EndPosition + (Vector3) (Random.insideUnitCircle * mussRadius),
+                        endRotation: plan.EndRotation * Quaternion.Euler(
+                            x: 0,
+                            y: 0,
+                            z: Random.Range(
+                                minInclusive: -(mussRotationRange / 2),
+                                maxInclusive: mussRotationRange / 2
+                            )
+                        )
                     )
                 );
             }
