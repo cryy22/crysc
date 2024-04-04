@@ -8,7 +8,7 @@ namespace Crysc.Presentation.Arrangements
 
     public static class ArrangementMovementScheduler
     {
-        public static void ScheduleElementMovement(
+        public static Arrangement ScheduleElementMovement(
             this Arrangement arrangement,
             IElement element,
             float startTime = 0f,
@@ -28,9 +28,10 @@ namespace Crysc.Presentation.Arrangements
             );
 
             arrangement.SetMovementPlan(plan);
+            return arrangement;
         }
 
-        public static void ScheduleSimultaneousMovement(
+        public static Arrangement ScheduleSimultaneousMovement(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
@@ -41,7 +42,7 @@ namespace Crysc.Presentation.Arrangements
         {
             arrangement.RecalculateElementPlacements();
             IElement[] elementsToAnimate = (elements ?? arrangement.Elements).ToArray();
-            if (elementsToAnimate.Length == 0) return;
+            if (elementsToAnimate.Length == 0) return arrangement;
 
             var plans = new ElementMovementPlan[elementsToAnimate.Length];
             for (var i = 0; i < elementsToAnimate.Length; i++)
@@ -62,9 +63,10 @@ namespace Crysc.Presentation.Arrangements
             }
 
             foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
+            return arrangement;
         }
 
-        public static void ScheduleSerialMovement(
+        public static Arrangement ScheduleSerialMovement(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
@@ -76,7 +78,7 @@ namespace Crysc.Presentation.Arrangements
         {
             arrangement.RecalculateElementPlacements();
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
-            if (elementsAry.Length == 0) return;
+            if (elementsAry.Length == 0) return arrangement;
 
             var plans = new ElementMovementPlan[elementsAry.Length];
             for (var i = 0; i < elementsAry.Length; i++)
@@ -124,9 +126,10 @@ namespace Crysc.Presentation.Arrangements
             }
 
             foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
+            return arrangement;
         }
 
-        public static void ScheduleAcceleratingMovement(
+        public static Arrangement ScheduleAcceleratingMovement(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float elementDuration = 0.25f,
@@ -138,7 +141,7 @@ namespace Crysc.Presentation.Arrangements
         {
             arrangement.RecalculateElementPlacements();
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
-            if (elementsAry.Length == 0) return;
+            if (elementsAry.Length == 0) return arrangement;
 
             var plans = new ElementMovementPlan[elementsAry.Length];
             for (var i = 0; i < elementsAry.Length; i++)
@@ -167,9 +170,10 @@ namespace Crysc.Presentation.Arrangements
             }
 
             foreach (ElementMovementPlan plan in plans) arrangement.SetMovementPlan(plan);
+            return arrangement;
         }
 
-        public static void MussMovementPlans(
+        public static Arrangement MussMovementPlans(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
             float mussRadius = 0.75f,
@@ -177,7 +181,7 @@ namespace Crysc.Presentation.Arrangements
         )
         {
             IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
-            if (elementsAry.Length == 0) return;
+            if (elementsAry.Length == 0) return arrangement;
 
             foreach (IElement element in elementsAry)
             {
@@ -197,6 +201,8 @@ namespace Crysc.Presentation.Arrangements
                     )
                 );
             }
+
+            return arrangement;
         }
 
         public static ElementMovementPlan CreateMovementPlan(
