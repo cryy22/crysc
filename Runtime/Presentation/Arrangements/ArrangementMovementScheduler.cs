@@ -40,20 +40,14 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            arrangement.RecalculateElementPlacements();
-            IElement[] elementsToAnimate = (elements ?? arrangement.Elements).ToArray();
-            if (elementsToAnimate.Length == 0) return arrangement;
-
-            var plans = new ElementMovementPlan[elementsToAnimate.Length];
-            for (var i = 0; i < elementsToAnimate.Length; i++)
-                plans[i] = CreateMovementPlan(
-                    arrangement: arrangement,
-                    element: elementsToAnimate[i],
-                    startTime: 0f,
-                    endTime: duration,
-                    extraRotations: extraRotations,
-                    easing: easing
-                );
+            ElementMovementPlan[] plans = GenerateInitialPlansForArrangement(
+                arrangement: arrangement,
+                elements: elements,
+                duration: duration,
+                extraRotations: extraRotations,
+                easing: easing
+            );
+            if (plans.Length == 0) return arrangement;
 
             if (consistentSpeed)
             {
@@ -76,20 +70,14 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            arrangement.RecalculateElementPlacements();
-            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
-            if (elementsAry.Length == 0) return arrangement;
-
-            var plans = new ElementMovementPlan[elementsAry.Length];
-            for (var i = 0; i < elementsAry.Length; i++)
-                plans[i] = CreateMovementPlan(
-                    arrangement: arrangement,
-                    element: elementsAry[i],
-                    startTime: 0f,
-                    endTime: duration,
-                    extraRotations: extraRotations,
-                    easing: easing
-                );
+            ElementMovementPlan[] plans = GenerateInitialPlansForArrangement(
+                arrangement: arrangement,
+                elements: elements,
+                duration: duration,
+                extraRotations: extraRotations,
+                easing: easing
+            );
+            if (plans.Length == 0) return arrangement;
 
             if (consistentSpeed)
             {
@@ -129,6 +117,90 @@ namespace Crysc.Presentation.Arrangements
             return arrangement;
         }
 
+        public static void ScheduleSerialMovement(
+            Arrangement[] arrangements,
+            IEnumerable<IElement> elements = null,
+            float duration = 0.25f,
+            float spacingPct = 0f,
+            int extraRotations = 0,
+            bool consistentSpeed = true,
+            Easings.Enum easing = Easings.Enum.Linear
+        )
+        {
+            foreach (Arrangement arrangement in arrangements) arrangement.RecalculateElementPlacements();
+
+            IElement[] elementsAry = (elements ?? arrangements.SelectMany(a => a.Elements)).ToArray();
+            if (elementsAry.Length == 0) return;
+
+            var elementsArrangements = new Dictionary<IElement, Arrangement>();
+            foreach (Arrangement arrangement in arrangements)
+            foreach (IElement element in arrangement.Elements)
+            {
+                if (elementsAry.Contains(element) == false) continue;
+                elementsArrangements[element] = arrangement;
+            }
+
+            if (elementsAry.Length > elementsArrangements.Count)
+                elementsAry = elementsAry
+                    .Distinct()
+                    .Where(e => elementsArrangements.ContainsKey(e))
+                    .ToArray();
+
+            var plans = new ElementMovementPlan[elementsAry.Length];
+            for (var i = 0; i < elementsAry.Length; i++)
+            {
+                IElement element = elementsAry[i];
+                elementsArrangements.TryGetValue(key: element, value: out Arrangement arrangement);
+                if (!arrangement) continue;
+
+                plans[i] = CreateMovementPlan(
+                    arrangement: arrangement,
+                    element: element,
+                    startTime: 0f,
+                    endTime: duration,
+                    extraRotations: extraRotations,
+                    easing: easing
+                );
+            }
+
+            if (consistentSpeed)
+            {
+                var spacingAwareDistance = 0f;
+                for (var i = 0; i < plans.Length; i++)
+                    spacingAwareDistance += plans[i].Distance * (1 + (i > 0 ? spacingPct : 0));
+                spacingAwareDistance = Mathf.Max(a: spacingAwareDistance, b: Mathf.Epsilon);
+
+                var startTime = 0f;
+                var endTime = 0f;
+                for (var i = 0; i < plans.Length; i++)
+                {
+                    ElementMovementPlan plan = plans[i];
+                    float pDuration = plan.Distance / spacingAwareDistance * duration;
+                    startTime = Mathf.Max(a: endTime + spacingPct * pDuration, b: startTime);
+                    endTime = startTime + pDuration;
+
+                    plans[i] = plan.Copy(startTime: startTime, endTime: endTime);
+                }
+            }
+            else
+            {
+                float pDuration = duration / (1 + (plans.Length - 1) * (1 + spacingPct));
+                var startTime = 0f;
+                var endTime = 0f;
+                for (var i = 0; i < plans.Length; i++)
+                {
+                    ElementMovementPlan plan = plans[i];
+                    startTime = Mathf.Max(a: endTime + spacingPct * pDuration, b: startTime);
+                    endTime = startTime + pDuration;
+
+                    plans[i] = plan.Copy(startTime: startTime, endTime: endTime);
+                }
+            }
+
+            foreach (ElementMovementPlan plan in plans)
+                elementsArrangements[plan.Element].SetMovementPlan(plan);
+        }
+
         public static Arrangement ScheduleAcceleratingMovement(
             this Arrangement arrangement,
             IEnumerable<IElement> elements = null,
@@ -139,20 +211,14 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            arrangement.RecalculateElementPlacements();
-            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
-            if (elementsAry.Length == 0) return arrangement;
-
-            var plans = new ElementMovementPlan[elementsAry.Length];
-            for (var i = 0; i < elementsAry.Length; i++)
-                plans[i] = CreateMovementPlan(
-                    arrangement: arrangement,
-                    element: elementsAry[i],
-                    startTime: 0f,
-                    endTime: elementDuration,
-                    extraRotations: extraRotations,
-                    easing: easing
-                );
+            ElementMovementPlan[] plans = GenerateInitialPlansForArrangement(
+                arrangement: arrangement,
+                elements: elements,
+                duration: elementDuration,
+                extraRotations: extraRotations,
+                easing: easing
+            );
+            if (plans.Length == 0) return arrangement;
 
             var startTime = 0f;
             float delay = initialDelay;
@@ -261,6 +327,31 @@ namespace Crysc.Presentation.Arrangements
                 extraRotations: 0,
                 easing: Easings.Enum.Linear
             );
+        }
+
+        private static ElementMovementPlan[] GenerateInitialPlansForArrangement(
+            Arrangement arrangement,
+            IEnumerable<IElement> elements,
+            float duration,
+            int extraRotations,
+            Easings.Enum easing
+        )
+        {
+            arrangement.RecalculateElementPlacements();
+            IElement[] elementsAry = (elements ?? arrangement.Elements).ToArray();
+
+            var plans = new ElementMovementPlan[elementsAry.Length];
+            for (var i = 0; i < elementsAry.Length; i++)
+                plans[i] = CreateMovementPlan(
+                    arrangement: arrangement,
+                    element: elementsAry[i],
+                    startTime: 0f,
+                    endTime: duration,
+                    extraRotations: extraRotations,
+                    easing: easing
+                );
+
+            return plans;
         }
     }
 }
