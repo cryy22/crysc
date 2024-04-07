@@ -162,11 +162,14 @@ namespace Crysc.Presentation.Arrangements
             bool consistentSpeed
         )
         {
+            if (plans.Length == 0) return;
+
             if (consistentSpeed)
             {
-                var spacingAwareDistance = 0f;
-                for (var i = 0; i < plans.Length; i++)
-                    spacingAwareDistance += plans[i].Distance * (1 + (i > 0 ? spacingPct : 0));
+                float spacingAwareDistance = plans[0].Distance;
+
+                for (var i = 1; i < plans.Length; i++)
+                    spacingAwareDistance += plans[i].Distance * (1 + spacingPct);
                 spacingAwareDistance = Mathf.Max(a: spacingAwareDistance, b: Mathf.Epsilon);
 
                 var startTime = 0f;
@@ -185,14 +188,13 @@ namespace Crysc.Presentation.Arrangements
             {
                 float pDuration = duration / (1 + (plans.Length - 1) * (1 + spacingPct));
                 var startTime = 0f;
-                var endTime = 0f;
+
                 for (var i = 0; i < plans.Length; i++)
                 {
                     Plan plan = plans[i];
-                    startTime = Mathf.Max(a: endTime + spacingPct * pDuration, b: startTime);
-                    endTime = startTime + pDuration;
+                    plans[i] = plan.Copy(startTime: startTime, endTime: startTime + pDuration);
 
-                    plans[i] = plan.Copy(startTime: startTime, endTime: endTime);
+                    startTime += Mathf.Max(a: (1 + spacingPct) * pDuration, b: 0);
                 }
             }
         }
@@ -269,17 +271,44 @@ namespace Crysc.Presentation.Arrangements
         public static Arrangement EaseMovementPlanTimings(this Arrangement arrangement, Easings.Enum easing)
         {
             Plan[] plans = arrangement.ElementsMovementPlans.Values.ToArray();
-            float startDuration = plans.Max(p => p.StartTime);
-
+            EaseMovementPlanTimings(plans: plans, easing: easing);
             foreach (Plan plan in plans)
-            {
-                float startTime = Easings.Ease(t: plan.StartTime / startDuration, easing: easing) * startDuration;
-                arrangement.SetMovementPlan(
-                    plan.Copy(startTime: startTime, endTime: startTime + plan.Duration)
-                );
-            }
+                arrangement.SetMovementPlan(plan);
 
             return arrangement;
+        }
+
+        public static void EaseMovementPlanTimings(IEnumerable<Arrangement> arrangements, Easings.Enum easing)
+        {
+            int arrangementsCount = arrangements.SelectMany(a => a.ElementsMovementPlans).Count();
+            var plans = new Plan[arrangementsCount];
+            var arrangementsForPlans = new Arrangement[arrangementsCount];
+
+            var index = 0;
+            foreach (Arrangement arrangement in arrangements)
+            foreach (ElementMovementPlan plan in arrangement.ElementsMovementPlans.Values)
+            {
+                plans[index] = plan;
+                arrangementsForPlans[index] = arrangement;
+                index++;
+            }
+
+            EaseMovementPlanTimings(plans: plans, easing: easing);
+
+            for (var i = 0; i < arrangementsCount; i++)
+                arrangementsForPlans[i].SetMovementPlan(plans[i]);
+        }
+
+        public static void EaseMovementPlanTimings(Plan[] plans, Easings.Enum easing)
+        {
+            float startDuration = plans.Max(p => p.StartTime);
+
+            for (var i = 0; i < plans.Length; i++)
+            {
+                Plan plan = plans[i];
+                float startTime = Easings.Unease(x: plan.StartTime / startDuration, easing: easing) * startDuration;
+                plans[i] = plan.Copy(startTime: startTime, endTime: startTime + plan.Duration);
+            }
         }
 
         public static Plan CreateMovementPlan(
