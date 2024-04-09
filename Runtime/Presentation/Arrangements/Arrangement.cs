@@ -94,11 +94,11 @@ namespace Crysc.Presentation.Arrangements
             RecalculateElementPlacements();
         }
 
-        public void SetMovementPlan(ElementMovementPlan plan)
+        public void SetMovementPlan(ElementMovementPlan plan, bool relativeTiming = true)
         {
             _elementsMovementPlans[plan.Element] = plan.Copy(
-                startTime: plan.StartTime + _animationTime,
-                endTime: plan.EndTime + _animationTime
+                startTime: plan.StartTime + (relativeTiming ? _animationTime : 0),
+                endTime: plan.EndTime + (relativeTiming ? _animationTime : 0)
             );
         }
 
@@ -157,14 +157,13 @@ namespace Crysc.Presentation.Arrangements
                         ElementArrangeStarted?.Invoke(sender: this, e: EventArgs.Empty);
                     }
 
-                    startedPlans.Clear();
-
                     foreach (ElementMovementPlan plan in endedPlans)
                     {
                         _elementsMovementPlans.Remove(plan.Element);
                         ElementArrangeEnded?.Invoke(sender: this, e: EventArgs.Empty);
                     }
 
+                    startedPlans.Clear();
                     endedPlans.Clear();
 
                     yield return null;
