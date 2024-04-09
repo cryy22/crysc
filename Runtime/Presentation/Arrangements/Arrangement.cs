@@ -86,7 +86,10 @@ namespace Crysc.Presentation.Arrangements
             }
 
             foreach (IElement element in existingElements.Except(_elements))
+            {
                 _elementsPlacements.Remove(element);
+                _elementsMovementPlans.Remove(element);
+            }
 
             RecalculateElementPlacements();
         }
@@ -98,6 +101,8 @@ namespace Crysc.Presentation.Arrangements
                 endTime: plan.EndTime + _animationTime
             );
         }
+
+        public void RemoveMovementPlanForElement(IElement element) { _elementsMovementPlans.Remove(element); }
 
         public IEnumerator ExecuteMovementPlans()
         {
