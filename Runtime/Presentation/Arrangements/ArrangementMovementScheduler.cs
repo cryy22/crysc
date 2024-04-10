@@ -280,13 +280,14 @@ namespace Crysc.Presentation.Arrangements
 
         public static void EaseMovementPlanTimings(IEnumerable<Arrangement> arrangements, Easings.Enum easing)
         {
-            int arrangementsCount = arrangements.SelectMany(a => a.ElementsMovementPlans).Count();
-            var plans = new Plan[arrangementsCount];
-            var arrangementsForPlans = new Arrangement[arrangementsCount];
+            int plansCount = arrangements.SelectMany(a => a.ElementsMovementPlans).Count();
+            if (plansCount == 0) return;
+            var plans = new Plan[plansCount];
+            var arrangementsForPlans = new Arrangement[plansCount];
 
             var index = 0;
             foreach (Arrangement arrangement in arrangements)
-            foreach (ElementMovementPlan plan in arrangement.ElementsMovementPlans.Values)
+            foreach (Plan plan in arrangement.ElementsMovementPlans.Values)
             {
                 plans[index] = plan;
                 arrangementsForPlans[index] = arrangement;
@@ -295,12 +296,13 @@ namespace Crysc.Presentation.Arrangements
 
             EaseMovementPlanTimings(plans: plans, easing: easing);
 
-            for (var i = 0; i < arrangementsCount; i++)
+            for (var i = 0; i < plansCount; i++)
                 arrangementsForPlans[i].SetMovementPlan(plans[i]);
         }
 
         public static void EaseMovementPlanTimings(Plan[] plans, Easings.Enum easing)
         {
+            if (plans.Length == 0) return;
             float startDuration = plans.Max(p => p.StartTime);
 
             for (var i = 0; i < plans.Length; i++)
