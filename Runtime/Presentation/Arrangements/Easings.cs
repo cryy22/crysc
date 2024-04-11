@@ -46,6 +46,7 @@ namespace Crysc.Presentation.Arrangements
         {
             return easing switch
             {
+                Enum.Linear         => Linear(x),
                 Enum.EaseInOutSine  => UneaseInOutSine(x),
                 Enum.EaseInOutCubic => UneaseInOutCubic(x),
                 _ => throw new ArgumentOutOfRangeException(
