@@ -20,5 +20,15 @@ namespace Crysc.Helpers
         {
             return to.InverseTransformVector(from.TransformVector(scale));
         }
+
+        public static void SetGlobalScale(this Transform transform, Vector3 globalScale)
+        {
+            transform.localScale = Vector3.one;
+            transform.localScale = new Vector3(
+                x: globalScale.x / transform.localScale.x,
+                y: globalScale.y / transform.localScale.y,
+                z: globalScale.z / transform.localScale.z
+            );
+        }
     }
 }
