@@ -219,7 +219,7 @@ namespace Crysc.Presentation.Arrangements
 
             var startTime = 0f;
             float delay = initialDelay;
-            for (var i = 1; i < plans.Length; i++)
+            for (var i = 0; i < plans.Length; i++)
             {
                 Plan plan = plans[i];
                 startTime += delay;
