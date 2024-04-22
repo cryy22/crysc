@@ -18,7 +18,9 @@ namespace Crysc.Patterns.Coordination
                 sender: this,
                 e: new EventArgs(eventEnum: eventEnum, state: state, waitGroup: waitGroup)
             );
+
             waitGroup.Leave();
+            yield return null;
 
             while (waitGroup.IsEmpty() == false)
             {
