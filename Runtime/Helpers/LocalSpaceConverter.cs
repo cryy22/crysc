@@ -21,6 +21,15 @@ namespace Crysc.Helpers
             return to.InverseTransformVector(from.TransformVector(scale));
         }
 
+        public static Vector3 LocalScaleForGlobalUnity(Transform transform)
+        {
+            return new Vector3(
+                x: transform.localScale.x / transform.lossyScale.x,
+                y: transform.localScale.y / transform.lossyScale.y,
+                z: transform.localScale.z / transform.lossyScale.z
+            );
+        }
+
         public static void SetGlobalScale(this Transform transform, Vector3 globalScale)
         {
             transform.localScale = Vector3.one;
