@@ -34,9 +34,9 @@ namespace Crysc.Helpers
         {
             transform.localScale = Vector3.one;
             transform.localScale = new Vector3(
-                x: globalScale.x / transform.localScale.x,
-                y: globalScale.y / transform.localScale.y,
-                z: globalScale.z / transform.localScale.z
+                x: globalScale.x / transform.lossyScale.x,
+                y: globalScale.y / transform.lossyScale.y,
+                z: globalScale.z / transform.lossyScale.z
             );
         }
     }
