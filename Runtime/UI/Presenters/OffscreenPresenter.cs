@@ -58,6 +58,7 @@ namespace Crysc.UI.Presenters
 
         public void Present()
         {
+            if (!isActiveAndEnabled) return;
             if (PresentationState == PresentationState.Presented) return;
 
             _moveRoutine?.Stop();
@@ -66,6 +67,7 @@ namespace Crysc.UI.Presenters
 
         public void Dismiss()
         {
+            if (!isActiveAndEnabled) return;
             if (PresentationState == PresentationState.Dismissed) return;
 
             _moveRoutine?.Stop();
@@ -113,8 +115,8 @@ namespace Crysc.UI.Presenters
             Vector3 difference = ScreenOrigin switch
             {
                 Origin.Left   => (bounds.max.x + OffscreenBuffer) * Vector3.left,
-                Origin.Right  => ((_canvasRect.rect.width - bounds.min.x) + OffscreenBuffer) * Vector3.right,
-                Origin.Top    => ((_canvasRect.rect.height - bounds.min.y) + OffscreenBuffer) * Vector3.up,
+                Origin.Right  => (_canvasRect.rect.width - bounds.min.x + OffscreenBuffer) * Vector3.right,
+                Origin.Top    => (_canvasRect.rect.height - bounds.min.y + OffscreenBuffer) * Vector3.up,
                 Origin.Bottom => (bounds.max.y + OffscreenBuffer) * Vector3.down,
                 _             => Vector3.zero,
             };
