@@ -29,6 +29,14 @@ namespace Crysc.Patterns.Coordination
             }
         }
 
+        protected virtual void CoordinateWithoutWaiting(TEvent eventEnum, TState state)
+        {
+            Announcement?.Invoke(
+                sender: this,
+                e: new EventArgs(eventEnum: eventEnum, state: state, waitGroup: null)
+            );
+        }
+
         public class EventArgs : CoordinationEventArgs<TEvent, TState>
         {
             public EventArgs(
