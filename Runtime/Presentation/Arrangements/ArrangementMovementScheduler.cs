@@ -268,20 +268,20 @@ namespace Crysc.Presentation.Arrangements
             return arrangement;
         }
 
-        public static Arrangement EaseMovementPlanTimings(this Arrangement arrangement, Easings.Enum easing)
+        public static Arrangement EaseMovementPlanStartTimings(this Arrangement arrangement, Easings.Enum easing)
         {
             Plan[] plans = arrangement.ElementsMovementPlans.Values.ToArray();
-            EaseMovementPlanTimings(plans: plans, easing: easing);
+            EaseMovementPlanStartTimings(plans: plans, easing: easing);
             foreach (Plan plan in plans)
                 arrangement.SetMovementPlan(plan);
 
             return arrangement;
         }
 
-        public static void EaseMovementPlanTimings(IEnumerable<Arrangement> arrangements, Easings.Enum easing)
+        public static void EaseMovementPlanStartTimings(IEnumerable<Arrangement> arrangements, Easings.Enum easing)
         {
             int plansCount = arrangements.SelectMany(a => a.ElementsMovementPlans).Count();
-            if (plansCount == 0) return;
+            if (plansCount <= 1) return;
             var plans = new Plan[plansCount];
             var arrangementsForPlans = new Arrangement[plansCount];
 
@@ -294,21 +294,23 @@ namespace Crysc.Presentation.Arrangements
                 index++;
             }
 
-            EaseMovementPlanTimings(plans: plans, easing: easing);
+            EaseMovementPlanStartTimings(plans: plans, easing: easing);
 
             for (var i = 0; i < plansCount; i++)
                 arrangementsForPlans[i].SetMovementPlan(plans[i]);
         }
 
-        public static void EaseMovementPlanTimings(Plan[] plans, Easings.Enum easing)
+        public static void EaseMovementPlanStartTimings(Plan[] plans, Easings.Enum easing)
         {
-            if (plans.Length == 0) return;
-            float startDuration = plans.Max(p => p.StartTime);
+            if (plans.Length <= 1) return;
+            float latestStart = plans.Max(p => p.StartTime);
 
             for (var i = 0; i < plans.Length; i++)
             {
                 Plan plan = plans[i];
-                float startTime = Easings.Unease(x: plan.StartTime / startDuration, easing: easing) * startDuration;
+                float startTime = latestStart > 0
+                    ? Easings.Unease(x: plan.StartTime / latestStart, easing: easing) * latestStart
+                    : 0;
                 plans[i] = plan.Copy(startTime: startTime, endTime: startTime + plan.Duration);
             }
         }
