@@ -20,6 +20,13 @@ namespace GulchGuardians.Editor
             property.GetArrayElementAtIndex(newIndex).objectReferenceValue = obj;
         }
 
+        public static void AddElementToArray<T>(this SerializedProperty property, T value) where T : struct
+        {
+            int newIndex = property.arraySize;
+            property.InsertArrayElementAtIndex(newIndex);
+            property.GetArrayElementAtIndex(newIndex).boxedValue = value;
+        }
+
         public static int CountElementInArray(this SerializedProperty array, Object element)
         {
             return GetIndexesOfArrayElementInternal(array: array, element: element).Count();
