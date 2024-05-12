@@ -7,6 +7,11 @@ namespace GulchGuardians.Editor
 {
     public static class SerializedPropertyExtensions
     {
+        public static SerializedProperty FindCSharpProperty(this SerializedObject obj, string propertyName)
+        {
+            return obj.FindProperty($"<{propertyName}>k__BackingField");
+        }
+
         public static IEnumerable<T> GetElements<T>(this SerializedProperty property) where T : Object
         {
             for (var i = 0; i < property.arraySize; i++)
