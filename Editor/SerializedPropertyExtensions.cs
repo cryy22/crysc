@@ -32,6 +32,13 @@ namespace GulchGuardians.Editor
             property.GetArrayElementAtIndex(newIndex).boxedValue = value;
         }
 
+        public static void AddElementToArray(this SerializedProperty property, string value)
+        {
+            int newIndex = property.arraySize;
+            property.InsertArrayElementAtIndex(newIndex);
+            property.GetArrayElementAtIndex(newIndex).stringValue = value;
+        }
+
         public static int CountElementInArray(this SerializedProperty array, Object element)
         {
             return GetIndexesOfArrayElementInternal(array: array, element: element).Count();
