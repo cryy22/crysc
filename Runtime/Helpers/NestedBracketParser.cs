@@ -14,7 +14,7 @@ namespace Crysc.Helpers
 
             foreach (char next in raw)
             {
-                if (next == openChar)
+                if (next == closeChar)
                 {
                     nestLevel--;
                     if (nestLevel == 0)
@@ -28,7 +28,7 @@ namespace Crysc.Helpers
                 if (nestLevel > 0)
                     sb.Append(next);
 
-                if (next == closeChar)
+                if (next == openChar)
                     nestLevel++;
             }
 

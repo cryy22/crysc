@@ -12,10 +12,16 @@ namespace GulchGuardians.Editor
             return obj.FindProperty($"<{propertyName}>k__BackingField");
         }
 
-        public static IEnumerable<T> GetElements<T>(this SerializedProperty property) where T : Object
+        public static IEnumerable<T> GetObjectElements<T>(this SerializedProperty property) where T : Object
         {
             for (var i = 0; i < property.arraySize; i++)
                 yield return property.GetArrayElementAtIndex(i).objectReferenceValue as T;
+        }
+
+        public static IEnumerable<T> GetStructElements<T>(this SerializedProperty property) where T : struct
+        {
+            for (var i = 0; i < property.arraySize; i++)
+                yield return (T) property.GetArrayElementAtIndex(i).boxedValue;
         }
 
         public static void AddElementToArray(this SerializedProperty property, Object obj)
