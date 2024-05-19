@@ -19,8 +19,8 @@ namespace Crysc.Presentation.Arrangements
             Right,
         }
 
-        public event EventHandler ElementArrangeStarted;
-        public event EventHandler ElementArrangeEnded;
+        public event EventHandler<ArrangementEventArgs> ElementArrangeStarted;
+        public event EventHandler<ArrangementEventArgs> ElementArrangeEnded;
 
         public const float ZOffset = 0.01f;
 
@@ -50,6 +50,8 @@ namespace Crysc.Presentation.Arrangements
         public Transform Transform => transform;
         public Vector2 Pivot { get; private set; } = new(x: 0.5f, y: 0.5f);
         public Vector2 SizeMultiplier { get; private set; } = Vector2.zero;
+
+        public Transform ElementsParent => ElementsParentInput;
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
@@ -142,8 +144,15 @@ namespace Crysc.Presentation.Arrangements
                     foreach (ElementMovementPlan plan in _elementsMovementPlans.Values)
                     {
                         if (!plan.IsStarted)
-                            if (_animationTime > plan.StartTime) startedPlans.Add(plan);
-                            else continue;
+                            if (_animationTime > plan.StartTime)
+                            {
+                                plan.Element.Transform.SetParent(ElementsParentInput);
+                                startedPlans.Add(plan);
+                            }
+                            else
+                            {
+                                continue;
+                            }
 
                         IncrementPlan(plan: plan, time: _animationTime);
 
@@ -154,13 +163,13 @@ namespace Crysc.Presentation.Arrangements
                     foreach (ElementMovementPlan plan in startedPlans)
                     {
                         _elementsMovementPlans[plan.Element] = plan.Copy(isStarted: true);
-                        ElementArrangeStarted?.Invoke(sender: this, e: EventArgs.Empty);
+                        ElementArrangeStarted?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
                     }
 
                     foreach (ElementMovementPlan plan in endedPlans)
                     {
                         _elementsMovementPlans.Remove(plan.Element);
-                        ElementArrangeEnded?.Invoke(sender: this, e: EventArgs.Empty);
+                        ElementArrangeEnded?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
                     }
 
                     startedPlans.Clear();
