@@ -47,7 +47,7 @@ namespace Crysc.UI.Presenters
         #region Lazily-Initialized Properties
 
         private IPresenter _presenter;
-        private IPresenter Presenter => _presenter != null ? _presenter : _presenter = CastPresenter();
+        private IPresenter Presenter => _presenter ??= CastPresenter();
 
         private IPresenter CastPresenter()
         {
