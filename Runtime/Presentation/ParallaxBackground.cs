@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Crysc.Presentation
 {
+    [DefaultExecutionOrder(-1)]
     public class ParallaxBackground : MonoBehaviour
     {
         public enum Layer
@@ -21,19 +22,33 @@ namespace Crysc.Presentation
             FGCactus2,
         }
 
+        public static ParallaxBackground I { get; private set; }
+
         [SerializeField] private Transform FocalPoint;
         [SerializeField] private LayerSpeed[] LayerSpeeds;
         [SerializeField] private List<ParallaxLayer> Layers = new();
 
         private readonly Dictionary<Transform, Vector3> _transformsInitialPositions = new();
-        private readonly Dictionary<Layer, List<Transform>> _layersTransforms = new();
+        private readonly Dictionary<Layer, HashSet<Transform>> _layersTransforms = new();
         private Camera _camera;
 
         private void Awake()
         {
+            if (I != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            I = this;
+
             _camera = Camera.main;
+
             foreach (Transform layerTransform in Layers.SelectMany(layer => layer.Transforms))
                 _transformsInitialPositions.Add(key: layerTransform, value: layerTransform.localPosition);
+
+            foreach (Layer layer in Enum.GetValues(typeof(Layer)))
+                _layersTransforms[layer] = new HashSet<Transform>();
         }
 
         private void Update()
@@ -45,6 +60,18 @@ namespace Crysc.Presentation
             );
 
             foreach (ParallaxLayer layer in Layers) UpdateLayer(layer: layer, vocalDeltaRatio: vocalDeltaRatio);
+        }
+
+        public void Register(Layer layer, Transform registrant)
+        {
+            _transformsInitialPositions.Add(key: registrant, value: registrant.localPosition);
+            _layersTransforms[layer].Add(registrant);
+        }
+
+        public void Deregister(Layer layer, Transform registrant)
+        {
+            _transformsInitialPositions.Remove(registrant);
+            _layersTransforms[layer].Remove(registrant);
         }
 
         private void UpdateLayer(ParallaxLayer layer, Vector2 vocalDeltaRatio)
