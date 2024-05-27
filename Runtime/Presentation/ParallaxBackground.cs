@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Crysc.Presentation
@@ -26,11 +25,11 @@ namespace Crysc.Presentation
 
         [SerializeField] private Transform FocalPoint;
         [SerializeField] private LayerSpeed[] LayerSpeeds;
-        [SerializeField] private List<ParallaxLayer> Layers = new();
 
         private readonly Dictionary<Transform, Vector3> _transformsInitialPositions = new();
         private readonly Dictionary<Layer, HashSet<Transform>> _layersTransforms = new();
         private Camera _camera;
+        private Layer[] _layers;
 
         private void Awake()
         {
@@ -43,11 +42,9 @@ namespace Crysc.Presentation
             I = this;
 
             _camera = Camera.main;
+            _layers = (Layer[]) Enum.GetValues(typeof(Layer));
 
-            foreach (Transform layerTransform in Layers.SelectMany(layer => layer.Transforms))
-                _transformsInitialPositions.Add(key: layerTransform, value: layerTransform.localPosition);
-
-            foreach (Layer layer in Enum.GetValues(typeof(Layer)))
+            foreach (Layer layer in _layers)
                 _layersTransforms[layer] = new HashSet<Transform>();
         }
 
@@ -59,7 +56,7 @@ namespace Crysc.Presentation
                 maxLength: .66f
             );
 
-            foreach (ParallaxLayer layer in Layers) UpdateLayer(layer: layer, vocalDeltaRatio: vocalDeltaRatio);
+            UpdateRegistrants(vocalDeltaRatio: vocalDeltaRatio);
         }
 
         public void Register(Layer layer, Transform registrant)
@@ -74,22 +71,15 @@ namespace Crysc.Presentation
             _layersTransforms[layer].Remove(registrant);
         }
 
-        private void UpdateLayer(ParallaxLayer layer, Vector2 vocalDeltaRatio)
+        private void UpdateRegistrants(Vector2 vocalDeltaRatio)
         {
-            foreach (Transform layerTransform in layer.Transforms)
-                layerTransform.localPosition = _transformsInitialPositions[layerTransform] + new Vector3(
-                    x: vocalDeltaRatio.x * layer.Speed * layerTransform.lossyScale.x,
-                    y: vocalDeltaRatio.y * layer.Speed * layerTransform.lossyScale.y,
+            foreach (LayerSpeed layerSpeed in LayerSpeeds)
+            foreach (Transform registrant in _layersTransforms[layerSpeed.Layer])
+                registrant.localPosition = _transformsInitialPositions[registrant] + new Vector3(
+                    x: vocalDeltaRatio.x * layerSpeed.Speed * registrant.lossyScale.x,
+                    y: vocalDeltaRatio.y * layerSpeed.Speed * registrant.lossyScale.y,
                     z: 0
                 );
-        }
-
-        [Serializable]
-        public struct ParallaxLayer
-        {
-            public string Name;
-            public Transform[] Transforms;
-            public float Speed;
         }
 
         [Serializable]
