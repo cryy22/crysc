@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Crysc.Presentation
 {
@@ -21,13 +23,20 @@ namespace Crysc.Presentation
             FGCactus2,
         }
 
+        private const float _layerWidth = 20;
+
         public static ParallaxBackground I { get; private set; }
 
         [SerializeField] private Transform FocalPoint;
         [SerializeField] private LayerSpeed[] LayerSpeeds;
 
-        private readonly Dictionary<Transform, Vector3> _transformsInitialPositions = new();
+        public float Speed { get; set; }
+
+        private readonly Dictionary<Transform, Vector3> _transformsBasePositions = new();
         private readonly Dictionary<Layer, HashSet<Transform>> _layersTransforms = new();
+        private readonly HashSet<Transform> _affectedBySpeed = new();
+
+        private float _distance;
         private Camera _camera;
         private Layer[] _layers;
 
@@ -56,30 +65,39 @@ namespace Crysc.Presentation
                 maxLength: .66f
             );
 
+            _distance += Speed * Time.deltaTime;
             UpdateRegistrants(vocalDeltaRatio: vocalDeltaRatio);
         }
 
-        public void Register(Layer layer, Transform registrant)
+        public void Register(Layer layer, Transform registrant, bool isAffectedBySpeed = true)
         {
-            _transformsInitialPositions.Add(key: registrant, value: registrant.localPosition);
+            _transformsBasePositions.Add(key: registrant, value: registrant.localPosition);
             _layersTransforms[layer].Add(registrant);
+            if (isAffectedBySpeed) _affectedBySpeed.Add(registrant);
         }
 
         public void Deregister(Layer layer, Transform registrant)
         {
-            _transformsInitialPositions.Remove(registrant);
+            _transformsBasePositions.Remove(registrant);
             _layersTransforms[layer].Remove(registrant);
+            _affectedBySpeed.Remove(registrant);
         }
 
         private void UpdateRegistrants(Vector2 vocalDeltaRatio)
         {
             foreach (LayerSpeed layerSpeed in LayerSpeeds)
-            foreach (Transform registrant in _layersTransforms[layerSpeed.Layer])
-                registrant.localPosition = _transformsInitialPositions[registrant] + new Vector3(
-                    x: vocalDeltaRatio.x * layerSpeed.Speed * registrant.lossyScale.x,
-                    y: vocalDeltaRatio.y * layerSpeed.Speed * registrant.lossyScale.y,
-                    z: 0
-                );
+            {
+                float xDelta = _distance * layerSpeed.Speed % _layerWidth;
+                foreach (Transform registrant in _layersTransforms[layerSpeed.Layer])
+                    registrant.localPosition =
+                        _transformsBasePositions[registrant] +
+                        (_affectedBySpeed.Contains(registrant) ? Vector3.right * xDelta : Vector3.zero) +
+                        new Vector3(
+                            x: vocalDeltaRatio.x * layerSpeed.Speed * registrant.lossyScale.x,
+                            y: vocalDeltaRatio.y * layerSpeed.Speed * registrant.lossyScale.y,
+                            z: 0
+                        );
+            }
         }
 
         [Serializable]
