@@ -66,7 +66,7 @@ namespace Crysc.Presentation
             );
 
             _distance += Speed * Time.deltaTime;
-            UpdateRegistrants(vocalDeltaRatio: vocalDeltaRatio);
+            UpdateRegistrants(vocalDeltaRatio: vocalDeltaRatio, distance: _distance);
         }
 
         public void Register(Layer layer, Transform registrant, bool isAffectedBySpeed = true)
@@ -83,11 +83,13 @@ namespace Crysc.Presentation
             _affectedBySpeed.Remove(registrant);
         }
 
-        private void UpdateRegistrants(Vector2 vocalDeltaRatio)
+        public void ResetDistance() { _distance = 0; }
+
+        private void UpdateRegistrants(Vector2 vocalDeltaRatio, float distance)
         {
             foreach (LayerSpeed layerSpeed in LayerSpeeds)
             {
-                float xDelta = _distance * layerSpeed.Speed % _layerWidth;
+                float xDelta = distance * layerSpeed.Speed % _layerWidth;
                 foreach (Transform registrant in _layersTransforms[layerSpeed.Layer])
                     registrant.localPosition =
                         _transformsBasePositions[registrant] +
