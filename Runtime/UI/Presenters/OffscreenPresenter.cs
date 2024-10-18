@@ -71,6 +71,7 @@ namespace Crysc.UI.Presenters
             if (PresentationState == PresentationState.Dismissed) return;
 
             _moveRoutine?.Stop();
+            _dismissedPosition = CalculateOffscreenPosition();
             _moveRoutine = new CryRoutine(enumerator: RunDismiss(), behaviour: this);
         }
 
