@@ -26,8 +26,8 @@ namespace Crysc.UI.Tooltips
 
         protected virtual IEnumerable<Image> LockingImages =>
             LockingImageInput ? new[] { LockingImageInput } : Enumerable.Empty<Image>();
-        private TooltipPositioner _positioner;
-        private TooltipPositioner Positioner => _positioner ??= GetComponent<TooltipPositioner>();
+
+        private TooltipPositioner Positioner { get; set; }
 
         private ITooltipTargetProvider _currentTarget;
         private bool _isActive = true;
@@ -36,7 +36,11 @@ namespace Crysc.UI.Tooltips
         private bool _isLocked;
         private TooltipEventArgs _eventDuringLock;
 
-        private void Awake() { DismissTooltip(); }
+        private void Awake()
+        {
+            Positioner = GetComponent<TooltipPositioner>();
+            DismissTooltip();
+        }
 
         private void OnEnable() { Publisher.Hovered += TargetHoveredEventHandler; }
         private void OnDisable() { Publisher.Hovered -= TargetHoveredEventHandler; }
@@ -112,14 +116,14 @@ namespace Crysc.UI.Tooltips
                     yield break;
                 }
 
-                if (time >= _hoverLockTime && !LocksOnExtendedHover) continue;
+                if ((time >= _hoverLockTime) && !LocksOnExtendedHover) continue;
 
                 time += Time.deltaTime;
                 if (CanvasGroup)
                     CanvasGroup.alpha = Mathf.Lerp(
                         a: 0.0625f,
                         b: 0.1875f,
-                        t: (float) (Math.Truncate((time * 2) / _hoverLockTime) / 2f)
+                        t: (float) (Math.Truncate(time * 2 / _hoverLockTime) / 2f)
                     );
                 if (LocksOnExtendedHover)
                     foreach (Image image in LockingImages)
@@ -153,7 +157,7 @@ namespace Crysc.UI.Tooltips
 
                 time += Time.deltaTime;
                 if (time >= _unhoverUnlockTime) _isLocked = false;
-                foreach (Image image in LockingImages) image.fillAmount = 1 - (time / _unhoverUnlockTime);
+                foreach (Image image in LockingImages) image.fillAmount = 1 - time / _unhoverUnlockTime;
             }
 
             foreach (Image image in LockingImages) image.fillAmount = 0;

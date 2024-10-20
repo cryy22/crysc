@@ -9,19 +9,21 @@ namespace Crysc.Presentation
 
         private void Start()
         {
-            ParallaxBackground.I?.Register(
-                layer: Layer,
-                registrant: transform,
-                isAffectedBySpeed: IsAffectedBySpeed
-            );
+            if (ParallaxBackground.I)
+                ParallaxBackground.I.Register(
+                    layer: Layer,
+                    registrant: transform,
+                    isAffectedBySpeed: IsAffectedBySpeed
+                );
         }
 
         private void OnDestroy()
         {
-            ParallaxBackground.I?.Deregister(
-                layer: Layer,
-                registrant: transform
-            );
+            if (ParallaxBackground.I)
+                ParallaxBackground.I.Deregister(
+                    layer: Layer,
+                    registrant: transform
+                );
         }
     }
 }

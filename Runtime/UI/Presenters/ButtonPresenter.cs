@@ -51,7 +51,8 @@ namespace Crysc.UI.Presenters
 
         private IPresenter CastPresenter()
         {
-            if (PresenterInput is not IPresenter presenter)
+            var presenter = PresenterInput as IPresenter;
+            if (!PresenterInput || (presenter == null))
                 throw new InvalidCastException($"PresenterInput {PresenterInput} is not an IPresenter");
             return presenter;
         }

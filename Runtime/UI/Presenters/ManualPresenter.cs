@@ -17,7 +17,7 @@ namespace Crysc.UI.Presenters
 
         public PresentationState PresentationState { get; private set; }
 
-        private Transform Container => ContainerInput ?? transform;
+        private Transform Container => ContainerInput ? ContainerInput : transform;
         private Vector3 DismissedPosition => DismissedPoint.LocalPosition(Container.parent);
         private Vector3 PresentedPosition => PresentedPoint.LocalPosition(Container.parent);
 

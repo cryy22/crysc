@@ -41,7 +41,7 @@ namespace Crysc.UI.Presenters
             _camera = Camera.main;
 
             _canvas = Container.GetComponentInParent<Canvas>();
-            if (_canvas is null)
+            if (!_canvas)
             {
                 Debug.LogError("OffscreenPresenter's Container must be a child of a Canvas.");
                 return;
