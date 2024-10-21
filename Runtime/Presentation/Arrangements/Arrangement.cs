@@ -57,6 +57,7 @@ namespace Crysc.Presentation.Arrangements
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
         private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
 
+        private bool _isArrangementCalculatorSet;
         private IArrangementCalculator _arrangementCalculator;
         private float _animationTime;
         private CryRoutine _movementPlanRoutine;
@@ -65,7 +66,6 @@ namespace Crysc.Presentation.Arrangements
         {
             if ((BaseElementSize.x < 0) || (BaseElementSize.y < 0))
                 throw new Exception("BaseElementSize cannot be negative");
-            _arrangementCalculator = GetComponent<IArrangementCalculator>() ?? new DefaultArrangementCalculator();
         }
 
         public void SetElements(IEnumerable<IElement> elements)
@@ -281,8 +281,20 @@ namespace Crysc.Presentation.Arrangements
         public void RecalculateElementPlacements()
         {
             UpdateProperties();
-            foreach (ElementPlacement placement in _arrangementCalculator.CalculateElementPlacements(this))
+            ElementPlacement[] elementPlacements = GetArrangementCalculator().CalculateElementPlacements(this);
+            foreach (ElementPlacement placement in elementPlacements)
                 _elementsPlacements[placement.Element] = placement;
+        }
+
+        private IArrangementCalculator GetArrangementCalculator()
+        {
+            if (_isArrangementCalculatorSet) return _arrangementCalculator;
+
+            _arrangementCalculator = GetComponent<IArrangementCalculator>();
+            if (_arrangementCalculator == null) _arrangementCalculator = new DefaultArrangementCalculator();
+            _isArrangementCalculatorSet = true;
+
+            return _arrangementCalculator;
         }
     }
 }
