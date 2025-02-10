@@ -13,7 +13,7 @@ namespace Crysc.UI.Tooltips
     public abstract class Tooltip<T> : MonoBehaviour, IPointerClickHandler
     {
         private const float _hoverLockTime = 0.75f;
-        private const float _unhoverUnlockTime = 0.125f;
+        private const float _unhoverUnlockTime = 0.175f;
         private static TooltipPublisher Publisher => TooltipPublisher.I;
 
         [SerializeField] protected RectTransform Container;
@@ -42,10 +42,20 @@ namespace Crysc.UI.Tooltips
             DismissTooltip();
         }
 
-        private void OnEnable() { Publisher.Hovered += TargetHoveredEventHandler; }
-        private void OnDisable() { Publisher.Hovered -= TargetHoveredEventHandler; }
+        private void OnEnable()
+        {
+            Publisher.Hovered += TargetHoveredEventHandler;
+        }
 
-        public void OnPointerClick(PointerEventData _) { Publisher.RegisterClick(_currentTarget); }
+        private void OnDisable()
+        {
+            Publisher.Hovered -= TargetHoveredEventHandler;
+        }
+
+        public void OnPointerClick(PointerEventData _)
+        {
+            Publisher.RegisterClick(_currentTarget);
+        }
 
         public virtual void SetActive(bool active)
         {
@@ -65,7 +75,10 @@ namespace Crysc.UI.Tooltips
             if (CanvasGroup) CanvasGroup.alpha = 0.0625f;
         }
 
-        protected virtual bool ShouldPresentTooltip(T[] contents) { return _isActive; }
+        protected virtual bool ShouldPresentTooltip(T[] contents)
+        {
+            return _isActive;
+        }
 
         protected virtual void DismissTooltip()
         {
