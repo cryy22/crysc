@@ -22,9 +22,13 @@ namespace Crysc.Helpers
             if (!mainCamera || !overlayCamera) return;
 
             UniversalAdditionalCameraData baseCameraData = mainCamera.GetUniversalAdditionalCameraData();
-            baseCameraData.cameraStack.Remove(overlayCamera);
+            if (baseCameraData.renderType == CameraRenderType.Base)
+                baseCameraData.cameraStack.Remove(overlayCamera);
         }
 
-        private static int GetOverlayIndex(this Camera camera) { return camera.GetComponent<OverlayIndexer>().Index; }
+        private static int GetOverlayIndex(this Camera camera)
+        {
+            return camera.GetComponent<OverlayIndexer>().Index;
+        }
     }
 }
