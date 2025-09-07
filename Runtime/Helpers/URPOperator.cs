@@ -12,7 +12,10 @@ namespace Crysc.Helpers
             if (!mainCamera || !overlayCamera) return;
 
             UniversalAdditionalCameraData baseCameraData = mainCamera.GetUniversalAdditionalCameraData();
-            baseCameraData.cameraStack.Add(overlayCamera);
+
+            if (!baseCameraData.cameraStack.Contains(overlayCamera))
+                baseCameraData.cameraStack.Add(overlayCamera);
+
             baseCameraData.cameraStack.Sort((a, b) => a.GetOverlayIndex().CompareTo(b.GetOverlayIndex()));
         }
 
@@ -28,7 +31,8 @@ namespace Crysc.Helpers
 
         private static int GetOverlayIndex(this Camera camera)
         {
-            return camera.GetComponent<OverlayIndexer>().Index;
+            var indexer = camera.GetComponent<OverlayIndexer>();
+            return indexer ? indexer.Index : -1;
         }
     }
 }
