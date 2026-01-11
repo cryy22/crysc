@@ -23,7 +23,7 @@ namespace Crysc.Presentation
             FGCactus2,
         }
 
-        private const float _layerWidth = 20;
+        public const float LayerWidth = 20;
 
         public static ParallaxBackground I { get; private set; }
 
@@ -73,7 +73,8 @@ namespace Crysc.Presentation
         {
             _transformsBasePositions.Add(key: registrant, value: registrant.localPosition);
             _layersTransforms[layer].Add(registrant);
-            if (isAffectedBySpeed) _affectedBySpeed.Add(registrant);
+            if (isAffectedBySpeed)
+                _affectedBySpeed.Add(registrant);
         }
 
         public void Deregister(Layer layer, Transform registrant)
@@ -83,13 +84,16 @@ namespace Crysc.Presentation
             _affectedBySpeed.Remove(registrant);
         }
 
-        public void ResetDistance() { _distance = 0; }
+        public void ResetDistance()
+        {
+            _distance = 0;
+        }
 
         private void UpdateRegistrants(Vector2 vocalDeltaRatio, float distance)
         {
             foreach (LayerSpeed layerSpeed in LayerSpeeds)
             {
-                float xDelta = distance * layerSpeed.Speed % _layerWidth;
+                float xDelta = distance * layerSpeed.Speed % LayerWidth;
                 foreach (Transform registrant in _layersTransforms[layerSpeed.Layer])
                     registrant.localPosition =
                         _transformsBasePositions[registrant] +
