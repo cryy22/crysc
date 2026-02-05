@@ -20,7 +20,8 @@ namespace Crysc.Presentation
 
         protected void Awake()
         {
-            _items.Capacity = InitialCapacity;
+            if (_items.Capacity < InitialCapacity)
+                _items.Capacity = InitialCapacity;
 
             for (var i = 0; i < InitialCapacity; i++)
             {
