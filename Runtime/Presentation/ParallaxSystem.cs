@@ -15,6 +15,7 @@ namespace Crysc.Presentation
         [SerializeField] private Transform FocalPoint;
 
         [field: SerializeField] public float Speed { get; set; } = 0;
+        [field: SerializeField] public Vector2 MouseEffectModifier { get; set; } = Vector2.one;
 
         private readonly Dictionary<Transform, Vector3> _transformsBasePositions = new();
         private readonly Dictionary<ParallaxLayerConfig, HashSet<Transform>> _layersTransforms = new();
@@ -22,6 +23,7 @@ namespace Crysc.Presentation
 
         private float _distance;
         private Camera _camera;
+        private Vector3 _focalPoint;
 
         private void Awake()
         {
@@ -34,18 +36,28 @@ namespace Crysc.Presentation
             I = this;
 
             _camera = Camera.main;
+            if (_camera == null)
+                _focalPoint = _camera.WorldToScreenPoint(FocalPoint.position);
+            else
+                _focalPoint = Vector3.zero;       
         }
 
         private void Update()
         {
-            Vector2 focalPixelDelta = Input.mousePosition - _camera.WorldToScreenPoint(FocalPoint.position);
-            Vector2 vocalDeltaRatio = Vector2.ClampMagnitude(
-                vector: focalPixelDelta / _camera.pixelWidth,
+            var clampedPosition = Input.mousePosition;
+            clampedPosition.x = Mathf.Clamp(clampedPosition.x, 0, Screen.width);
+            clampedPosition.y = Mathf.Clamp(clampedPosition.y, 0, Screen.height);
+            
+            Vector2 focalPixelDelta = clampedPosition - _focalPoint;
+            focalPixelDelta *= MouseEffectModifier;
+            
+            Vector2 focalDeltaRatio = Vector2.ClampMagnitude(
+                vector: focalPixelDelta / Screen.width,
                 maxLength: .66f
             );
 
             _distance += Speed * Time.deltaTime;
-            UpdateRegistrants(vocalDeltaRatio: vocalDeltaRatio, distance: _distance);
+            UpdateRegistrants(focalDeltaRatio: focalDeltaRatio, distance: _distance);
         }
 
         public void Register(ParallaxLayerConfig layer, Transform registrant, bool isAffectedBySpeed = true)
@@ -78,7 +90,7 @@ namespace Crysc.Presentation
             _distance = 0;
         }
 
-        private void UpdateRegistrants(Vector2 vocalDeltaRatio, float distance)
+        private void UpdateRegistrants(Vector2 focalDeltaRatio, float distance)
         {
             foreach (var (layer, transforms) in _layersTransforms)
             {
@@ -88,8 +100,8 @@ namespace Crysc.Presentation
                         _transformsBasePositions[registrant] +
                         (_affectedBySpeed.Contains(registrant) ? Vector3.right * xDelta : Vector3.zero) +
                         new Vector3(
-                            x: vocalDeltaRatio.x * layer.Speed * registrant.lossyScale.x,
-                            y: vocalDeltaRatio.y * layer.Speed * registrant.lossyScale.y,
+                            x: focalDeltaRatio.x * layer.Speed * registrant.lossyScale.x,
+                            y: focalDeltaRatio.y * layer.Speed * registrant.lossyScale.y,
                             z: 0
                         );
             }
