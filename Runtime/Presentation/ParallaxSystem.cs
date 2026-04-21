@@ -14,7 +14,7 @@ namespace Crysc.Presentation
 
         [SerializeField] private Transform FocalPoint;
 
-        public float Speed { get; set; }
+        [field: SerializeField] public float Speed { get; set; } = 0;
 
         private readonly Dictionary<Transform, Vector3> _transformsBasePositions = new();
         private readonly Dictionary<ParallaxLayerConfig, HashSet<Transform>> _layersTransforms = new();
