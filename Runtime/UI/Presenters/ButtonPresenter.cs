@@ -41,8 +41,17 @@ namespace Crysc.UI.Presenters
             Presenter.Dismiss();
         }
 
-        public void Present() { Present(true); }
-        public void Dismiss() { Dismiss(false); }
+        public void Present()
+        {
+            if (isActiveAndEnabled)
+                Present(true);
+        }
+
+        public void Dismiss()
+        {
+            if (isActiveAndEnabled)
+                Dismiss(false);
+        }
 
         #region Lazily-Initialized Properties
 
