@@ -22,6 +22,7 @@ namespace Crysc.Presentation
         private readonly Dictionary<ParallaxLayerConfig, HashSet<Transform>> _layersTransforms = new();
         private readonly Dictionary<ParallaxLayerConfig, float> _layersPivotDeltas = new();
         private readonly Dictionary<ParallaxLayerConfig, float> _layersMovementDeltas = new();
+        private readonly Dictionary<ParallaxLayerConfig, float> _layersForeshorteningFactors = new();
         private readonly HashSet<Transform> _affectedBySpeed = new();
 
         private float _distance;
@@ -30,7 +31,7 @@ namespace Crysc.Presentation
         private Vector3 _cameraBasePosition;
         private Vector3 _focalPoint;
         private Vector3 _focalPointScreenOffset;
-        private Vector2 _currentFocalDeltaRatio;
+        private Vector2 _currentFocalDelta;
 
         private void Awake()
         {
@@ -56,7 +57,7 @@ namespace Crysc.Presentation
                     y: Screen.height / 2f,
                     z: 0
                 );
-                _currentFocalDeltaRatio = Vector2.zero;
+                _currentFocalDelta = Vector2.zero;
             }
         }
 
@@ -66,17 +67,12 @@ namespace Crysc.Presentation
             clampedPosition.x = Mathf.Clamp(value: clampedPosition.x, min: 0, max: Screen.width);
             clampedPosition.y = Mathf.Clamp(value: clampedPosition.y, min: 0, max: Screen.height);
 
-            Vector2 focalPixelDelta = clampedPosition - _focalPointScreenOffset;
-            focalPixelDelta *= new Vector2(-1, 1);
-            focalPixelDelta *= MouseEffectModifier;
-
-            Vector2 focalDeltaRatio = Vector2.ClampMagnitude(
-                vector: focalPixelDelta / Screen.width,
-                maxLength: .66f
-            );
+            Vector2 focalDeltaPixels = clampedPosition - _focalPointScreenOffset;
+            focalDeltaPixels *= MouseEffectModifier;
+            Vector2 focalDelta = focalDeltaPixels / Screen.width;
             
-            var focalDeltaDiff = focalDeltaRatio - _currentFocalDeltaRatio;
-            _currentFocalDeltaRatio += focalDeltaDiff * (Time.deltaTime % CameraMouseAlignmentSpeed / CameraMouseAlignmentSpeed);
+            var focalDeltaDiff = focalDelta - _currentFocalDelta;
+            _currentFocalDelta += focalDeltaDiff * (Time.deltaTime % CameraMouseAlignmentSpeed / CameraMouseAlignmentSpeed);
 
             _distance += Speed * Time.deltaTime;
             UpdateRegistrants();
@@ -100,6 +96,7 @@ namespace Crysc.Presentation
                 _layersTransforms.Add(key: layer, value: new HashSet<Transform>());
                 _layersPivotDeltas.Add(key: layer, value: (layer.DistanceFromObserver - PivotDistance) / layer.DistanceFromObserver);
                 _layersMovementDeltas.Add(key: layer, value: 1 + ((PivotDistance - layer.DistanceFromObserver) / layer.DistanceFromObserver));
+                _layersForeshorteningFactors.Add(key: layer, value: 0.5f / (layer.DistanceFromObserver * layer.DistanceFromObserver));
             }
 
             _layersTransforms[layer].Add(registrant);
@@ -118,6 +115,7 @@ namespace Crysc.Presentation
                     _layersTransforms.Remove(layer);
                     _layersPivotDeltas.Remove(layer);
                     _layersMovementDeltas.Remove(layer);
+                    _layersForeshorteningFactors.Remove(layer);
                 }
             }
             _affectedBySpeed.Remove(registrant);
@@ -132,19 +130,29 @@ namespace Crysc.Presentation
         {
             foreach ((ParallaxLayerConfig layer, HashSet<Transform> transforms) in _layersTransforms)
             {
-                var layerPivotDelta = _layersPivotDeltas[layer];
-                var layerMovementDelta = _layersMovementDeltas[layer];
-                float xDelta = _distance * layerMovementDelta;
+                var foreshorteningFactor = _layersForeshorteningFactors[layer];
+                var foreshorteningScale = Vector2.one - _currentFocalDelta * _currentFocalDelta * foreshorteningFactor;
+                // var foreshortenedLayerWidth = LayerWidth * foreshorteningScale; // TODO: handle foreshortened layers to avoid weird jumps.
+                
+                var pivotDelta = _layersPivotDeltas[layer];
+                var movementDelta = _layersMovementDeltas[layer];
+                
+                float xDelta = _distance * movementDelta;
                 xDelta = (xDelta + LayerWidth / 2f) % LayerWidth - LayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
+                
                 foreach (Transform registrant in transforms)
+                {
                     registrant.localPosition =
                         _transformsBasePositions[registrant] +
                         (_affectedBySpeed.Contains(registrant) ? Vector3.right * xDelta : Vector3.zero) +
-                        new Vector3(
-                            x: _currentFocalDeltaRatio.x * layerPivotDelta * registrant.lossyScale.x,
-                            y: _currentFocalDeltaRatio.y * layerPivotDelta * registrant.lossyScale.y,
-                            z: 0
-                        );
+                        (Vector3) _currentFocalDelta * pivotDelta;
+
+                    registrant.localScale = new Vector3(
+                        x: foreshorteningScale.x,
+                        y: foreshorteningScale.y,
+                        z: 1f
+                    );
+                }
             }
         }
     }
