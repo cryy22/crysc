@@ -15,8 +15,8 @@ namespace Crysc.Presentation
 
         [field: SerializeField] public float PivotDistance { get; private set; } = 10;
         [field: SerializeField] public float Speed { get; set; }
-        // [field: SerializeField] public float CameraSpeed { get; private set; } = 0;
         [field: SerializeField] public Vector2 MouseEffectModifier { get; set; } = Vector2.one;
+        [field: SerializeField] public float CameraMouseAlignmentSpeed { get; set; } = 1f;
 
         private readonly Dictionary<Transform, Vector3> _transformsBasePositions = new();
         private readonly Dictionary<ParallaxLayerConfig, HashSet<Transform>> _layersTransforms = new();
@@ -30,6 +30,7 @@ namespace Crysc.Presentation
         private Vector3 _cameraBasePosition;
         private Vector3 _focalPoint;
         private Vector3 _focalPointScreenOffset;
+        private Vector2 _currentFocalDeltaRatio;
 
         private void Awake()
         {
@@ -44,8 +45,6 @@ namespace Crysc.Presentation
             _camera = Camera.main;
             if (_camera)
             {
-                // _cameraTransform = _camera.transform;
-                // _cameraBasePosition = _cameraTransform.localPosition;
                 _focalPoint = FocalPoint ? FocalPoint.position : Vector3.zero;
                 _focalPointScreenOffset = _camera.WorldToScreenPoint(_focalPoint);
             }
@@ -57,6 +56,7 @@ namespace Crysc.Presentation
                     y: Screen.height / 2f,
                     z: 0
                 );
+                _currentFocalDeltaRatio = Vector2.zero;
             }
         }
 
@@ -67,18 +67,19 @@ namespace Crysc.Presentation
             clampedPosition.y = Mathf.Clamp(value: clampedPosition.y, min: 0, max: Screen.height);
 
             Vector2 focalPixelDelta = clampedPosition - _focalPointScreenOffset;
-            focalPixelDelta *= -1;
+            focalPixelDelta *= new Vector2(-1, 1);
             focalPixelDelta *= MouseEffectModifier;
 
             Vector2 focalDeltaRatio = Vector2.ClampMagnitude(
                 vector: focalPixelDelta / Screen.width,
                 maxLength: .66f
             );
+            
+            var focalDeltaDiff = focalDeltaRatio - _currentFocalDeltaRatio;
+            _currentFocalDeltaRatio += focalDeltaDiff * (Time.deltaTime % CameraMouseAlignmentSpeed / CameraMouseAlignmentSpeed);
 
             _distance += Speed * Time.deltaTime;
-            // if (_camera)
-            //     UpdateCamera(focalDeltaRatio);
-            UpdateRegistrants(focalDeltaRatio: focalDeltaRatio, distance: _distance);
+            UpdateRegistrants();
         }
 
         public void Register(ParallaxLayerConfig layer, Transform registrant, bool isAffectedBySpeed = true)
@@ -127,31 +128,21 @@ namespace Crysc.Presentation
             _distance = 0;
         }
 
-        // private void UpdateCamera(Vector2 focalDeltaRatio)
-        // {
-        //     _cameraTransform.localPosition = _cameraBasePosition + new Vector3(
-        //         x: focalDeltaRatio.x * CameraSpeed * _cameraTransform.lossyScale.x,
-        //         y: focalDeltaRatio.y * CameraSpeed * _cameraTransform.lossyScale.y,
-        //         z: 0
-        //     );
-        //     _cameraTransform.LookAt(_focalPoint);
-        // }
-
-        private void UpdateRegistrants(Vector2 focalDeltaRatio, float distance)
+        private void UpdateRegistrants()
         {
             foreach ((ParallaxLayerConfig layer, HashSet<Transform> transforms) in _layersTransforms)
             {
                 var layerPivotDelta = _layersPivotDeltas[layer];
                 var layerMovementDelta = _layersMovementDeltas[layer];
-                float xDelta = distance * layerMovementDelta;
+                float xDelta = _distance * layerMovementDelta;
                 xDelta = (xDelta + LayerWidth / 2f) % LayerWidth - LayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
                 foreach (Transform registrant in transforms)
                     registrant.localPosition =
                         _transformsBasePositions[registrant] +
                         (_affectedBySpeed.Contains(registrant) ? Vector3.right * xDelta : Vector3.zero) +
                         new Vector3(
-                            x: focalDeltaRatio.x * layerPivotDelta * registrant.lossyScale.x,
-                            y: focalDeltaRatio.y * layerPivotDelta * registrant.lossyScale.y,
+                            x: _currentFocalDeltaRatio.x * layerPivotDelta * registrant.lossyScale.x,
+                            y: _currentFocalDeltaRatio.y * layerPivotDelta * registrant.lossyScale.y,
                             z: 0
                         );
             }
