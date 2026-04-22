@@ -132,20 +132,20 @@ namespace Crysc.Presentation
             {
                 var foreshorteningFactor = _layersForeshorteningFactors[layer];
                 var foreshorteningScale = Vector2.one - _currentFocalDelta * _currentFocalDelta * foreshorteningFactor;
-                // var foreshortenedLayerWidth = LayerWidth * foreshorteningScale; // TODO: handle foreshortened layers to avoid weird jumps.
+                var adjustedLayerWidth = LayerWidth * foreshorteningScale.x;
+                
+                var movementDelta = _layersMovementDeltas[layer];
+                float xDelta = _distance * movementDelta * foreshorteningScale.x;
+                xDelta = (xDelta + adjustedLayerWidth / 2f) % adjustedLayerWidth - adjustedLayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
                 
                 var pivotDelta = _layersPivotDeltas[layer];
-                var movementDelta = _layersMovementDeltas[layer];
-                
-                float xDelta = _distance * movementDelta;
-                xDelta = (xDelta + LayerWidth / 2f) % LayerWidth - LayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
                 
                 foreach (Transform registrant in transforms)
                 {
                     registrant.localPosition =
                         _transformsBasePositions[registrant] +
                         (_affectedBySpeed.Contains(registrant) ? Vector3.right * xDelta : Vector3.zero) +
-                        (Vector3) _currentFocalDelta * pivotDelta;
+                        (Vector3) (_currentFocalDelta * pivotDelta);
 
                     registrant.localScale = new Vector3(
                         x: foreshorteningScale.x,
