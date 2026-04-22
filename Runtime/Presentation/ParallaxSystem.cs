@@ -13,12 +13,15 @@ namespace Crysc.Presentation
         [field: SerializeField] public float LayerWidth { get; private set; } = 25;
         [SerializeField] private Transform FocalPoint;
 
-        [field: SerializeField] public float Speed { get; set; } = 0;
+        [field: SerializeField] public float PivotDistance { get; private set; } = 10;
+        [field: SerializeField] public float Speed { get; set; }
         // [field: SerializeField] public float CameraSpeed { get; private set; } = 0;
         [field: SerializeField] public Vector2 MouseEffectModifier { get; set; } = Vector2.one;
 
         private readonly Dictionary<Transform, Vector3> _transformsBasePositions = new();
         private readonly Dictionary<ParallaxLayerConfig, HashSet<Transform>> _layersTransforms = new();
+        private readonly Dictionary<ParallaxLayerConfig, float> _layersPivotDeltas = new();
+        private readonly Dictionary<ParallaxLayerConfig, float> _layersMovementDeltas = new();
         private readonly HashSet<Transform> _affectedBySpeed = new();
 
         private float _distance;
@@ -54,19 +57,19 @@ namespace Crysc.Presentation
                     y: Screen.height / 2f,
                     z: 0
                 );
-            }       
+            }
         }
 
         private void Update()
         {
-            var clampedPosition = Input.mousePosition;
-            clampedPosition.x = Mathf.Clamp(clampedPosition.x, 0, Screen.width);
-            clampedPosition.y = Mathf.Clamp(clampedPosition.y, 0, Screen.height);
-            
+            Vector3 clampedPosition = Input.mousePosition;
+            clampedPosition.x = Mathf.Clamp(value: clampedPosition.x, min: 0, max: Screen.width);
+            clampedPosition.y = Mathf.Clamp(value: clampedPosition.y, min: 0, max: Screen.height);
+
             Vector2 focalPixelDelta = clampedPosition - _focalPointScreenOffset;
             focalPixelDelta *= -1;
             focalPixelDelta *= MouseEffectModifier;
-            
+
             Vector2 focalDeltaRatio = Vector2.ClampMagnitude(
                 vector: focalPixelDelta / Screen.width,
                 maxLength: .66f
@@ -80,15 +83,23 @@ namespace Crysc.Presentation
 
         public void Register(ParallaxLayerConfig layer, Transform registrant, bool isAffectedBySpeed = true)
         {
-            if (layer == null || registrant == null)
+            if ((layer == null) || (registrant == null))
             {
-                Debug.LogWarning($"ParallaxBackgroundRegistrar: Attempted to register null layer or registrant (layer: {(layer != null ? layer.name : null)}, registrant: {(registrant != null ? registrant.name : null)})");
+                Debug.LogWarning(
+                    $"ParallaxBackgroundRegistrar: Attempted to register null layer or registrant (layer: {(layer != null ? layer.name : null)}, registrant: {(registrant != null ? registrant.name : null)})"
+                );
                 return;
             }
 
+            if (_transformsBasePositions.ContainsKey(registrant))
+                return;
             _transformsBasePositions.Add(key: registrant, value: registrant.localPosition);
             if (!_layersTransforms.ContainsKey(layer))
-                _layersTransforms.Add(layer, new HashSet<Transform>());
+            {
+                _layersTransforms.Add(key: layer, value: new HashSet<Transform>());
+                _layersPivotDeltas.Add(key: layer, value: (layer.DistanceFromObserver - PivotDistance) / layer.DistanceFromObserver);
+                _layersMovementDeltas.Add(key: layer, value: 1 + ((PivotDistance - layer.DistanceFromObserver) / layer.DistanceFromObserver));
+            }
 
             _layersTransforms[layer].Add(registrant);
             if (isAffectedBySpeed)
@@ -98,8 +109,16 @@ namespace Crysc.Presentation
         public void Deregister(ParallaxLayerConfig layer, Transform registrant)
         {
             _transformsBasePositions.Remove(registrant);
-            if (_layersTransforms.TryGetValue(layer, out HashSet<Transform> layersTransforms))
+            if (_layersTransforms.TryGetValue(key: layer, value: out HashSet<Transform> layersTransforms))
+            {
                 layersTransforms.Remove(registrant);
+                if (layersTransforms.Count == 0)
+                {
+                    _layersTransforms.Remove(layer);
+                    _layersPivotDeltas.Remove(layer);
+                    _layersMovementDeltas.Remove(layer);
+                }
+            }
             _affectedBySpeed.Remove(registrant);
         }
 
@@ -107,7 +126,7 @@ namespace Crysc.Presentation
         {
             _distance = 0;
         }
-        
+
         // private void UpdateCamera(Vector2 focalDeltaRatio)
         // {
         //     _cameraTransform.localPosition = _cameraBasePosition + new Vector3(
@@ -117,20 +136,22 @@ namespace Crysc.Presentation
         //     );
         //     _cameraTransform.LookAt(_focalPoint);
         // }
-        
+
         private void UpdateRegistrants(Vector2 focalDeltaRatio, float distance)
         {
-            foreach (var (layer, transforms) in _layersTransforms)
+            foreach ((ParallaxLayerConfig layer, HashSet<Transform> transforms) in _layersTransforms)
             {
-                float xDelta = distance * layer.Speed;
+                var layerPivotDelta = _layersPivotDeltas[layer];
+                var layerMovementDelta = _layersMovementDeltas[layer];
+                float xDelta = distance * layerMovementDelta;
                 xDelta = (xDelta + LayerWidth / 2f) % LayerWidth - LayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
                 foreach (Transform registrant in transforms)
                     registrant.localPosition =
                         _transformsBasePositions[registrant] +
                         (_affectedBySpeed.Contains(registrant) ? Vector3.right * xDelta : Vector3.zero) +
                         new Vector3(
-                            x: focalDeltaRatio.x * layer.Speed * registrant.lossyScale.x,
-                            y: focalDeltaRatio.y * layer.Speed * registrant.lossyScale.y,
+                            x: focalDeltaRatio.x * layerPivotDelta * registrant.lossyScale.x,
+                            y: focalDeltaRatio.y * layerPivotDelta * registrant.lossyScale.y,
                             z: 0
                         );
             }

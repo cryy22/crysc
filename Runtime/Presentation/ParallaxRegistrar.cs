@@ -23,6 +23,8 @@ namespace Crysc.Presentation
 
         public void Register(ParallaxLayerConfig layer, bool isAffectedBySpeed = true)
         {
+            if (_registeredLayer == layer)
+                return;
             if (_registeredLayer)
                 Deregister();
 
