@@ -24,7 +24,7 @@ namespace Crysc.Presentation.Arrangements
 
             float perUnitDistance = GetSplineDistanceBetweenElements(
                 elements: elements,
-                elementWidth: arrangement.BaseElementSize.x,
+                elementWidth: arrangement.ElementSize.x,
                 preferredSpacingRatio: arrangement.PreferredSpacingRatio.x,
                 splineLength: splineLength
             );

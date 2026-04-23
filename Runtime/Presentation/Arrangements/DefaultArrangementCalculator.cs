@@ -42,7 +42,7 @@ namespace Crysc.Presentation.Arrangements
             int i
         )
         {
-            Vector2 elementSize = arrangement.BaseElementSize * element.SizeMultiplier;
+            Vector2 elementSize = arrangement.ElementSize * element.SizeMultiplier;
             Vector2 directionalPivot = element.Pivot - (arrangement.IsInverted ? Vector2.one : Vector2.zero);
 
             Vector3 startPoint = CalculateElementStartPoint(
@@ -57,15 +57,15 @@ namespace Crysc.Presentation.Arrangements
 
         private static Vector3 CalculateElementStartPoint(Arrangement arrangement, Vector2 weightedIndexes, int i)
         {
-            Vector2 startPoint2d = arrangement.BaseElementSize * weightedIndexes;
-            startPoint2d += arrangement.Spacing * i;
-            startPoint2d -= arrangement.AlignmentOffset;
-            if (i % 2 == 1) startPoint2d += arrangement.OddElementStagger;
-            startPoint2d *= arrangement.Direction;
+            Vector2 startPoint2D = arrangement.ElementSize * weightedIndexes;
+            startPoint2D += arrangement.Spacing * i;
+            startPoint2D -= arrangement.AlignmentOffset;
+            if (i % 2 == 1) startPoint2D += arrangement.OddElementStagger;
+            startPoint2D *= arrangement.Direction;
 
             return new Vector3(
-                x: startPoint2d.x,
-                y: startPoint2d.y,
+                x: startPoint2D.x,
+                y: startPoint2D.y,
                 z: Arrangement.ZOffset * i
             );
         }

@@ -28,9 +28,9 @@ namespace Crysc.Presentation.Arrangements
         [SerializeField] private Transform ElementsParentInput;
         
         [FormerlySerializedAs("BaseElementSizeInput")]
-        [SerializeField] public Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
-        
+        [SerializeField] private Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
         [field: SerializeField] public Vector2 ElementScale { get; private set; } = Vector2.one;
+        public Vector2 ElementSize => BaseElementSize * ElementScale;
         
         [FormerlySerializedAs("OddElementStaggerInput")]
         [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
@@ -218,7 +218,7 @@ namespace Crysc.Presentation.Arrangements
             Vector2 totalSize = _elements.Aggregate(
                 seed: Vector2.zero,
                 (acc, e) => acc + e.SizeMultiplier
-            ) * BaseElementSize;
+            ) * ElementSize;
 
             if (_elements.Count > 1)
             {
@@ -227,7 +227,7 @@ namespace Crysc.Presentation.Arrangements
                     y: MaxSize.y > 0 ? MaxSize.y : float.PositiveInfinity
                 );
                 Vector2 maxSpacing = (maxSize - totalSize) / (_elements.Count - 1);
-                Vector2 preferredSpacing = PreferredSpacingRatio * BaseElementSize;
+                Vector2 preferredSpacing = PreferredSpacingRatio * ElementSize;
 
                 Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
             }
@@ -235,8 +235,8 @@ namespace Crysc.Presentation.Arrangements
             Vector2 size = totalSize + Spacing * (_elements.Count - 1);
 
             SizeMultiplier = new Vector2(
-                x: BaseElementSize.x > 0 ? size.x / BaseElementSize.x : 0,
-                y: BaseElementSize.y > 0 ? size.y / BaseElementSize.y : 0
+                x: ElementSize.x > 0 ? size.x / ElementSize.x : 0,
+                y: ElementSize.y > 0 ? size.y / ElementSize.y : 0
             );
             AlignmentOffset = HorizontalAlignment switch
             {
