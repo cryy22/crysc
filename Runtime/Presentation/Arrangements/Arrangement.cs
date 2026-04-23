@@ -26,10 +26,15 @@ namespace Crysc.Presentation.Arrangements
 
         [FormerlySerializedAs("ElementsParent")]
         [SerializeField] private Transform ElementsParentInput;
+        
         [FormerlySerializedAs("BaseElementSizeInput")]
         [SerializeField] public Vector2 BaseElementSize = Vector2.right; // prob won't work with a negative
+        
+        [field: SerializeField] public Vector2 ElementScale { get; private set; } = Vector2.one;
+        
         [FormerlySerializedAs("OddElementStaggerInput")]
         [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
+        
         [FormerlySerializedAs("UpdateZInstantlyInput")]
         [SerializeField] public bool UpdateZInstantly = true;
 

@@ -37,7 +37,7 @@ namespace Crysc.Presentation.Arrangements
                 Spline.Evaluate(
                     t: currentRatio,
                     position: out float3 position,
-                    tangent: out float3 tangent,
+                    tangent: out _,
                     upVector: out _
                 );
 
@@ -45,15 +45,11 @@ namespace Crysc.Presentation.Arrangements
                 Vector3 placementPosition =
                     new Vector3(x: position.x, y: position.y, z: Arrangement.ZOffset * i) +
                     element.ArrangementOffset;
-                Quaternion placementRotation = Quaternion.FromToRotation(
-                    fromDirection: Vector3.right,
-                    toDirection: tangent
-                );
 
                 placements[i] = new ElementPlacement(
                     element: element,
                     position: placementPosition,
-                    rotation: placementRotation
+                    rotation: Quaternion.identity
                 );
 
                 currentRatio += perUnitDistance;

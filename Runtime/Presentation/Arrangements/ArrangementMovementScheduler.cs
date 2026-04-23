@@ -333,7 +333,7 @@ namespace Crysc.Presentation.Arrangements
                 startRotation: element.Transform.localRotation,
                 endRotation: arrangement.ElementsPlacements[element].Rotation,
                 startScale: element.Transform.localScale,
-                endScale: Vector3.one,
+                endScale: (Vector3) arrangement.ElementScale + Vector3.forward,
                 extraRotations: extraRotations,
                 easing: easing
             );
