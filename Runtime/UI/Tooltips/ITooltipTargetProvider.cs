@@ -1,4 +1,3 @@
-using System;
 using Crysc.Common;
 
 namespace Crysc.UI.Tooltips
@@ -10,8 +9,5 @@ namespace Crysc.UI.Tooltips
 
         public object[] GetTooltipContent();
         public Dimensions GetSize();
-
-        public event EventHandler Hovered;
-        public event EventHandler Unhovered;
     }
 }

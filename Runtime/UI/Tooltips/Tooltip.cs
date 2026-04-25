@@ -97,7 +97,7 @@ namespace Crysc.UI.Tooltips
 
         private void TargetHoveredEventHandler(object sender, TooltipEventArgs e)
         {
-            T[] contents = e.TooltipContent.Where(c => c is T).Cast<T>().ToArray();
+            T[] contents = e.TooltipContent.OfType<T>().ToArray();
             if (contents.Length == 0) return;
             if (ShouldPresentTooltip(contents) == false) return;
 

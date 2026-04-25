@@ -1,10 +1,12 @@
 using System;
+using UnityEngine;
 
 namespace Crysc.UI.Tooltips
 {
     public class TooltipPublisher
     {
         public event EventHandler<TooltipEventArgs> Hovered;
+        public event EventHandler<TooltipEventArgs> Unhovered;
         public event EventHandler<TooltipEventArgs> Clicked;
 
         private static TooltipPublisher _instance;
@@ -14,9 +16,25 @@ namespace Crysc.UI.Tooltips
 
         public void RegisterHover(ITooltipTargetProvider targetProvider)
         {
-            if (!Enabled) return;
-
+            if (!Enabled) 
+                return;
+            
             Hovered?.Invoke(
+                sender: this,
+                e: new TooltipEventArgs(
+                    targetProvider: targetProvider,
+                    tooltipContent: targetProvider.GetTooltipContent(),
+                    dimensions: targetProvider.GetSize()
+                )
+            );
+        }
+
+        public void RegisterUnhover(ITooltipTargetProvider targetProvider)
+        {
+            if (!Enabled)
+                return;
+            
+            Unhovered?.Invoke(
                 sender: this,
                 e: new TooltipEventArgs(
                     targetProvider: targetProvider,
