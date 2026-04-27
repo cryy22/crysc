@@ -10,7 +10,7 @@ namespace Crysc.Presentation
     {
         public static ParallaxSystem I { get; private set; }
 
-        [field: SerializeField] public float LayerWidth { get; private set; } = 25;
+        [field: SerializeField] public float LayerWidth { get; private set; } = 20;
         [SerializeField] private Transform FocalPoint;
 
         [field: SerializeField] public float PivotDistance { get; private set; } = 10;
