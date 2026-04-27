@@ -109,7 +109,6 @@ namespace Crysc.UI.Tooltips
 
             PresentTooltip(contents);
             _currentTarget = e.TargetProvider;
-            Positioner.UpdateTooltipPosition(targetDimensions: e.Dimensions);
 
             _tooltipPersistenceRoutine?.Stop();
             _tooltipPersistenceRoutine = new CryRoutine(enumerator: RunTooltipPersistence(), behaviour: this);
@@ -182,8 +181,7 @@ namespace Crysc.UI.Tooltips
 
         private static bool IsTargetHovered(ITooltipTargetProvider target)
         {
-            if (target.IsHovered) return true;
-            return target.IgnoreRaycastBlocking && target.GetSize().IsScreenPointWithin(Input.mousePosition);
+            return target.IsHovered;
         }
     }
 }

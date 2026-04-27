@@ -8,6 +8,5 @@ namespace Crysc.UI.Tooltips
         public bool IgnoreRaycastBlocking { get; }
 
         public object[] GetTooltipContent();
-        public Dimensions GetSize();
     }
 }

@@ -7,17 +7,14 @@ namespace Crysc.UI.Tooltips
     {
         public ITooltipTargetProvider TargetProvider { get; }
         public object[] TooltipContent { get; }
-        public Dimensions Dimensions { get; }
 
         public TooltipEventArgs(
             ITooltipTargetProvider targetProvider,
-            object[] tooltipContent,
-            Dimensions dimensions
+            object[] tooltipContent
         )
         {
             TargetProvider = targetProvider;
             TooltipContent = tooltipContent;
-            Dimensions = dimensions;
         }
     }
 }

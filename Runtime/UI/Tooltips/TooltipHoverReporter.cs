@@ -19,12 +19,10 @@ namespace Crysc.UI.Tooltips
         protected virtual TooltipPublisher Publisher => TooltipPublisher.I;
 
         private readonly List<ITooltipContentProvider> _contentProviders = new();
-        private GenericSizeCalculator _sizeCalculator;
 
         private void Start()
         {
             _contentProviders.AddRange(GetComponents<ITooltipContentProvider>());
-            _sizeCalculator = new GenericSizeCalculator(this);
         }
         private void OnDisable()
         {
@@ -44,7 +42,5 @@ namespace Crysc.UI.Tooltips
         }
 
         public object[] GetTooltipContent() { return _contentProviders.SelectMany(p => p.GetContent()).ToArray(); }
-
-        public Dimensions GetSize() { return _sizeCalculator.Calculate(); }
     }
 }
