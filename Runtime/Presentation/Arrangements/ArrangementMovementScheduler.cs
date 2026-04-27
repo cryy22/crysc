@@ -403,7 +403,7 @@ namespace Crysc.Presentation.Arrangements
             if (elementsAry.Length > elementsArrangements.Count)
                 elementsAry = elementsAry
                     .Distinct()
-                    .Where(e => elementsArrangements.ContainsKey(e))
+                    .Where(elementsArrangements.ContainsKey)
                     .ToArray();
 
             var plans = new Plan[elementsAry.Length];
