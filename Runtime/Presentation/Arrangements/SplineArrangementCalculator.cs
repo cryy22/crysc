@@ -43,13 +43,14 @@ namespace Crysc.Presentation.Arrangements
 
                 IArrangementElement element = elements.ElementAt(i);
                 Vector3 placementPosition =
-                    new Vector3(x: position.x, y: position.y, z: ComplexArrangement.ZOffset * i) +
+                    new Vector3(x: position.x, y: position.y, z: Arrangement.ZOffset * i) +
                     element.ArrangementOffset;
 
                 placements[i] = new ElementPlacement(
                     element: element,
                     position: placementPosition,
-                    rotation: Quaternion.identity
+                    rotation: Quaternion.identity,
+                    scale: Vector3.one
                 );
 
                 currentRatio += perUnitDistance;

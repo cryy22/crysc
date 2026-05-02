@@ -26,7 +26,8 @@ namespace Crysc.Presentation.Arrangements
                         weightedIndexes: weightedIndexes,
                         i: i
                     ),
-                    rotation: Quaternion.identity
+                    rotation: Quaternion.identity,
+                    scale: Vector3.one
                 );
 
                 weightedIndexes += element.SizeMultiplier;
@@ -66,7 +67,7 @@ namespace Crysc.Presentation.Arrangements
             return new Vector3(
                 x: startPoint2D.x,
                 y: startPoint2D.y,
-                z: ComplexArrangement.ZOffset * i
+                z: Arrangement.ZOffset * i
             );
         }
     }
