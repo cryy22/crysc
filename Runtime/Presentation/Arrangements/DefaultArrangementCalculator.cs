@@ -7,7 +7,7 @@ namespace Crysc.Presentation.Arrangements
 
     public class DefaultArrangementCalculator : IArrangementCalculator
     {
-        public ElementPlacement[] CalculateElementPlacements(Arrangement arrangement)
+        public ElementPlacement[] CalculateElementPlacements(ComplexArrangement arrangement)
         {
             IElement[] elementsAry = arrangement.Elements.ToArray();
 
@@ -36,7 +36,7 @@ namespace Crysc.Presentation.Arrangements
         }
 
         private static Vector3 CalculateElementAnchorPoint(
-            Arrangement arrangement,
+            ComplexArrangement arrangement,
             IElement element,
             Vector2 weightedIndexes,
             int i
@@ -55,7 +55,7 @@ namespace Crysc.Presentation.Arrangements
             return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z) + element.ArrangementOffset;
         }
 
-        private static Vector3 CalculateElementStartPoint(Arrangement arrangement, Vector2 weightedIndexes, int i)
+        private static Vector3 CalculateElementStartPoint(ComplexArrangement arrangement, Vector2 weightedIndexes, int i)
         {
             Vector2 startPoint2D = arrangement.ElementSize * weightedIndexes;
             startPoint2D += arrangement.Spacing * i;
@@ -66,7 +66,7 @@ namespace Crysc.Presentation.Arrangements
             return new Vector3(
                 x: startPoint2D.x,
                 y: startPoint2D.y,
-                z: Arrangement.ZOffset * i
+                z: ComplexArrangement.ZOffset * i
             );
         }
     }

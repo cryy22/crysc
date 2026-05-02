@@ -10,7 +10,7 @@ namespace Crysc.Presentation.Arrangements
 {
     using IElement = IArrangementElement;
 
-    public class Arrangement : MonoBehaviour, IElement
+    public class ComplexArrangement : MonoBehaviour, IElement
     {
         public enum Alignment
         {

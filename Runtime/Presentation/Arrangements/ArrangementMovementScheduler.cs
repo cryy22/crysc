@@ -9,8 +9,8 @@ namespace Crysc.Presentation.Arrangements
 
     public static class ArrangementMovementScheduler
     {
-        public static Arrangement ScheduleElementMovement(
-            this Arrangement arrangement,
+        public static ComplexArrangement ScheduleElementMovement(
+            this ComplexArrangement arrangement,
             IElement element,
             float startTime = 0f,
             float duration = 0.25f,
@@ -32,8 +32,8 @@ namespace Crysc.Presentation.Arrangements
             return arrangement;
         }
 
-        public static Arrangement ScheduleSimultaneousMovement(
-            this Arrangement arrangement,
+        public static ComplexArrangement ScheduleSimultaneousMovement(
+            this ComplexArrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
             int extraRotations = 0,
@@ -56,7 +56,7 @@ namespace Crysc.Presentation.Arrangements
         }
 
         public static void ScheduleSimultaneousMovement(
-            IEnumerable<Arrangement> arrangements,
+            IEnumerable<ComplexArrangement> arrangements,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
             int extraRotations = 0,
@@ -64,7 +64,7 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            (Plan[] plans, Arrangement[] arrangementsForPlans) = GenerateInitialPlansForArrangements(
+            (Plan[] plans, ComplexArrangement[] arrangementsForPlans) = GenerateInitialPlansForArrangements(
                 arrangements: arrangements,
                 elements: elements,
                 extraRotations: extraRotations,
@@ -97,8 +97,8 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        public static Arrangement ScheduleSerialMovement(
-            this Arrangement arrangement,
+        public static ComplexArrangement ScheduleSerialMovement(
+            this ComplexArrangement arrangement,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
             float spacingPct = 0f,
@@ -127,7 +127,7 @@ namespace Crysc.Presentation.Arrangements
         }
 
         public static void ScheduleSerialMovement(
-            IEnumerable<Arrangement> arrangements,
+            IEnumerable<ComplexArrangement> arrangements,
             IEnumerable<IElement> elements = null,
             float duration = 0.25f,
             float spacingPct = 0f,
@@ -136,7 +136,7 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            (Plan[] plans, Arrangement[] arrangementsForPlans) = GenerateInitialPlansForArrangements(
+            (Plan[] plans, ComplexArrangement[] arrangementsForPlans) = GenerateInitialPlansForArrangements(
                 arrangements: arrangements,
                 elements: elements,
                 extraRotations: extraRotations,
@@ -199,8 +199,8 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        public static Arrangement ScheduleAcceleratingMovement(
-            this Arrangement arrangement,
+        public static ComplexArrangement ScheduleAcceleratingMovement(
+            this ComplexArrangement arrangement,
             IEnumerable<IElement> elements = null,
             float elementDuration = 0.25f,
             float initialDelay = 0.5f,
@@ -236,8 +236,8 @@ namespace Crysc.Presentation.Arrangements
             return arrangement;
         }
 
-        public static Arrangement MussMovementPlans(
-            this Arrangement arrangement,
+        public static ComplexArrangement MussMovementPlans(
+            this ComplexArrangement arrangement,
             IEnumerable<IElement> elements = null,
             float mussRadius = 0.75f,
             float mussRotationRange = 45f
@@ -268,7 +268,7 @@ namespace Crysc.Presentation.Arrangements
             return arrangement;
         }
 
-        public static Arrangement EaseMovementPlanStartTimings(this Arrangement arrangement, Easings.Enum easing)
+        public static ComplexArrangement EaseMovementPlanStartTimings(this ComplexArrangement arrangement, Easings.Enum easing)
         {
             Plan[] plans = arrangement.ElementsMovementPlans.Values.ToArray();
             EaseMovementPlanStartTimings(plans: plans, easing: easing);
@@ -278,15 +278,15 @@ namespace Crysc.Presentation.Arrangements
             return arrangement;
         }
 
-        public static void EaseMovementPlanStartTimings(IEnumerable<Arrangement> arrangements, Easings.Enum easing)
+        public static void EaseMovementPlanStartTimings(IEnumerable<ComplexArrangement> arrangements, Easings.Enum easing)
         {
             int plansCount = arrangements.SelectMany(a => a.ElementsMovementPlans).Count();
             if (plansCount <= 1) return;
             var plans = new Plan[plansCount];
-            var arrangementsForPlans = new Arrangement[plansCount];
+            var arrangementsForPlans = new ComplexArrangement[plansCount];
 
             var index = 0;
-            foreach (Arrangement arrangement in arrangements)
+            foreach (ComplexArrangement arrangement in arrangements)
             foreach (Plan plan in arrangement.ElementsMovementPlans.Values)
             {
                 plans[index] = plan;
@@ -316,7 +316,7 @@ namespace Crysc.Presentation.Arrangements
         }
 
         public static Plan CreateMovementPlan(
-            Arrangement arrangement,
+            ComplexArrangement arrangement,
             IElement element,
             float startTime,
             float endTime,
@@ -358,7 +358,7 @@ namespace Crysc.Presentation.Arrangements
         }
 
         private static Plan[] GenerateInitialPlansForArrangement(
-            Arrangement arrangement,
+            ComplexArrangement arrangement,
             IEnumerable<IElement> elements,
             int extraRotations,
             Easings.Enum easing
@@ -381,19 +381,19 @@ namespace Crysc.Presentation.Arrangements
             return plans;
         }
 
-        private static (Plan[] plans, Arrangement[] arrangements) GenerateInitialPlansForArrangements(
-            IEnumerable<Arrangement> arrangements,
+        private static (Plan[] plans, ComplexArrangement[] arrangements) GenerateInitialPlansForArrangements(
+            IEnumerable<ComplexArrangement> arrangements,
             IEnumerable<IElement> elements,
             int extraRotations,
             Easings.Enum easing
         )
         {
-            foreach (Arrangement arrangement in arrangements) arrangement.RecalculateElementPlacements();
+            foreach (ComplexArrangement arrangement in arrangements) arrangement.RecalculateElementPlacements();
 
             IElement[] elementsAry = (elements ?? arrangements.SelectMany(a => a.Elements)).ToArray();
 
-            var elementsArrangements = new Dictionary<IElement, Arrangement>();
-            foreach (Arrangement arrangement in arrangements)
+            var elementsArrangements = new Dictionary<IElement, ComplexArrangement>();
+            foreach (ComplexArrangement arrangement in arrangements)
             foreach (IElement element in arrangement.Elements)
             {
                 if (elementsAry.Contains(element) == false) continue;
@@ -407,11 +407,11 @@ namespace Crysc.Presentation.Arrangements
                     .ToArray();
 
             var plans = new Plan[elementsAry.Length];
-            var arrangementsForPlans = new Arrangement[elementsAry.Length];
+            var arrangementsForPlans = new ComplexArrangement[elementsAry.Length];
             for (var i = 0; i < elementsAry.Length; i++)
             {
                 IElement element = elementsAry[i];
-                elementsArrangements.TryGetValue(key: element, value: out Arrangement arrangement);
+                elementsArrangements.TryGetValue(key: element, value: out ComplexArrangement arrangement);
 
                 plans[i] = CreateMovementPlan(
                     arrangement: arrangement,

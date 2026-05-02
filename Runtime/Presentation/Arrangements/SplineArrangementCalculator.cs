@@ -17,7 +17,7 @@ namespace Crysc.Presentation.Arrangements
         // NB, several limitations:
         // - ignores element SizeMultiplier; all elements have the same size
         // - assumes anchor is in the center of the element
-        public ElementPlacement[] CalculateElementPlacements(Arrangement arrangement)
+        public ElementPlacement[] CalculateElementPlacements(ComplexArrangement arrangement)
         {
             IArrangementElement[] elements = arrangement.Elements.ToArray();
             float splineLength = SplineContainer.CalculateLength();
@@ -43,7 +43,7 @@ namespace Crysc.Presentation.Arrangements
 
                 IArrangementElement element = elements.ElementAt(i);
                 Vector3 placementPosition =
-                    new Vector3(x: position.x, y: position.y, z: Arrangement.ZOffset * i) +
+                    new Vector3(x: position.x, y: position.y, z: ComplexArrangement.ZOffset * i) +
                     element.ArrangementOffset;
 
                 placements[i] = new ElementPlacement(
