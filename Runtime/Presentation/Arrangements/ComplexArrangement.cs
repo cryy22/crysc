@@ -41,6 +41,16 @@ namespace Crysc.Presentation.Arrangements
 
         public void RemoveMovementPlanForElement(IElement element) { _elementsMovementPlans.Remove(element); }
 
+        public override void RecalculateElementPlacements()
+        {
+            UpdateProperties();
+            ElementPlacement[] elementPlacements = GetArrangementCalculator().CalculateElementPlacements(this);
+            
+            foreach (ElementPlacement placement in elementPlacements)
+                _elementsPlacements[placement.Element] = 
+                    placement.Copy(scale: (Vector3) ElementScale + Vector3.forward);
+        }
+        
         public void UpdateProperties()
         {
             Vector2 totalSize = _elements.Aggregate(
@@ -83,15 +93,6 @@ namespace Crysc.Presentation.Arrangements
             };
         }
 
-        public override void RecalculateElementPlacements()
-        {
-            UpdateProperties();
-            ElementPlacement[] elementPlacements = GetArrangementCalculator().CalculateElementPlacements(this);
-            
-            foreach (ElementPlacement placement in elementPlacements)
-                _elementsPlacements[placement.Element] = 
-                    placement.Copy(scale: (Vector3) ElementScale + Vector3.forward);
-        }
 
         private IArrangementCalculator GetArrangementCalculator()
         {

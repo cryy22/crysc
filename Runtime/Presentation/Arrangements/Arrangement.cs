@@ -23,7 +23,7 @@ namespace Crysc.Presentation.Arrangements
         
         
         public virtual Vector2 ElementSize => Vector2.zero;
-        [field: SerializeField] public Vector2 Spacing { get; protected set; } = Vector2.zero;
+        public Vector2 Spacing { get; protected set; } = Vector2.zero;
         public virtual Vector2 AlignmentOffset => Vector2.zero;
         [field: SerializeField] public bool IsInverted { get; set; }
         public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
