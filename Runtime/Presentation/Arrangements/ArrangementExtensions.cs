@@ -5,7 +5,7 @@ namespace Crysc.Presentation.Arrangements
 {
     public static class ArrangementExtensions
     {
-        public static int GetClosestIndex(this ComplexArrangement arrangement, Vector2 position, bool isLocal = true)
+        public static int GetClosestIndex(this Arrangement arrangement, Vector2 position, bool isLocal = true)
         {
             var closestIndex = 0;
             var closestDistance = float.MaxValue;
@@ -29,7 +29,7 @@ namespace Crysc.Presentation.Arrangements
         }
 
         public static int GetInsertionIndex(
-            this ComplexArrangement arrangement,
+            this Arrangement arrangement,
             Vector2 position,
             bool isLocal = true,
             bool useXAxis = true
@@ -40,8 +40,10 @@ namespace Crysc.Presentation.Arrangements
             int closestIndex = arrangement.GetClosestIndex(position: localPosition);
             IArrangementElement closestElement = arrangement.Elements.ElementAtOrDefault(closestIndex);
 
-            if (closestElement == null) return closestIndex;
-            if (!arrangement.ElementsPlacements.TryGetValue(key: closestElement, value: out ElementPlacement placement))
+            if (
+                (closestElement == null) 
+                || !arrangement.ElementsPlacements.TryGetValue(key: closestElement, value: out ElementPlacement placement)
+            ) 
                 return closestIndex;
 
             float closestAxialPosition =

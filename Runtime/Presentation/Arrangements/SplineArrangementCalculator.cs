@@ -17,7 +17,7 @@ namespace Crysc.Presentation.Arrangements
         // NB, several limitations:
         // - ignores element SizeMultiplier; all elements have the same size
         // - assumes anchor is in the center of the element
-        public ElementPlacement[] CalculateElementPlacements(ComplexArrangement arrangement)
+        public ElementPlacement[] CalculateElementPlacements(Arrangement arrangement)
         {
             IArrangementElement[] elements = arrangement.Elements.ToArray();
             float splineLength = SplineContainer.CalculateLength();
@@ -25,7 +25,7 @@ namespace Crysc.Presentation.Arrangements
             float perUnitDistance = GetSplineDistanceBetweenElements(
                 elements: elements,
                 elementWidth: arrangement.ElementSize.x,
-                preferredSpacingRatio: arrangement.PreferredSpacingRatio.x,
+                arrangementSpacing: arrangement.Spacing.x,
                 splineLength: splineLength
             );
             float totalDistance = perUnitDistance * (elements.Count() - 1);
@@ -62,19 +62,17 @@ namespace Crysc.Presentation.Arrangements
         private static float GetSplineDistanceBetweenElements(
             IEnumerable<IElement> elements,
             float elementWidth,
-            float preferredSpacingRatio,
+            float arrangementSpacing,
             float splineLength
         )
         {
             elements = elements.ToArray();
             if (elements.Count() <= 1) return 0;
 
-            float maxElementSplineRatioWidth = 1f / (elements.Count() - 1);
+            float maxSplineSpacingPerElement = 1f / (elements.Count() - 1);
+            float arrangementSplineSpacingPerElement = (elementWidth + arrangementSpacing) / splineLength;
 
-            float elementSplineRatioWidth = elementWidth / splineLength;
-            float preferredElementSplineRatioWidth = elementSplineRatioWidth * (1 + preferredSpacingRatio);
-
-            return Mathf.Min(a: maxElementSplineRatioWidth, b: preferredElementSplineRatioWidth);
+            return Mathf.Min(a: maxSplineSpacingPerElement, b: arrangementSplineSpacingPerElement);
         }
     }
 }

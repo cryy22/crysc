@@ -16,20 +16,14 @@ namespace Crysc.Presentation.Arrangements
         [field: FormerlySerializedAs("BaseElementSize")]
         [field: SerializeField] public Vector2 BaseElementSize { get; set; } = Vector2.right; // prob won't work with a negative
         [field: SerializeField] public Vector2 ElementScale { get; set; } = Vector2.one;
-        public Vector2 ElementSize => BaseElementSize * ElementScale;
-        
-        [FormerlySerializedAs("OddElementStaggerInput")]
-        [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
+        public override Vector2 ElementSize => BaseElementSize * ElementScale;
 
         [field: SerializeField] public Alignment HorizontalAlignment { get; set; } = Alignment.Left;
-        [field: SerializeField] public bool IsInverted { get; set; }
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
 
-        public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
-
-        public Vector2 AlignmentOffset { get; private set; }
-        public Vector2 Spacing { get; private set; } = Vector2.zero;
+        private Vector2 _alignmentOffset = Vector2.zero;
+        public override Vector2 AlignmentOffset => _alignmentOffset;
 
         // IArrangementElement
         public Transform Transform => transform;
@@ -72,7 +66,7 @@ namespace Crysc.Presentation.Arrangements
                 x: ElementSize.x > 0 ? size.x / ElementSize.x : 0,
                 y: ElementSize.y > 0 ? size.y / ElementSize.y : 0
             );
-            AlignmentOffset = HorizontalAlignment switch
+            _alignmentOffset = HorizontalAlignment switch
             {
                 Alignment.Left   => Vector2.zero,
                 Alignment.Center => size / 2,
@@ -95,7 +89,8 @@ namespace Crysc.Presentation.Arrangements
             ElementPlacement[] elementPlacements = GetArrangementCalculator().CalculateElementPlacements(this);
             
             foreach (ElementPlacement placement in elementPlacements)
-                _elementsPlacements[placement.Element] = placement.Copy(scale: (Vector3) ElementScale + Vector3.forward);
+                _elementsPlacements[placement.Element] = 
+                    placement.Copy(scale: (Vector3) ElementScale + Vector3.forward);
         }
 
         private IArrangementCalculator GetArrangementCalculator()
