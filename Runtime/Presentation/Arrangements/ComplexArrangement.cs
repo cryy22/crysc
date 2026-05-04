@@ -39,8 +39,6 @@ namespace Crysc.Presentation.Arrangements
                 throw new Exception("BaseElementSize cannot be negative");
         }
 
-        public void RemoveMovementPlanForElement(IElement element) { _elementsMovementPlans.Remove(element); }
-
         public override void RecalculateElementPlacements()
         {
             UpdateProperties();

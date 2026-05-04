@@ -87,6 +87,11 @@ namespace Crysc.Presentation.Arrangements
             );
         }
 
+        public void RemoveMovementPlanForElement(IElement element)
+        {
+            _elementsMovementPlans.Remove(element);
+        }
+
         public IEnumerator ExecuteMovementPlans()
         {
             this.StartActiveCoroutine(RunMovementPlans());
