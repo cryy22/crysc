@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using UnityEngine;
 
@@ -51,18 +52,23 @@ namespace Crysc.Presentation.Arrangements
                 weightedIndexes: weightedIndexes,
                 i: i
             );
-            Vector2 midpoint2d = (Vector2) startPoint + (elementSize * directionalPivot);
+            Vector2 midpoint2D = (Vector2) startPoint + (elementSize * directionalPivot);
 
-            return new Vector3(x: midpoint2d.x, y: midpoint2d.y, z: startPoint.z) + element.ArrangementOffset;
+            return new Vector3(x: midpoint2D.x, y: midpoint2D.y, z: startPoint.z) + element.ArrangementOffset;
         }
 
         private static Vector3 CalculateElementStartPoint(Arrangement arrangement, Vector2 weightedIndexes, int i)
         {
             Vector2 startPoint2D = arrangement.ElementSize * weightedIndexes;
             startPoint2D += arrangement.Spacing * i;
-            startPoint2D -= arrangement.AlignmentOffset;
-            if (i % 2 == 1) 
-                startPoint2D += arrangement.OddElementStagger;
+            startPoint2D -= arrangement.HorizontalAlignment switch
+            {
+                Arrangement.Alignment.Left   => Vector2.zero,
+                Arrangement.Alignment.Center => arrangement.Size / 2,
+                Arrangement.Alignment.Right  => arrangement.Size,
+                _                            => throw new ArgumentOutOfRangeException(),
+            };
+            startPoint2D += arrangement.OddElementStagger * (i % 2);
             startPoint2D *= arrangement.Direction;
 
             return new Vector3(

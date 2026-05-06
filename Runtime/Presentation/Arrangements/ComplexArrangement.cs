@@ -18,12 +18,8 @@ namespace Crysc.Presentation.Arrangements
         [field: SerializeField] public Vector2 ElementScale { get; set; } = Vector2.one;
         public override Vector2 ElementSize => BaseElementSize * ElementScale;
 
-        [field: SerializeField] public Alignment HorizontalAlignment { get; set; } = Alignment.Left;
         [field: SerializeField] public Vector2 MaxSize { get; set; } = Vector2.zero;
         [field: SerializeField] public Vector2 PreferredSpacingRatio { get; set; } = Vector2.zero;
-
-        private Vector2 _alignmentOffset = Vector2.zero;
-        public override Vector2 AlignmentOffset => _alignmentOffset;
 
         // IArrangementElement
         public Transform Transform => transform;
@@ -45,42 +41,34 @@ namespace Crysc.Presentation.Arrangements
             ElementPlacement[] elementPlacements = GetArrangementCalculator().CalculateElementPlacements(this);
             
             foreach (ElementPlacement placement in elementPlacements)
-                _elementsPlacements[placement.Element] = 
-                    placement.Copy(scale: (Vector3) ElementScale + Vector3.forward);
+                SetPlacement(placement.Copy(scale: (Vector3) ElementScale + Vector3.forward));
         }
         
         public void UpdateProperties()
         {
-            Vector2 totalSize = _elements.Aggregate(
+            Vector2 totalSize = Elements.Aggregate(
                 seed: Vector2.zero,
                 (acc, e) => acc + e.SizeMultiplier
             ) * ElementSize;
 
-            if (_elements.Count > 1)
+            if (Elements.Count > 1)
             {
                 var maxSize = new Vector2(
                     x: MaxSize.x > 0 ? MaxSize.x : float.PositiveInfinity,
                     y: MaxSize.y > 0 ? MaxSize.y : float.PositiveInfinity
                 );
-                Vector2 maxSpacing = (maxSize - totalSize) / (_elements.Count - 1);
+                Vector2 maxSpacing = (maxSize - totalSize) / (Elements.Count - 1);
                 Vector2 preferredSpacing = PreferredSpacingRatio * ElementSize;
 
                 Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
             }
 
-            Vector2 size = totalSize + Spacing * (_elements.Count - 1);
+            Size = totalSize + Spacing * (Elements.Count - 1);
 
             SizeMultiplier = new Vector2(
-                x: ElementSize.x > 0 ? size.x / ElementSize.x : 0,
-                y: ElementSize.y > 0 ? size.y / ElementSize.y : 0
+                x: ElementSize.x > 0 ? Size.x / ElementSize.x : 0,
+                y: ElementSize.y > 0 ? Size.y / ElementSize.y : 0
             );
-            _alignmentOffset = HorizontalAlignment switch
-            {
-                Alignment.Left   => Vector2.zero,
-                Alignment.Center => size / 2,
-                Alignment.Right  => size,
-                _                => throw new ArgumentOutOfRangeException(),
-            };
 
             Pivot = HorizontalAlignment switch
             {

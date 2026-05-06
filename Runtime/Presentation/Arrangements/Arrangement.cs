@@ -23,11 +23,15 @@ namespace Crysc.Presentation.Arrangements
         
         
         public virtual Vector2 ElementSize => Vector2.zero;
+        public Vector2 Size { get; protected set; } = Vector2.zero;
         public Vector2 Spacing { get; protected set; } = Vector2.zero;
-        public virtual Vector2 AlignmentOffset => Vector2.zero;
+        
+        [field: SerializeField] public Alignment HorizontalAlignment { get; set; } = Alignment.Left;
         [field: SerializeField] public bool IsInverted { get; set; }
         public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
-        [SerializeField] public Vector2 OddElementStagger = Vector2.zero;
+        
+        [field: SerializeField, FormerlySerializedAs("OddElementStagger")]
+        public Vector2 OddElementStagger { get; set; } = Vector2.zero;
         [field: SerializeField] public bool UpdateZInstantly { get; private set; } = true;
         
         public Coroutine ActiveCoroutine { get; set; }
@@ -36,9 +40,9 @@ namespace Crysc.Presentation.Arrangements
         public IReadOnlyDictionary<IElement, ElementPlacement> ElementsPlacements => _elementsPlacements;
         public IReadOnlyDictionary<IElement, ElementMovementPlan> ElementsMovementPlans => _elementsMovementPlans;
         
-        protected readonly List<IElement> _elements = new();
-        protected readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
-        protected readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
+        private readonly List<IElement> _elements = new();
+        private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
+        private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
         private float _animationTime;
         
         public enum Alignment
@@ -77,6 +81,17 @@ namespace Crysc.Presentation.Arrangements
             }
 
             RecalculateElementPlacements();
+        }
+
+        public void SetPlacement(ElementPlacement placement)
+        {
+            if (!_elements.Contains(placement.Element))
+            {
+                Debug.Log($"Attempted to override placement for element {placement.Element.Transform.gameObject.name} which is not managed by this arrangement");
+                return;
+            }
+            
+            _elementsPlacements[placement.Element] = placement;
         }
 
         public void SetMovementPlan(ElementMovementPlan plan, bool relativeTiming = true)
