@@ -62,6 +62,10 @@ namespace Crysc.Presentation.Arrangements
 
                 Spacing = Vector2.Min(lhs: maxSpacing, rhs: preferredSpacing);
             }
+            else
+            {
+                Spacing = Vector2.zero;
+            }
 
             Size = totalSize + Spacing * (Elements.Count - 1);
 
@@ -70,13 +74,22 @@ namespace Crysc.Presentation.Arrangements
                 y: ElementSize.y > 0 ? Size.y / ElementSize.y : 0
             );
 
-            Pivot = HorizontalAlignment switch
-            {
-                Alignment.Left   => IsInverted ? Vector2.one : Vector2.zero,
-                Alignment.Center => new Vector2(x: 0.5f, y: 0.5f),
-                Alignment.Right  => IsInverted ? Vector2.zero : Vector2.one,
-                _                => throw new ArgumentOutOfRangeException(),
-            };
+            Pivot = new Vector2(
+                x: HorizontalAlignment switch
+                {
+                    HorizontalAlignmentType.Left   => IsInverted ? 1 : 0,
+                    HorizontalAlignmentType.Center => 0.5f,
+                    HorizontalAlignmentType.Right  => IsInverted ? 0 : 1,
+                    _                              => throw new ArgumentOutOfRangeException(),
+                },
+                y: VerticalAlignment switch
+                {
+                    VerticalAlignmentType.Bottom => 0,
+                    VerticalAlignmentType.Middle => 0.5f,
+                    VerticalAlignmentType.Top    => 1,
+                    _                            => throw new ArgumentOutOfRangeException(),
+                }
+            );
         }
 
 

@@ -26,9 +26,9 @@ namespace Crysc.Presentation.Arrangements
         public Vector2 Size { get; protected set; } = Vector2.zero;
         public Vector2 Spacing { get; protected set; } = Vector2.zero;
         
-        [field: SerializeField] public Alignment HorizontalAlignment { get; set; } = Alignment.Left;
+        [field: SerializeField] public HorizontalAlignmentType HorizontalAlignment { get; set; } = HorizontalAlignmentType.Left;
+        [field: SerializeField] public VerticalAlignmentType VerticalAlignment { get; set; } = VerticalAlignmentType.Bottom;
         [field: SerializeField] public bool IsInverted { get; set; }
-        public Vector2 Direction => Vector2.one * (IsInverted ? -1 : 1);
         
         [field: SerializeField, FormerlySerializedAs("OddElementStagger")]
         public Vector2 OddElementStagger { get; set; } = Vector2.zero;
@@ -45,11 +45,18 @@ namespace Crysc.Presentation.Arrangements
         private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
         private float _animationTime;
         
-        public enum Alignment
+        public enum HorizontalAlignmentType
         {
             Left,
             Center,
             Right,
+        }
+        
+        public enum VerticalAlignmentType
+        {
+            Top,
+            Middle,
+            Bottom,
         }
         
         public abstract void RecalculateElementPlacements();
@@ -219,18 +226,14 @@ namespace Crysc.Presentation.Arrangements
                 element.Transform.localRotation = _elementsMovementPlans[element].EndRotation;
                 element.Transform.localScale = _elementsMovementPlans[element].EndScale;
             }
-
-            IEnumerable<IElement> remainingElements = _elements.Except(_elementsMovementPlans.Keys).ToArray();
             _elementsMovementPlans.Clear();
 
-            if (!remainingElements.Any()) return;
-
             RecalculateElementPlacements();
-            foreach (IElement element in remainingElements)
+            foreach (var (element, placement) in ElementsPlacements)
             {
-                element.Transform.localPosition = _elementsPlacements[element].Position;
-                element.Transform.localRotation = _elementsPlacements[element].Rotation;
-                element.Transform.localScale = Vector3.one;
+                element.Transform.localPosition = placement.Position;
+                element.Transform.localRotation = placement.Rotation;
+                element.Transform.localScale = placement.Scale;
             }
         }
     }
