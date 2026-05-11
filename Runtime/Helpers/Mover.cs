@@ -11,7 +11,8 @@ namespace Crysc.Helpers
             Transform transform,
             Vector3 end,
             float duration = 0.25f,
-            bool isLocal = true
+            bool isLocal = true,
+            Easings.Enum easing = Easings.Enum.Linear
         )
         {
             Vector3 start = GetPosition(transform: transform, isLocal: isLocal);
