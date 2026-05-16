@@ -22,8 +22,23 @@ namespace Crysc.Presentation
         {
             if (_items.Capacity < InitialCapacity)
                 _items.Capacity = InitialCapacity;
+            
+            if (gameObject.name == "AbilityIconItemsDisplayer")
+                Debug.Log("howdy");
 
-            for (var i = 0; i < InitialCapacity; i++)
+            for (int i = ItemsParent.childCount - 1; i >= 0; i--)
+            {
+                Transform child = ItemsParent.GetChild(i);
+                child.gameObject.SetActive(false);
+
+                var item = child.GetComponent<TItem>();
+                if (item && (_items.Count < InitialCapacity))
+                    _items.Insert(0, item);
+                else
+                    Destroy(child.gameObject);
+            }
+
+            for (int i = _items.Count; i < InitialCapacity; i++)
             {
                 TItem presenter = Instantiate(original: ItemPrefab, parent: ItemsParent);
                 presenter.gameObject.SetActive(false);
@@ -37,10 +52,10 @@ namespace Crysc.Presentation
             _count = elementsAry.Length;
             EnsureCapacity();
 
-            ItemsParent.gameObject.SetActive(elementsAry.Length > 0);
+            ItemsParent.gameObject.SetActive(_count > 0);
             if (NoElementsIndicator)
-                NoElementsIndicator.gameObject.SetActive(elementsAry.Length == 0);
-            if (elementsAry.Length == 0)
+                NoElementsIndicator.gameObject.SetActive(_count == 0);
+            if (_count == 0)
                 return;
 
             for (var i = 0; i < _items.Count; i++)
