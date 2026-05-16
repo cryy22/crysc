@@ -15,8 +15,8 @@ namespace Crysc.Presentation
 
         public IEnumerable<TItem> Items => _items.Take(_count);
 
-        private readonly List<TItem> _items = new();
-        private int _count;
+        protected readonly List<TItem> _items = new();
+        protected int _count;
 
         protected void Awake()
         {
@@ -50,7 +50,7 @@ namespace Crysc.Presentation
         {
             T[] elementsAry = elements.ToArray();
             _count = elementsAry.Length;
-            EnsureCapacity();
+            EnsureCapacity(_count);
 
             ItemsParent.gameObject.SetActive(_count > 0);
             if (NoElementsIndicator)
@@ -77,10 +77,10 @@ namespace Crysc.Presentation
 
         protected abstract void SetElement(TItem presenter, T element, int index);
 
-        private void EnsureCapacity()
+        protected void EnsureCapacity(int count)
         {
-            _items.Capacity = Mathf.Max(a: _count, b: _items.Capacity);
-            while (_items.Count < _count)
+            _items.Capacity = Mathf.Max(a: count, b: _items.Capacity);
+            while (_items.Count < count)
             {
                 TItem presenter = Instantiate(original: ItemPrefab, parent: ItemsParent);
                 presenter.gameObject.SetActive(false);
