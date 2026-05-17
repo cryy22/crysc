@@ -23,9 +23,6 @@ namespace Crysc.Presentation
             if (_items.Capacity < InitialCapacity)
                 _items.Capacity = InitialCapacity;
             
-            if (gameObject.name == "AbilityIconItemsDisplayer")
-                Debug.Log("howdy");
-
             for (int i = ItemsParent.childCount - 1; i >= 0; i--)
             {
                 Transform child = ItemsParent.GetChild(i);
