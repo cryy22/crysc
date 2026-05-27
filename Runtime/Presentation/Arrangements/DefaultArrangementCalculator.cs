@@ -18,17 +18,17 @@ namespace Crysc.Presentation.Arrangements
             var alignmentAdjustment = new Vector2(
                 x: arrangement.HorizontalAlignment switch
                 {
-                    Arrangement.HorizontalAlignmentType.Left => 0f,
+                    Arrangement.HorizontalAlignmentType.Left   => 0f,
                     Arrangement.HorizontalAlignmentType.Center => -arrangement.Size.x / 2f,
-                    Arrangement.HorizontalAlignmentType.Right => -arrangement.Size.x,
-                    _ => throw new ArgumentOutOfRangeException(),
+                    Arrangement.HorizontalAlignmentType.Right  => -arrangement.Size.x,
+                    _                                          => throw new ArgumentOutOfRangeException(),
                 },
                 y: arrangement.VerticalAlignment switch
                 {
                     Arrangement.VerticalAlignmentType.Bottom => 0f,
                     Arrangement.VerticalAlignmentType.Middle => -arrangement.Size.y / 2f,
-                    Arrangement.VerticalAlignmentType.Top => -arrangement.Size.y,
-                    _ => throw new ArgumentOutOfRangeException(),
+                    Arrangement.VerticalAlignmentType.Top    => -arrangement.Size.y,
+                    _                                        => throw new ArgumentOutOfRangeException(),
                 }
             );
 
@@ -76,25 +76,25 @@ namespace Crysc.Presentation.Arrangements
                 i: i
             );
             Vector2 midpoint2D = (Vector2) startPoint + (elementSize * directionalPivot);
-            
+
             return new Vector3(x: midpoint2D.x, y: midpoint2D.y, z: startPoint.z) + element.ArrangementOffset;
         }
 
         private static Vector3 CalculateElementStartPoint(
-            Arrangement arrangement, 
-            Vector2 weightedIndexes, 
+            Arrangement arrangement,
+            Vector2 weightedIndexes,
             Vector2 alignmentAdjustment,
             int i
         )
         {
             Vector2 startPoint2D = arrangement.ElementSize * weightedIndexes;
             startPoint2D += arrangement.Spacing * i;
-            startPoint2D += alignmentAdjustment;
             startPoint2D += arrangement.OddElementStagger * (i % 2);
             startPoint2D *= new Vector2(
                 x: arrangement.IsInverted ? -1 : 1,
                 y: 1
             );
+            startPoint2D += alignmentAdjustment;
 
             return new Vector3(
                 x: startPoint2D.x,
