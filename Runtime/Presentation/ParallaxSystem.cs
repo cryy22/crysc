@@ -11,12 +11,14 @@ namespace Crysc.Presentation
         public static ParallaxSystem I { get; private set; }
 
         [field: SerializeField] public float LayerWidth { get; private set; } = 20;
-        [SerializeField] private Transform FocalPoint;
+        [SerializeField] private Vector2 InitialFocalPoint;
 
         [field: SerializeField] public float PivotDistance { get; private set; } = 10;
         [field: SerializeField] public float Speed { get; set; }
         [field: SerializeField] public Vector2 MouseEffectModifier { get; set; } = Vector2.one;
         [field: SerializeField] public float CameraMouseAlignmentSpeed { get; set; } = 1f;
+
+        public Vector2 FocalPoint { get; private set; }
 
         private readonly Dictionary<Transform, Vector3> _transformsBasePositions = new();
         private readonly Dictionary<ParallaxLayerConfig, HashSet<Transform>> _layersTransforms = new();
@@ -28,9 +30,7 @@ namespace Crysc.Presentation
         private float _distance;
         private Camera _camera;
         private Transform _cameraTransform;
-        private Vector3 _cameraBasePosition;
-        private Vector3 _focalPoint;
-        private Vector3 _focalPointScreenOffset;
+        private Vector2 _focalPointScreenOffset;
         private Vector2 _currentFocalDelta;
 
         private void Awake()
@@ -46,36 +46,49 @@ namespace Crysc.Presentation
             _camera = Camera.main;
             if (_camera)
             {
-                _focalPoint = FocalPoint ? FocalPoint.position : Vector3.zero;
-                _focalPointScreenOffset = _camera.WorldToScreenPoint(_focalPoint);
+                FocalPoint = InitialFocalPoint;
+                _focalPointScreenOffset = _camera.WorldToScreenPoint(FocalPoint);
             }
             else
             {
-                _focalPoint = Vector3.zero;
+                Debug.LogWarning("No camera, defaulting to screen center focal point", gameObject);
+                FocalPoint = Vector3.zero;
                 _focalPointScreenOffset = new Vector3(
                     x: Screen.width / 2f,
                     y: Screen.height / 2f,
                     z: 0
                 );
-                _currentFocalDelta = Vector2.zero;
             }
         }
 
         private void Update()
         {
-            Vector3 clampedPosition = Input.mousePosition;
+            Vector2 clampedPosition = Input.mousePosition;
             clampedPosition.x = Mathf.Clamp(value: clampedPosition.x, min: 0, max: Screen.width);
             clampedPosition.y = Mathf.Clamp(value: clampedPosition.y, min: 0, max: Screen.height);
 
             Vector2 focalDeltaPixels = clampedPosition - _focalPointScreenOffset;
             focalDeltaPixels *= MouseEffectModifier;
             Vector2 focalDelta = focalDeltaPixels / Screen.width;
-            
-            var focalDeltaDiff = focalDelta - _currentFocalDelta;
-            _currentFocalDelta += focalDeltaDiff * (Time.deltaTime % CameraMouseAlignmentSpeed / CameraMouseAlignmentSpeed);
+
+            Vector2 focalDeltaDiff = focalDelta - _currentFocalDelta;
+            _currentFocalDelta +=
+                focalDeltaDiff * (Time.deltaTime % CameraMouseAlignmentSpeed / CameraMouseAlignmentSpeed);
 
             _distance += Speed * Time.deltaTime;
             UpdateRegistrants();
+        }
+
+        public void UpdateFocalPoint(Vector2 focalPoint)
+        {
+            if (!_camera)
+            {
+                Debug.LogWarning("No camera, focal point ignored");
+                return;
+            }
+
+            FocalPoint = focalPoint;
+            _focalPointScreenOffset = _camera.WorldToScreenPoint(FocalPoint);
         }
 
         public void Register(ParallaxLayerConfig layer, Transform registrant, bool isAffectedBySpeed = true)
@@ -94,9 +107,18 @@ namespace Crysc.Presentation
             if (!_layersTransforms.ContainsKey(layer))
             {
                 _layersTransforms.Add(key: layer, value: new HashSet<Transform>());
-                _layersPivotDeltas.Add(key: layer, value: (layer.DistanceFromObserver - PivotDistance) / layer.DistanceFromObserver);
-                _layersMovementDeltas.Add(key: layer, value: 1 + ((PivotDistance - layer.DistanceFromObserver) / layer.DistanceFromObserver));
-                _layersForeshorteningFactors.Add(key: layer, value: 0.5f / (layer.DistanceFromObserver * layer.DistanceFromObserver));
+                _layersPivotDeltas.Add(
+                    key: layer,
+                    value: (layer.DistanceFromObserver - PivotDistance) / layer.DistanceFromObserver
+                );
+                _layersMovementDeltas.Add(
+                    key: layer,
+                    value: 1 + ((PivotDistance - layer.DistanceFromObserver) / layer.DistanceFromObserver)
+                );
+                _layersForeshorteningFactors.Add(
+                    key: layer,
+                    value: 0.5f / (layer.DistanceFromObserver * layer.DistanceFromObserver)
+                );
             }
 
             _layersTransforms[layer].Add(registrant);
@@ -118,6 +140,7 @@ namespace Crysc.Presentation
                     _layersForeshorteningFactors.Remove(layer);
                 }
             }
+
             _affectedBySpeed.Remove(registrant);
         }
 
@@ -133,13 +156,14 @@ namespace Crysc.Presentation
                 var foreshorteningFactor = _layersForeshorteningFactors[layer];
                 var foreshorteningScale = Vector2.one - _currentFocalDelta * _currentFocalDelta * foreshorteningFactor;
                 var adjustedLayerWidth = LayerWidth * foreshorteningScale.x;
-                
+
                 var movementDelta = _layersMovementDeltas[layer];
                 float xDelta = _distance * movementDelta * foreshorteningScale.x;
-                xDelta = (xDelta + adjustedLayerWidth / 2f) % adjustedLayerWidth - adjustedLayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
-                
+                xDelta = (xDelta + adjustedLayerWidth / 2f) % adjustedLayerWidth
+                    - adjustedLayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
+
                 var pivotDelta = _layersPivotDeltas[layer];
-                
+
                 foreach (Transform registrant in transforms)
                 {
                     registrant.localPosition =
