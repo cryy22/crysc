@@ -51,6 +51,9 @@ namespace Crysc.Presentation
             _camera = Camera.main;
             if (!_canvas)
             {
+                for (int i = transform.childCount - 1; i >= 0; i--)
+                    DestroyImmediate(transform.GetChild(i).gameObject);
+
                 _canvas = new GameObject("GridSystemCanvas").AddComponent<Canvas>();
                 _scaler = _canvas.gameObject.AddComponent<CanvasScaler>();
                 _canvas.transform.SetParent(transform);
@@ -104,7 +107,7 @@ namespace Crysc.Presentation
             {
                 // draw lines
                 Image top = Instantiate(original: prototypeLine, parent: _marginBox);
-                top.gameObject.name = "Margin (top)";
+                top.gameObject.name = "Margin (Top)";
                 top.rectTransform.pivot = new Vector2(x: 0.5f, y: 0);
                 top.rectTransform.anchorMin = new Vector2(x: 0, y: 1);
                 top.rectTransform.anchorMax = new Vector2(x: 1, y: 1);
