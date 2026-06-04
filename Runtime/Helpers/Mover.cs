@@ -1,7 +1,11 @@
+#region
+
 using System.Collections;
 using Crysc.Presentation.Arrangements;
 using DG.Tweening;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Helpers
 {
@@ -18,10 +22,11 @@ namespace Crysc.Helpers
             Vector3 start = GetPosition(transform: transform, isLocal: isLocal);
 
             float t = 0;
+
             while (t < 1)
             {
                 t += Time.deltaTime / duration;
-                MoveToStep(transform: transform, start: start, end: end, t: t, isLocal: isLocal);
+                MoveToStep(transform: transform, start: start, end: end, t: t, isLocal: isLocal, easing: easing);
                 yield return null;
             }
 
@@ -75,11 +80,12 @@ namespace Crysc.Helpers
             Vector3 max = initial + delta;
 
             var t = 0f;
+
             while (t < duration)
             {
                 t += Time.deltaTime;
 
-                float sineT = (Mathf.Sin((t / period) * 2 * Mathf.PI) / 2) + 0.5f;
+                float sineT = Mathf.Sin(t / period * 2 * Mathf.PI) / 2 + 0.5f;
                 Vector3 newPosition = Vector3.Lerp(a: min, b: max, t: sineT);
                 SetPosition(transform: transform, position: newPosition, isLocal: isLocal);
 
