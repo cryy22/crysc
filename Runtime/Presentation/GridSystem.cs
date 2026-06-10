@@ -38,6 +38,9 @@ namespace Crysc.Presentation
 
         private void OnValidate()
         {
+            if (PrefabUtility.IsPartOfPrefabAsset(this))
+                return;
+
             EditorApplication.delayCall += () =>
             {
                 if (this)
@@ -45,16 +48,24 @@ namespace Crysc.Presentation
             };
         }
 
+        private void OnDestroy()
+        {
+            if (_canvas)
+                DestroyImmediate(_canvas.gameObject);
+        }
+
         private void Refresh()
         {
             // create missing objects
             _camera = Camera.main;
+
             if (!_canvas)
             {
                 for (int i = transform.childCount - 1; i >= 0; i--)
                     DestroyImmediate(transform.GetChild(i).gameObject);
 
                 _canvas = new GameObject("GridSystemCanvas").AddComponent<Canvas>();
+                _canvas.gameObject.hideFlags = HideFlags.HideAndDontSave;
                 _scaler = _canvas.gameObject.AddComponent<CanvasScaler>();
                 _canvas.transform.SetParent(transform);
             }
@@ -136,9 +147,11 @@ namespace Crysc.Presentation
 
                 var yScan = 0f;
                 var initialField = true;
+
                 foreach (float fieldHeight in FieldHeights)
                 {
                     Image line;
+
                     if (!initialField)
                     {
                         yScan -= GutterHeight;
@@ -155,9 +168,11 @@ namespace Crysc.Presentation
 
                 var xScan = 0f;
                 initialField = true;
+
                 foreach (float fieldWidth in FieldWidths)
                 {
                     Image line;
+
                     if (!initialField)
                     {
                         xScan += GutterWidth;
