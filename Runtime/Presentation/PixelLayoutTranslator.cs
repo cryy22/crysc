@@ -121,6 +121,11 @@ namespace Crysc.Presentation
                 {
                     if (!this || !SpriteRenderer)
                         return;
+
+                    Debug.Log(
+                        $"ElementSize: {ElementSize}, PixelsPerUnit: {_pixelsPerUnit}, WindowUnitSize: {_windowUnitSize}"
+                    );
+
                     SpriteRenderer.size = ElementSize / _pixelsPerUnit;
                 };
             }

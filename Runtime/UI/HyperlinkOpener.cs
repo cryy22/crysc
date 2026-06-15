@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,8 +9,39 @@ namespace Crysc.UI
         [SerializeField] private Button Button;
         [SerializeField] private string Uri;
 
-        private void Start() { Button.onClick.AddListener(OpenUri); }
+        private IButton _button;
 
-        private void OpenUri() { Application.OpenURL(Uri); }
+        private void Awake()
+        {
+            _button = GetComponent<IButton>();
+        }
+
+        private void OnEnable()
+        {
+            if (Button)
+                Button.onClick.AddListener(OpenUri);
+
+            if (_button != null)
+                _button.Clicked += OpenUri;
+        }
+
+        private void OnDisable()
+        {
+            if (Button)
+                Button.onClick.RemoveListener(OpenUri);
+
+            if (_button != null)
+                _button.Clicked -= OpenUri;
+        }
+
+        private void OpenUri()
+        {
+            Application.OpenURL(Uri);
+        }
+
+        private void OpenUri(object sender, EventArgs e)
+        {
+            Application.OpenURL(Uri);
+        }
     }
 }
