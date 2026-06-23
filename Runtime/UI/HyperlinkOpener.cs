@@ -9,11 +9,11 @@ namespace Crysc.UI
         [SerializeField] private Button Button;
         [SerializeField] private string Uri;
 
-        private IButton _button;
+        private EventButton _button;
 
         private void Awake()
         {
-            _button = GetComponent<IButton>();
+            _button = GetComponent<EventButton>();
         }
 
         private void OnEnable()
