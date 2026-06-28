@@ -10,55 +10,56 @@ using UnityEngine.Serialization;
 namespace Crysc.Presentation.Arrangements
 {
     using IElement = IArrangementElement;
-    
+
     public abstract class Arrangement : MonoBehaviour, ICoroutineController
     {
         public const float ZOffset = 0.01f;
-        
+
         public event EventHandler<ArrangementEventArgs> ElementArrangeStarted;
         public event EventHandler<ArrangementEventArgs> ElementArrangeEnded;
 
         [field: SerializeField, FormerlySerializedAs("ElementsParent"), FormerlySerializedAs("ElementsParentInput")]
         public Transform ElementsParent { get; private set; }
-        
-        
+
         public virtual Vector2 ElementSize => Vector2.zero;
         public Vector2 Size { get; protected set; } = Vector2.zero;
         public Vector2 Spacing { get; protected set; } = Vector2.zero;
-        
-        [field: SerializeField] public HorizontalAlignmentType HorizontalAlignment { get; set; } = HorizontalAlignmentType.Left;
-        [field: SerializeField] public VerticalAlignmentType VerticalAlignment { get; set; } = VerticalAlignmentType.Bottom;
+
+        [field: SerializeField] public HorizontalAlignmentType HorizontalAlignment { get; set; } =
+            HorizontalAlignmentType.Left;
+        [field: SerializeField] public VerticalAlignmentType VerticalAlignment { get; set; } =
+            VerticalAlignmentType.Bottom;
         [field: SerializeField] public bool IsInverted { get; set; }
-        
+
         [field: SerializeField, FormerlySerializedAs("OddElementStagger")]
         public Vector2 OddElementStagger { get; set; } = Vector2.zero;
         [field: SerializeField] public bool UpdateZInstantly { get; private set; } = true;
-        
+
         public Coroutine ActiveCoroutine { get; set; }
 
         public IReadOnlyList<IElement> Elements => _elements;
         public IReadOnlyDictionary<IElement, ElementPlacement> ElementsPlacements => _elementsPlacements;
         public IReadOnlyDictionary<IElement, ElementMovementPlan> ElementsMovementPlans => _elementsMovementPlans;
-        
+
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
         private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
         private float _animationTime;
-        
+
         public enum HorizontalAlignmentType
         {
             Left,
             Center,
             Right,
         }
-        
+
         public enum VerticalAlignmentType
         {
             Top,
             Middle,
             Bottom,
         }
-        
+
         public abstract void RecalculateElementPlacements();
 
         public void SetElements(IEnumerable<IElement> elements)
@@ -94,10 +95,13 @@ namespace Crysc.Presentation.Arrangements
         {
             if (!_elements.Contains(placement.Element))
             {
-                Debug.Log($"Attempted to override placement for element {placement.Element.Transform.gameObject.name} which is not managed by this arrangement");
+                Debug.Log(
+                    $"Attempted to override placement for element {placement.Element.Transform.gameObject.name} which is not managed by this arrangement"
+                );
+
                 return;
             }
-            
+
             _elementsPlacements[placement.Element] = placement;
         }
 
@@ -119,7 +123,7 @@ namespace Crysc.Presentation.Arrangements
             this.StartActiveCoroutine(RunMovementPlans());
             yield return this.WaitForCompletion();
         }
-        
+
         public IEnumerator RunMovementPlans()
         {
             if (UpdateZInstantly)
@@ -187,7 +191,7 @@ namespace Crysc.Presentation.Arrangements
 
             _animationTime = 0f;
         }
-        
+
         private static void IncrementPlan(ElementMovementPlan plan, float time)
         {
             float t = Mathf.Clamp01((time - plan.StartTime) / plan.Duration);
@@ -199,6 +203,7 @@ namespace Crysc.Presentation.Arrangements
                 t: t,
                 easing: plan.Easing
             );
+
             Rotator.RotateToStep(
                 transform: plan.Element.Transform,
                 start: plan.StartRotation,
@@ -207,6 +212,7 @@ namespace Crysc.Presentation.Arrangements
                 rotations: plan.ExtraRotations,
                 easings: plan.Easing
             );
+
             Scaler.ScaleToStep(
                 transform: plan.Element.Transform,
                 start: plan.StartScale,
@@ -215,8 +221,23 @@ namespace Crysc.Presentation.Arrangements
                 easing: plan.Easing
             );
         }
-        
+
         public void RearrangeInstantly()
+        {
+            this.StopActiveCoroutine();
+            ExecuteMovementPlansInstantly();
+
+            RecalculateElementPlacements();
+
+            foreach (var (element, placement) in ElementsPlacements)
+            {
+                element.Transform.localPosition = placement.Position;
+                element.Transform.localRotation = placement.Rotation;
+                element.Transform.localScale = placement.Scale;
+            }
+        }
+
+        public void ExecuteMovementPlansInstantly()
         {
             this.StopActiveCoroutine();
 
@@ -226,15 +247,8 @@ namespace Crysc.Presentation.Arrangements
                 element.Transform.localRotation = _elementsMovementPlans[element].EndRotation;
                 element.Transform.localScale = _elementsMovementPlans[element].EndScale;
             }
-            _elementsMovementPlans.Clear();
 
-            RecalculateElementPlacements();
-            foreach (var (element, placement) in ElementsPlacements)
-            {
-                element.Transform.localPosition = placement.Position;
-                element.Transform.localRotation = placement.Rotation;
-                element.Transform.localScale = placement.Scale;
-            }
+            _elementsMovementPlans.Clear();
         }
     }
 }
