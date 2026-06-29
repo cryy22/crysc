@@ -5,15 +5,23 @@ using UnityEngine.EventSystems;
 namespace Crysc.Controls
 {
     public class PointerEventReporter : MonoBehaviour,
-        IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler,
-        IDragHandler
+        IPointerEnterHandler,
+        IPointerExitHandler,
+        IPointerDownHandler,
+        IPointerUpHandler,
+        IPointerClickHandler,
+        IBeginDragHandler,
+        IDragHandler,
+        IEndDragHandler
     {
         public event EventHandler<PointerEventArgs> Hovered;
         public event EventHandler<PointerEventArgs> Unhovered;
         public event EventHandler<PointerEventArgs> Pressed;
         public event EventHandler<PointerEventArgs> Unpressed;
         public event EventHandler<PointerEventArgs> Clicked;
+        public event EventHandler<PointerEventArgs> BegunDrag;
         public event EventHandler<PointerEventArgs> Dragged;
+        public event EventHandler<PointerEventArgs> DragEnded;
 
         [SerializeField] private Component SenderOverrideInput;
 
@@ -65,12 +73,27 @@ namespace Crysc.Controls
             Clicked?.Invoke(sender: Sender, e: CreatePointerEventArgs());
         }
 
+        public void OnBeginDrag(PointerEventData data)
+        {
+            _latestScreenPosition = data.position;
+            BegunDrag?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+        }
+
         public void OnDrag(PointerEventData data)
         {
             _latestScreenPosition = data.position;
             Dragged?.Invoke(sender: Sender, e: CreatePointerEventArgs());
         }
 
-        private PointerEventArgs CreatePointerEventArgs() { return new PointerEventArgs(_latestScreenPosition); }
+        public void OnEndDrag(PointerEventData data)
+        {
+            _latestScreenPosition = data.position;
+            DragEnded?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+        }
+
+        private PointerEventArgs CreatePointerEventArgs()
+        {
+            return new PointerEventArgs(_latestScreenPosition);
+        }
     }
 }
