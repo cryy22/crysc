@@ -93,12 +93,12 @@ namespace Crysc.Helpers
             }
         }
 
-        private static Vector3 GetPosition(Transform transform, bool isLocal)
+        public static Vector3 GetPosition(Transform transform, bool isLocal)
         {
             return isLocal ? transform.localPosition : transform.position;
         }
 
-        private static void SetPosition(Transform transform, Vector3 position, bool isLocal)
+        public static void SetPosition(Transform transform, Vector3 position, bool isLocal)
         {
             if (isLocal) transform.localPosition = position;
             else transform.position = position;

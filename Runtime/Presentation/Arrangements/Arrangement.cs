@@ -231,6 +231,8 @@ namespace Crysc.Presentation.Arrangements
 
             foreach (var (element, placement) in ElementsPlacements)
             {
+                element.Transform.SetParent(ElementsParent, false);
+
                 element.Transform.localPosition = placement.Position;
                 element.Transform.localRotation = placement.Rotation;
                 element.Transform.localScale = placement.Scale;

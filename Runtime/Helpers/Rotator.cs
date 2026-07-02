@@ -17,6 +17,7 @@ namespace Crysc.Helpers
             Vector3 start = GetRotation(transform: transform, isLocal: isLocal);
 
             float t = 0;
+
             while (t < 1)
             {
                 t += Time.deltaTime / duration;
@@ -94,6 +95,7 @@ namespace Crysc.Helpers
             Vector3 max = initial + delta;
 
             float t = 0;
+
             while (t < duration)
             {
                 t += Time.deltaTime;
@@ -106,12 +108,12 @@ namespace Crysc.Helpers
             }
         }
 
-        private static Vector3 GetRotation(Transform transform, bool isLocal)
+        public static Vector3 GetRotation(Transform transform, bool isLocal)
         {
             return isLocal ? transform.localRotation.eulerAngles : transform.rotation.eulerAngles;
         }
 
-        private static void SetRotation(Transform transform, Vector3 rotation, bool isLocal)
+        public static void SetRotation(Transform transform, Vector3 rotation, bool isLocal)
         {
             if (isLocal) transform.localRotation = Quaternion.Euler(rotation);
             else transform.rotation = Quaternion.Euler(rotation);
