@@ -1,6 +1,6 @@
 using System.Collections;
 using Crysc.Presentation.Arrangements;
-using DG.Tweening;
+using PrimeTween;
 using UnityEngine;
 
 namespace Crysc.Helpers
@@ -77,9 +77,9 @@ namespace Crysc.Helpers
         {
             yield return (
                 isLocal
-                    ? transform.DOLocalRotateQuaternion(endValue: end, duration: duration)
-                    : transform.DORotateQuaternion(endValue: end, duration: duration)
-            ).WaitForCompletion();
+                    ? Tween.LocalRotation(transform, endValue: end, duration: duration)
+                    : Tween.Rotation(transform, endValue: end, duration: duration)
+            ).ToYieldInstruction();
         }
 
         public static IEnumerator RotateSine(

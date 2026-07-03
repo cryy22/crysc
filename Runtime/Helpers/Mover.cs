@@ -2,7 +2,7 @@
 
 using System.Collections;
 using Crysc.Presentation.Arrangements;
-using DG.Tweening;
+using PrimeTween;
 using UnityEngine;
 
 #endregion
@@ -62,9 +62,9 @@ namespace Crysc.Helpers
         {
             yield return (
                 isLocal
-                    ? transform.DOLocalMove(endValue: end, duration: duration)
-                    : transform.DOMove(endValue: end, duration: duration)
-            ).WaitForCompletion();
+                    ? Tween.LocalPosition(transform, endValue: end, duration: duration)
+                    : Tween.Position(transform, endValue: end, duration: duration)
+            ).ToYieldInstruction();
         }
 
         public static IEnumerator MoveSine(
