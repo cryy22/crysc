@@ -1,5 +1,6 @@
 using System.Collections;
 using Crysc.Presentation.Arrangements;
+using PrimeTween;
 using UnityEngine;
 
 namespace Crysc.Helpers
@@ -12,17 +13,9 @@ namespace Crysc.Helpers
             float duration = 0.25f
         )
         {
-            Vector3 start = transform.localScale;
-
-            float t = 0;
-            while (t < 1)
-            {
-                t += Time.deltaTime / duration;
-                ScaleToStep(transform: transform, start: start, end: end, t: t);
-                yield return null;
-            }
-
-            transform.localScale = end;
+            yield return Tween
+                .Scale(transform, endValue: end, duration: duration, ease: Ease.Linear)
+                .ToStoppableYield();
         }
 
         public static void ScaleToStep(

@@ -42,6 +42,26 @@ namespace Crysc.Presentation.Arrangements
             };
         }
 
+        public static PrimeTween.Ease ToPrimeTweenEase(Enum easing)
+        {
+            return easing switch
+            {
+                Enum.Linear         => PrimeTween.Ease.Linear,
+                Enum.EaseInOutSine  => PrimeTween.Ease.InOutSine,
+                Enum.EaseOutCubic   => PrimeTween.Ease.OutCubic,
+                Enum.EaseInOutCubic => PrimeTween.Ease.InOutCubic,
+                Enum.EaseOutElastic => PrimeTween.Ease.OutElastic,
+                Enum.EaseInBack     => PrimeTween.Ease.InBack,
+                Enum.EaseOutBack    => PrimeTween.Ease.OutBack,
+                Enum.EaseInOutBack  => PrimeTween.Ease.InOutBack,
+                _ => throw new ArgumentOutOfRangeException(
+                    paramName: nameof(easing),
+                    actualValue: easing,
+                    message: "no PrimeTween ease for this easing"
+                ),
+            };
+        }
+
         public static float Unease(float x, Enum easing)
         {
             return easing switch

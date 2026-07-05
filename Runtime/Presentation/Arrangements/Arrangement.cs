@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crysc.Common.CoroutineControl;
 using Crysc.Helpers;
+using PrimeTween;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -44,7 +45,24 @@ namespace Crysc.Presentation.Arrangements
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
         private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
-        private float _animationTime;
+        private readonly Dictionary<IElement, Tween> _elementsTweens = new();
+        private readonly HashSet<IElement> _dirtyPlanElements = new();
+        private float _batchStartTime;
+
+        private bool HasLiveTweens
+        {
+            get
+            {
+                foreach (Tween tween in _elementsTweens.Values)
+                    if (tween.isAlive)
+                        return true;
+
+                return false;
+            }
+        }
+
+        // time since the current batch of plans began animating; 0 when idle.
+        private float AnimationTime => HasLiveTweens ? Time.time - _batchStartTime : 0f;
 
         public enum HorizontalAlignmentType
         {
@@ -86,6 +104,8 @@ namespace Crysc.Presentation.Arrangements
             {
                 _elementsPlacements.Remove(element);
                 _elementsMovementPlans.Remove(element);
+                _dirtyPlanElements.Remove(element);
+                StopTweenForElement(element);
             }
 
             RecalculateElementPlacements();
@@ -107,15 +127,19 @@ namespace Crysc.Presentation.Arrangements
 
         public void SetMovementPlan(ElementMovementPlan plan, bool relativeTiming = true)
         {
+            float offset = relativeTiming ? AnimationTime : 0f;
             _elementsMovementPlans[plan.Element] = plan.Copy(
-                startTime: plan.StartTime + (relativeTiming ? _animationTime : 0),
-                endTime: plan.EndTime + (relativeTiming ? _animationTime : 0)
+                startTime: plan.StartTime + offset,
+                endTime: plan.EndTime + offset
             );
+            _dirtyPlanElements.Add(plan.Element);
         }
 
         public void RemoveMovementPlanForElement(IElement element)
         {
             _elementsMovementPlans.Remove(element);
+            _dirtyPlanElements.Remove(element);
+            StopTweenForElement(element);
         }
 
         public IEnumerator ExecuteMovementPlans()
@@ -146,56 +170,70 @@ namespace Crysc.Presentation.Arrangements
                     );
                 }
 
-            var startedPlans = new HashSet<ElementMovementPlan>();
-            var endedPlans = new HashSet<ElementMovementPlan>();
+            if (!HasLiveTweens) _batchStartTime = Time.time;
+            float elapsed = Time.time - _batchStartTime;
 
-            while (_elementsMovementPlans.Count > 0)
-            {
-                foreach (ElementMovementPlan plan in _elementsMovementPlans.Values)
-                {
-                    if (!plan.IsStarted)
-                        if (_animationTime > plan.StartTime)
-                        {
-                            plan.Element.Transform.SetParent(ElementsParent);
-                            startedPlans.Add(plan);
-                        }
-                        else
-                        {
-                            continue;
-                        }
+            foreach (IElement element in _elementsMovementPlans.Keys.ToArray())
+                StartTweenForPlan(element: element, elapsed: elapsed);
 
-                    IncrementPlan(plan: plan, time: _animationTime);
-
-                    if (_animationTime > plan.EndTime)
-                        endedPlans.Add(plan);
-                }
-
-                foreach (ElementMovementPlan plan in startedPlans)
-                {
-                    _elementsMovementPlans[plan.Element] = plan.Copy(isStarted: true);
-                    ElementArrangeStarted?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
-                }
-
-                foreach (ElementMovementPlan plan in endedPlans)
-                {
-                    _elementsMovementPlans.Remove(plan.Element);
-                    ElementArrangeEnded?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
-                }
-
-                startedPlans.Clear();
-                endedPlans.Clear();
-
-                yield return null;
-                _animationTime += Time.deltaTime;
-            }
-
-            _animationTime = 0f;
+            while (HasLiveTweens) yield return null;
         }
 
-        private static void IncrementPlan(ElementMovementPlan plan, float time)
+        private void StartTweenForPlan(IElement element, float elapsed)
         {
-            float t = Mathf.Clamp01((time - plan.StartTime) / plan.Duration);
+            if (_elementsTweens.TryGetValue(key: element, value: out Tween existing) && existing.isAlive)
+            {
+                // an untouched plan mid-flight keeps its tween; restarting it would
+                // snap the element back to the plan's start pose.
+                if (!_dirtyPlanElements.Contains(element)) return;
+                existing.Stop();
+            }
 
+            _dirtyPlanElements.Remove(element);
+            ElementMovementPlan plan = _elementsMovementPlans[element];
+
+            _elementsTweens[element] = Tween.Custom(
+                    target: this,
+                    startValue: 0f,
+                    endValue: 1f,
+                    duration: plan.Duration,
+                    ease: Ease.Linear,
+                    startDelay: Mathf.Max(a: plan.StartTime - elapsed, b: 0f),
+                    onValueChange: (arrangement, t) => arrangement.IncrementPlanTween(element: element, t: t)
+                )
+                .OnComplete(
+                    target: this,
+                    onComplete: arrangement => arrangement.CompletePlanTween(element),
+                    warnIfTargetDestroyed: false
+                );
+        }
+
+        private void IncrementPlanTween(IElement element, float t)
+        {
+            if (!_elementsMovementPlans.TryGetValue(key: element, value: out ElementMovementPlan plan)) return;
+
+            if (!plan.IsStarted)
+            {
+                element.Transform.SetParent(ElementsParent);
+                plan = plan.Copy(isStarted: true);
+                _elementsMovementPlans[element] = plan;
+                ElementArrangeStarted?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
+            }
+
+            IncrementPlan(plan: plan, t: t);
+        }
+
+        private void CompletePlanTween(IElement element)
+        {
+            _elementsTweens.Remove(element);
+            if (!_elementsMovementPlans.TryGetValue(key: element, value: out ElementMovementPlan plan)) return;
+
+            _elementsMovementPlans.Remove(element);
+            ElementArrangeEnded?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
+        }
+
+        private static void IncrementPlan(ElementMovementPlan plan, float t)
+        {
             Mover.MoveToStep(
                 transform: plan.Element.Transform,
                 start: plan.StartPosition,
@@ -242,6 +280,7 @@ namespace Crysc.Presentation.Arrangements
         public void ExecuteMovementPlansInstantly()
         {
             this.StopActiveCoroutine();
+            StopAllTweens();
 
             foreach (IElement element in _elementsMovementPlans.Keys)
             {
@@ -251,6 +290,24 @@ namespace Crysc.Presentation.Arrangements
             }
 
             _elementsMovementPlans.Clear();
+            _dirtyPlanElements.Clear();
         }
+
+        private void StopTweenForElement(IElement element)
+        {
+            if (_elementsTweens.TryGetValue(key: element, value: out Tween tween) && tween.isAlive) tween.Stop();
+            _elementsTweens.Remove(element);
+        }
+
+        private void StopAllTweens()
+        {
+            foreach (Tween tween in _elementsTweens.Values)
+                if (tween.isAlive)
+                    tween.Stop();
+
+            _elementsTweens.Clear();
+        }
+
+        private void OnDestroy() { StopAllTweens(); }
     }
 }

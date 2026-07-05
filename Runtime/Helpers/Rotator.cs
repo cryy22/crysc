@@ -16,16 +16,22 @@ namespace Crysc.Helpers
         {
             Vector3 start = GetRotation(transform: transform, isLocal: isLocal);
 
-            float t = 0;
+            // euler lerp rather than a quaternion tween: callers pass cumulative euler
+            // targets and rely on paths longer than the shortest arc.
+            Tween tween = Tween.Custom(
+                target: transform,
+                startValue: 0f,
+                endValue: 1f,
+                duration: duration,
+                ease: Ease.Linear,
+                onValueChange: (target, t) => SetRotation(
+                    transform: target,
+                    rotation: Vector3.Lerp(a: start, b: end, t: t),
+                    isLocal: isLocal
+                )
+            );
 
-            while (t < 1)
-            {
-                t += Time.deltaTime / duration;
-                SetRotation(transform: transform, rotation: Vector3.Lerp(a: start, b: end, t: t), isLocal: isLocal);
-                yield return null;
-            }
-
-            SetRotation(transform: transform, rotation: end, isLocal: isLocal);
+            yield return tween.ToStoppableYield();
         }
 
         public static void RotateToStep(
@@ -79,7 +85,7 @@ namespace Crysc.Helpers
                 isLocal
                     ? Tween.LocalRotation(transform, endValue: end, duration: duration)
                     : Tween.Rotation(transform, endValue: end, duration: duration)
-            ).ToYieldInstruction();
+            ).ToStoppableYield();
         }
 
         public static IEnumerator RotateSine(

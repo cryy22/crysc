@@ -19,18 +19,12 @@ namespace Crysc.Helpers
             Easings.Enum easing = Easings.Enum.Linear
         )
         {
-            Vector3 start = GetPosition(transform: transform, isLocal: isLocal);
+            Ease ease = Easings.ToPrimeTweenEase(easing);
+            Tween tween = isLocal
+                ? Tween.LocalPosition(transform, endValue: end, duration: duration, ease: ease)
+                : Tween.Position(transform, endValue: end, duration: duration, ease: ease);
 
-            float t = 0;
-
-            while (t < 1)
-            {
-                t += Time.deltaTime / duration;
-                MoveToStep(transform: transform, start: start, end: end, t: t, isLocal: isLocal, easing: easing);
-                yield return null;
-            }
-
-            SetPosition(transform: transform, position: end, isLocal: isLocal);
+            yield return tween.ToStoppableYield();
         }
 
         public static void MoveToStep(
@@ -64,7 +58,7 @@ namespace Crysc.Helpers
                 isLocal
                     ? Tween.LocalPosition(transform, endValue: end, duration: duration)
                     : Tween.Position(transform, endValue: end, duration: duration)
-            ).ToYieldInstruction();
+            ).ToStoppableYield();
         }
 
         public static IEnumerator MoveSine(
