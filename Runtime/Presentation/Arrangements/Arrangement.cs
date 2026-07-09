@@ -132,6 +132,7 @@ namespace Crysc.Presentation.Arrangements
                 startTime: plan.StartTime + offset,
                 endTime: plan.EndTime + offset
             );
+
             _dirtyPlanElements.Add(plan.Element);
         }
 
@@ -197,7 +198,6 @@ namespace Crysc.Presentation.Arrangements
                     startValue: 0f,
                     endValue: 1f,
                     duration: plan.Duration,
-                    ease: Ease.Linear,
                     startDelay: Mathf.Max(a: plan.StartTime - elapsed, b: 0f),
                     onValueChange: (arrangement, t) => arrangement.IncrementPlanTween(element: element, t: t)
                 )
@@ -226,9 +226,9 @@ namespace Crysc.Presentation.Arrangements
         private void CompletePlanTween(IElement element)
         {
             _elementsTweens.Remove(element);
-            if (!_elementsMovementPlans.TryGetValue(key: element, value: out ElementMovementPlan plan)) return;
+            if (!_elementsMovementPlans.Remove(key: element, value: out ElementMovementPlan plan))
+                return;
 
-            _elementsMovementPlans.Remove(element);
             ElementArrangeEnded?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
         }
 
@@ -308,6 +308,9 @@ namespace Crysc.Presentation.Arrangements
             _elementsTweens.Clear();
         }
 
-        private void OnDestroy() { StopAllTweens(); }
+        private void OnDestroy()
+        {
+            StopAllTweens();
+        }
     }
 }

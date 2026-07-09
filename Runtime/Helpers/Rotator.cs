@@ -23,7 +23,6 @@ namespace Crysc.Helpers
                 startValue: 0f,
                 endValue: 1f,
                 duration: duration,
-                ease: Ease.Linear,
                 onValueChange: (target, t) => SetRotation(
                     transform: target,
                     rotation: Vector3.Lerp(a: start, b: end, t: t),

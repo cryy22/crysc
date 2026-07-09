@@ -14,7 +14,7 @@ namespace Crysc.Helpers
         )
         {
             yield return Tween
-                .Scale(transform, endValue: end, duration: duration, ease: Ease.Linear)
+                .Scale(transform, endValue: end, duration: duration)
                 .ToStoppableYield();
         }
 
@@ -60,6 +60,7 @@ namespace Crysc.Helpers
             Vector3 max = initial + delta;
 
             var t = 0f;
+
             while (t < duration)
             {
                 t += Time.deltaTime;
