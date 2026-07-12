@@ -41,12 +41,14 @@ namespace Crysc.Presentation.Arrangements
         public IReadOnlyList<IElement> Elements => _elements;
         public IReadOnlyDictionary<IElement, ElementPlacement> ElementsPlacements => _elementsPlacements;
         public IReadOnlyDictionary<IElement, ElementMovementPlan> ElementsMovementPlans => _elementsMovementPlans;
+        public IReadOnlyCollection<IElement> ExcludedElements => _excludedElements;
 
         private readonly List<IElement> _elements = new();
         private readonly Dictionary<IElement, ElementPlacement> _elementsPlacements = new();
         private readonly Dictionary<IElement, ElementMovementPlan> _elementsMovementPlans = new();
         private readonly Dictionary<IElement, Tween> _elementsTweens = new();
         private readonly HashSet<IElement> _dirtyPlanElements = new();
+        private readonly HashSet<IElement> _excludedElements = new();
         private float _batchStartTime;
 
         private bool HasLiveTweens
@@ -105,10 +107,24 @@ namespace Crysc.Presentation.Arrangements
                 _elementsPlacements.Remove(element);
                 _elementsMovementPlans.Remove(element);
                 _dirtyPlanElements.Remove(element);
+                _excludedElements.Remove(element);
                 StopTweenForElement(element);
             }
 
             RecalculateElementPlacements();
+        }
+
+        public void AddExcludedElement(IElement element)
+        {
+            if (!_excludedElements.Add(element))
+                return;
+
+            RemoveMovementPlanForElement(element);
+        }
+
+        public void RemoveExcludedElement(IElement element)
+        {
+            _excludedElements.Remove(element);
         }
 
         public void SetPlacement(ElementPlacement placement)
@@ -127,6 +143,9 @@ namespace Crysc.Presentation.Arrangements
 
         public void SetMovementPlan(ElementMovementPlan plan, bool relativeTiming = true)
         {
+            if (_excludedElements.Contains(plan.Element))
+                return;
+
             float offset = relativeTiming ? AnimationTime : 0f;
             _elementsMovementPlans[plan.Element] = plan.Copy(
                 startTime: plan.StartTime + offset,
@@ -269,6 +288,9 @@ namespace Crysc.Presentation.Arrangements
 
             foreach (var (element, placement) in ElementsPlacements)
             {
+                if (_excludedElements.Contains(element))
+                    continue;
+
                 element.Transform.SetParent(ElementsParent, false);
 
                 element.Transform.localPosition = placement.Position;
