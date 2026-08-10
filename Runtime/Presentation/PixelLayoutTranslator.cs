@@ -81,8 +81,6 @@ namespace Crysc.Presentation
         }
 
 #if UNITY_EDITOR
-        private bool _wasUsingSpriteRenderer;
-
         private void OnValidate()
         {
             _camera = Camera.main;
@@ -94,10 +92,7 @@ namespace Crysc.Presentation
             UpdateTranslationValues();
 
             if (!UseSpriteRenderer || !SpriteRenderer)
-            {
-                _wasUsingSpriteRenderer = false;
                 return;
-            }
 
             if (SpriteRenderer.drawMode == SpriteDrawMode.Simple)
             {
@@ -110,11 +105,6 @@ namespace Crysc.Presentation
 
                 UpdateTranslationValues();
             }
-            else if (!_wasUsingSpriteRenderer)
-            {
-                ElementSize = SpriteRenderer.size * _pixelsPerUnit;
-                UpdateTranslationValues();
-            }
             else
             {
                 EditorApplication.delayCall += () =>
@@ -125,8 +115,6 @@ namespace Crysc.Presentation
                     SpriteRenderer.size = ElementSize / _pixelsPerUnit;
                 };
             }
-
-            _wasUsingSpriteRenderer = true;
         }
 
         private bool RendererUsesSimpleDrawMode()
