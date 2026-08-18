@@ -1,4 +1,9 @@
+#region
+
 using System.Collections;
+using UnityEngine;
+
+#endregion
 
 namespace Crysc.Common.CoroutineControl
 {
@@ -11,12 +16,12 @@ namespace Crysc.Common.CoroutineControl
                 controller.WrapRoutine(routine)
             );
         }
-        
+
         public static void StopActiveCoroutine(this ICoroutineController controller)
         {
-            if (!controller.HasActiveCoroutine) 
+            if (!controller.HasActiveCoroutine)
                 return;
-            
+
             controller.StopCoroutine(controller.ActiveCoroutine);
             controller.ActiveCoroutine = null;
         }
@@ -27,10 +32,27 @@ namespace Crysc.Common.CoroutineControl
                 yield return null;
         }
 
-        private static IEnumerator WrapRoutine(this ICoroutineController controller, IEnumerator routine)
+        public static IEnumerator WrapRoutine(this ICoroutineController controller, IEnumerator routine)
         {
-            yield return routine;
-            controller.ActiveCoroutine = null;
+            Coroutine subroutine = controller.StartCoroutine(routine);
+            if (subroutine == null)
+                yield break;
+
+            var endedNaturally = false;
+
+            try
+            {
+                yield return subroutine;
+                endedNaturally = true;
+            }
+            finally
+            {
+                if (!endedNaturally)
+                    Debug.Log("Killed early!!");
+
+                controller.StopCoroutine(subroutine);
+                controller.ActiveCoroutine = null;
+            }
         }
     }
 }

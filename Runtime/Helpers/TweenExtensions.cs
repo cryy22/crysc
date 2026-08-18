@@ -1,5 +1,9 @@
+#region
+
 using System.Collections;
 using PrimeTween;
+
+#endregion
 
 namespace Crysc.Helpers
 {
@@ -11,11 +15,13 @@ namespace Crysc.Helpers
         {
             try
             {
-                while (tween.isAlive) yield return null;
+                while (tween.isAlive)
+                    yield return null;
             }
             finally
             {
-                if (tween.isAlive) tween.Stop();
+                if (tween.isAlive)
+                    tween.Stop();
             }
         }
     }

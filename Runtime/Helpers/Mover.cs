@@ -21,10 +21,10 @@ namespace Crysc.Helpers
         {
             Ease ease = Easings.ToPrimeTweenEase(easing);
             Tween tween = isLocal
-                ? Tween.LocalPosition(transform, endValue: end, duration: duration, ease: ease)
-                : Tween.Position(transform, endValue: end, duration: duration, ease: ease);
+                ? Tween.LocalPosition(target: transform, endValue: end, duration: duration, ease: ease)
+                : Tween.Position(target: transform, endValue: end, duration: duration, ease: ease);
 
-            yield return tween.ToStoppableYield();
+            return tween.ToStoppableYield();
         }
 
         public static void MoveToStep(
@@ -54,10 +54,10 @@ namespace Crysc.Helpers
             bool isLocal = true
         )
         {
-            yield return (
+            return (
                 isLocal
-                    ? Tween.LocalPosition(transform, endValue: end, duration: duration)
-                    : Tween.Position(transform, endValue: end, duration: duration)
+                    ? Tween.LocalPosition(target: transform, endValue: end, duration: duration)
+                    : Tween.Position(target: transform, endValue: end, duration: duration)
             ).ToStoppableYield();
         }
 
