@@ -1,8 +1,12 @@
+#region
+
 using System;
 using System.Collections;
 using Crysc.Helpers;
 using UnityEngine;
 using UnityEngine.Serialization;
+
+#endregion
 
 namespace Crysc.UI.Presenters
 {
@@ -47,7 +51,15 @@ namespace Crysc.UI.Presenters
         private IEnumerator RunPresent()
         {
             PresentationState = PresentationState.Presenting;
-            yield return Mover.MoveToSmoothly(transform: Container, end: PresentedPosition, duration: MoveTime);
+
+            AnimationHandle moveHandle = Mover.MoveToSmoothly(
+                transform: Container,
+                end: PresentedPosition,
+                duration: MoveTime
+            );
+
+            while (moveHandle.IsRunning)
+                yield return null;
 
             PresentationState = PresentationState.Presented;
             Presented?.Invoke(sender: this, e: EventArgs.Empty);
@@ -56,7 +68,14 @@ namespace Crysc.UI.Presenters
         private IEnumerator RunDismiss()
         {
             PresentationState = PresentationState.Dismissing;
-            yield return Mover.MoveToSmoothly(transform: Container, end: DismissedPosition, duration: MoveTime);
+            AnimationHandle moveHandle = Mover.MoveToSmoothly(
+                transform: Container,
+                end: DismissedPosition,
+                duration: MoveTime
+            );
+
+            while (moveHandle.IsRunning)
+                yield return null;
 
             PresentationState = PresentationState.Dismissed;
             Dismissed?.Invoke(sender: this, e: EventArgs.Empty);

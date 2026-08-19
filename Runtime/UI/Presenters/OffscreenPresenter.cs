@@ -1,8 +1,12 @@
+#region
+
 using System;
 using System.Collections;
 using Crysc.Common;
 using Crysc.Helpers;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.UI.Presenters
 {
@@ -34,13 +38,17 @@ namespace Crysc.UI.Presenters
         private Canvas _canvas;
         private RectTransform _canvasRect;
 
-        private void Awake() { Container.gameObject.SetActive(DismissedContainersAreActive); }
+        private void Awake()
+        {
+            Container.gameObject.SetActive(DismissedContainersAreActive);
+        }
 
         private void Start()
         {
             _camera = Camera.main;
 
             _canvas = Container.GetComponentInParent<Canvas>();
+
             if (!_canvas)
             {
                 Debug.LogError("OffscreenPresenter's Container must be a child of a Canvas.");
@@ -81,12 +89,15 @@ namespace Crysc.UI.Presenters
             yield return new WaitUntil(() => _isInitialized);
 
             Container.gameObject.SetActive(true);
-            yield return Mover.MoveToSmoothly(
+            AnimationHandle moveHandle = Mover.MoveToSmoothly(
                 transform: Container,
                 end: Vector3.zero,
                 duration: MoveTime,
                 isLocal: true
             );
+
+            while (moveHandle.IsRunning)
+                yield return null;
 
             PresentationState = PresentationState.Presented;
             Presented?.Invoke(sender: this, e: EventArgs.Empty);
@@ -97,12 +108,16 @@ namespace Crysc.UI.Presenters
             PresentationState = PresentationState.Dismissing;
             yield return new WaitUntil(() => _isInitialized);
 
-            yield return Mover.MoveToSmoothly(
+            AnimationHandle moveHandle = Mover.MoveToSmoothly(
                 transform: Container,
                 end: _dismissedPosition,
                 duration: MoveTime,
                 isLocal: false
             );
+
+            while (moveHandle.IsRunning)
+                yield return null;
+
             Container.gameObject.SetActive(DismissedContainersAreActive);
 
             PresentationState = PresentationState.Dismissed;

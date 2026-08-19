@@ -11,7 +11,7 @@ namespace Crysc.Helpers
 {
     public static class Mover
     {
-        public static IEnumerator MoveTo(
+        public static AnimationHandle MoveTo(
             Transform transform,
             Vector3 end,
             float duration = 0.25f,
@@ -24,7 +24,7 @@ namespace Crysc.Helpers
                 ? Tween.LocalPosition(target: transform, endValue: end, duration: duration, ease: ease)
                 : Tween.Position(target: transform, endValue: end, duration: duration, ease: ease);
 
-            return tween.ToStoppableYield();
+            return new AnimationHandle(tween);
         }
 
         public static void MoveToStep(
@@ -47,18 +47,18 @@ namespace Crysc.Helpers
             );
         }
 
-        public static IEnumerator MoveToSmoothly(
+        public static AnimationHandle MoveToSmoothly(
             Transform transform,
             Vector3 end,
             float duration = 0.25f,
             bool isLocal = true
         )
         {
-            return (
+            return new AnimationHandle(
                 isLocal
                     ? Tween.LocalPosition(target: transform, endValue: end, duration: duration)
                     : Tween.Position(target: transform, endValue: end, duration: duration)
-            ).ToStoppableYield();
+            );
         }
 
         public static IEnumerator MoveSine(

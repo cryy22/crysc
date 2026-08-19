@@ -1,13 +1,17 @@
+#region
+
 using System.Collections;
 using Crysc.Presentation.Arrangements;
 using PrimeTween;
 using UnityEngine;
 
+#endregion
+
 namespace Crysc.Helpers
 {
     public static class Rotator
     {
-        public static IEnumerator RotateTo(
+        public static AnimationHandle RotateTo(
             Transform transform,
             Vector3 end,
             float duration = 0.25f,
@@ -16,21 +20,19 @@ namespace Crysc.Helpers
         {
             Vector3 start = GetRotation(transform: transform, isLocal: isLocal);
 
-            // euler lerp rather than a quaternion tween: callers pass cumulative euler
-            // targets and rely on paths longer than the shortest arc.
-            Tween tween = Tween.Custom(
-                target: transform,
-                startValue: 0f,
-                endValue: 1f,
-                duration: duration,
-                onValueChange: (target, t) => SetRotation(
-                    transform: target,
-                    rotation: Vector3.Lerp(a: start, b: end, t: t),
-                    isLocal: isLocal
+            return new AnimationHandle(
+                Tween.Custom(
+                    target: transform,
+                    startValue: 0f,
+                    endValue: 1f,
+                    duration: duration,
+                    onValueChange: (target, t) => SetRotation(
+                        transform: target,
+                        rotation: Vector3.Lerp(a: start, b: end, t: t),
+                        isLocal: isLocal
+                    )
                 )
             );
-
-            yield return tween.ToStoppableYield();
         }
 
         public static void RotateToStep(
@@ -73,18 +75,18 @@ namespace Crysc.Helpers
             SetRotation(transform: transform, rotation: end, isLocal: isLocal);
         }
 
-        public static IEnumerator RotateToSmoothly(
+        public static AnimationHandle RotateToSmoothly(
             Transform transform,
             Quaternion end,
             float duration = 0.25f,
             bool isLocal = true
         )
         {
-            yield return (
+            return new AnimationHandle(
                 isLocal
-                    ? Tween.LocalRotation(transform, endValue: end, duration: duration)
-                    : Tween.Rotation(transform, endValue: end, duration: duration)
-            ).ToStoppableYield();
+                    ? Tween.LocalRotation(target: transform, endValue: end, duration: duration)
+                    : Tween.Rotation(target: transform, endValue: end, duration: duration)
+            );
         }
 
         public static IEnumerator RotateSine(
@@ -105,7 +107,7 @@ namespace Crysc.Helpers
             {
                 t += Time.deltaTime;
 
-                float sineT = (Mathf.Sin((t / period) * 2 * Mathf.PI) / 2) + 0.5f;
+                float sineT = Mathf.Sin(t / period * 2 * Mathf.PI) / 2 + 0.5f;
                 Vector3 newRotation = Vector3.Lerp(a: min, b: max, t: sineT);
                 SetRotation(transform: transform, rotation: newRotation, isLocal: isLocal);
 

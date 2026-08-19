@@ -1,21 +1,25 @@
+#region
+
 using System.Collections;
 using Crysc.Presentation.Arrangements;
 using PrimeTween;
 using UnityEngine;
 
+#endregion
+
 namespace Crysc.Helpers
 {
     public static class Scaler
     {
-        public static IEnumerator ScaleTo(
+        public static AnimationHandle ScaleTo(
             Transform transform,
             Vector3 end,
             float duration = 0.25f
         )
         {
-            yield return Tween
-                .Scale(transform, endValue: end, duration: duration)
-                .ToStoppableYield();
+            return new AnimationHandle(
+                Tween.Scale(target: transform, endValue: end, duration: duration)
+            );
         }
 
         public static void ScaleToStep(
@@ -65,7 +69,7 @@ namespace Crysc.Helpers
             {
                 t += Time.deltaTime;
 
-                float sineT = (Mathf.Sin((t / period) * 2 * Mathf.PI) / 2) + 0.5f;
+                float sineT = Mathf.Sin(t / period * 2 * Mathf.PI) / 2 + 0.5f;
                 Vector3 newScale = Vector3.Lerp(a: min, b: max, t: sineT);
                 transform.localScale = newScale;
 
