@@ -1,9 +1,11 @@
-using System;
+#region
+
 using System.Collections.Generic;
 using System.Linq;
-using Crysc.Common;
 using UnityEngine;
 using UnityEngine.EventSystems;
+
+#endregion
 
 namespace Crysc.UI.Tooltips
 {
@@ -24,6 +26,7 @@ namespace Crysc.UI.Tooltips
         {
             _contentProviders.AddRange(GetComponents<ITooltipContentProvider>());
         }
+
         private void OnDisable()
         {
             OnPointerExit(null);
@@ -41,6 +44,9 @@ namespace Crysc.UI.Tooltips
             Publisher.RegisterUnhover(this);
         }
 
-        public object[] GetTooltipContent() { return _contentProviders.SelectMany(p => p.GetContent()).ToArray(); }
+        public object[] GetTooltipContent()
+        {
+            return _contentProviders.SelectMany(p => p.GetContent()).ToArray();
+        }
     }
 }
