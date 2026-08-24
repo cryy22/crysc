@@ -1,7 +1,11 @@
+#region
+
 using System;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Presentation
 {
@@ -9,9 +13,20 @@ namespace Crysc.Presentation
     public class RelativeSizeMaintainer : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer LeadRenderer;
+        [SerializeField] private TMP_Text LeadText;
+
         [SerializeField] private FollowBoxCollider[] FollowBoxColliders;
         [SerializeField] private FollowRenderer[] FollowRenderers;
         [SerializeField] private FollowText[] FollowTexts;
+
+        private enum LeadType
+        {
+            None,
+            Renderer,
+            Text,
+        }
+
+        private LeadType _leadType = LeadType.None;
 
         [Serializable]
         private struct FollowBoxCollider
@@ -38,15 +53,45 @@ namespace Crysc.Presentation
 
         private void Update()
         {
-            if (!LeadRenderer || (LeadRenderer.size == _currentSize))
+            if (_leadType == LeadType.None)
+                DetermineLeadType();
+
+            if ((_leadType == LeadType.None) || (GetLeadSize() == _currentSize))
                 return;
 
             ResetSizes();
         }
 
+        private void DetermineLeadType()
+        {
+            if (LeadRenderer && LeadText)
+            {
+                Debug.LogWarning("RelativeSizeMaintainer can only have one lead.");
+                _leadType = LeadType.None;
+                return;
+            }
+
+            if (LeadRenderer)
+                _leadType = LeadType.Renderer;
+            else if (LeadText)
+                _leadType = LeadType.Text;
+            else
+                _leadType = LeadType.None;
+        }
+
+        private Vector2 GetLeadSize()
+        {
+            return _leadType switch
+            {
+                LeadType.Renderer => LeadRenderer.size * LeadRenderer.transform.lossyScale,
+                LeadType.Text     => (Vector2) LeadText.textBounds.size * LeadText.transform.lossyScale,
+                _                 => Vector2.zero,
+            };
+        }
+
         private void ResetSizes()
         {
-            _currentSize = LeadRenderer.size * LeadRenderer.transform.lossyScale;
+            _currentSize = GetLeadSize();
 
             foreach (FollowBoxCollider followBoxCollider in FollowBoxColliders)
             {
@@ -90,7 +135,11 @@ namespace Crysc.Presentation
             EditorApplication.delayCall += () =>
             {
                 if (this)
-                    ResetSizes();
+                {
+                    DetermineLeadType();
+                    if (_leadType != LeadType.None)
+                        ResetSizes();
+                }
             };
         }
 #endif
