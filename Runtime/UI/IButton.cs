@@ -1,5 +1,9 @@
+#region
+
 using System;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.UI
 {
@@ -7,9 +11,11 @@ namespace Crysc.UI
     {
         public event EventHandler Clicked;
 
+        public abstract void SetText(string text);
+
         protected void InvokeClicked()
         {
-            Clicked?.Invoke(this, EventArgs.Empty);
+            Clicked?.Invoke(sender: this, e: EventArgs.Empty);
         }
     }
 }
