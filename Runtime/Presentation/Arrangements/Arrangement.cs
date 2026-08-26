@@ -1,3 +1,5 @@
+#region
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,9 +10,15 @@ using PrimeTween;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+#endregion
+
 namespace Crysc.Presentation.Arrangements
 {
+    #region
+
     using IElement = IArrangementElement;
+
+    #endregion
 
     public abstract class Arrangement : MonoBehaviour, ICoroutineController
     {
@@ -162,7 +170,12 @@ namespace Crysc.Presentation.Arrangements
             StopTweenForElement(element);
         }
 
-        public IEnumerator ExecuteMovementPlans()
+        public void ExecuteMovementPlans()
+        {
+            this.StartActiveCoroutine(RunMovementPlans());
+        }
+
+        public IEnumerator ExecuteMovementPlansAndWait()
         {
             this.StartActiveCoroutine(RunMovementPlans());
             yield return this.WaitForCompletion();
@@ -286,12 +299,12 @@ namespace Crysc.Presentation.Arrangements
 
             RecalculateElementPlacements();
 
-            foreach (var (element, placement) in ElementsPlacements)
+            foreach ((IElement element, ElementPlacement placement) in ElementsPlacements)
             {
                 if (_excludedElements.Contains(element))
                     continue;
 
-                element.Transform.SetParent(ElementsParent, false);
+                element.Transform.SetParent(parent: ElementsParent, worldPositionStays: false);
 
                 element.Transform.localPosition = placement.Position;
                 element.Transform.localRotation = placement.Rotation;
