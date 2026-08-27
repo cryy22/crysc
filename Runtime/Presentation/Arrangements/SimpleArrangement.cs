@@ -18,8 +18,8 @@ namespace Crysc.Presentation.Arrangements
             if (Elements.Count > 1)
             {
                 var maxSize = new Vector2(
-                    x: Size.x > 0 ? Size.x : float.PositiveInfinity,
-                    y: Size.y > 0 ? Size.y : float.PositiveInfinity
+                    x: TargetSize.x > 0 ? TargetSize.x : float.PositiveInfinity,
+                    y: TargetSize.y > 0 ? TargetSize.y : float.PositiveInfinity
                 );
 
                 Vector2 maxSpacing = maxSize / (Elements.Count - 1);
