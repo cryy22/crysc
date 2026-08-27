@@ -1,6 +1,10 @@
+#region
+
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+
+#endregion
 
 namespace Crysc.Controls
 {
@@ -32,10 +36,10 @@ namespace Crysc.Controls
 
         private void OnDisable()
         {
-            if (IsHovered == false) return;
+            if (IsHovered == false)
+                return;
 
             IsHovered = false;
-
             Unhovered?.Invoke(sender: Sender, e: CreatePointerEventArgs());
         }
 
