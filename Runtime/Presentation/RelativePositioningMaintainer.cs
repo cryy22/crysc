@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Crysc.Presentation
 {
     [ExecuteAlways]
-    public class RelativeSizeMaintainer : MonoBehaviour
+    public class RelativePositioningMaintainer : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer LeadRenderer;
         [SerializeField] private TMP_Text LeadText;
@@ -40,6 +40,7 @@ namespace Crysc.Presentation
         {
             [SerializeField] public SpriteRenderer Renderer;
             [SerializeField] public Vector2 Offset;
+            [SerializeField] public int SortOrderOffset;
         }
 
         [Serializable]
@@ -47,19 +48,27 @@ namespace Crysc.Presentation
         {
             [SerializeField] public TMP_Text Text;
             [SerializeField] public Vector2 Offset;
+            [SerializeField] public int SortOrderOffset;
         }
 
         private Vector2 _currentSize;
+        private int _currentSortingLayerID;
+        private int _currentOrderInLayer;
 
         private void Update()
         {
             if (_leadType == LeadType.None)
                 DetermineLeadType();
 
-            if ((_leadType == LeadType.None) || (GetLeadSize() == _currentSize))
+            if (_leadType == LeadType.None)
                 return;
 
-            ResetSizes();
+            if (GetLeadSize() != _currentSize)
+                ResetSizes();
+
+            (int sortingLayerID, int sortingOrder) = GetLeadSortingDetails();
+            if ((sortingLayerID != _currentSortingLayerID) || (sortingOrder != _currentOrderInLayer))
+                ResetSortingDetails();
         }
 
         private void DetermineLeadType()
@@ -87,6 +96,25 @@ namespace Crysc.Presentation
                 LeadType.Text     => (Vector2) LeadText.textBounds.size * LeadText.transform.lossyScale,
                 _                 => Vector2.zero,
             };
+        }
+
+        private (int sortingLayerID, int orderInLayer) GetLeadSortingDetails()
+        {
+            int sortingLayerID = _leadType switch
+            {
+                LeadType.Renderer => LeadRenderer.sortingLayerID,
+                LeadType.Text     => LeadText.GetComponent<MeshRenderer>().sortingLayerID,
+                _                 => 0,
+            };
+
+            int orderInLayer = _leadType switch
+            {
+                LeadType.Renderer => LeadRenderer.sortingOrder,
+                LeadType.Text     => LeadText.GetComponent<MeshRenderer>().sortingOrder,
+                _                 => 0,
+            };
+
+            return (sortingLayerID, orderInLayer);
         }
 
         private void ResetSizes()
@@ -126,6 +154,24 @@ namespace Crysc.Presentation
                     x: _currentSize.x / followTextRectTransform.lossyScale.x + followText.Offset.x,
                     y: _currentSize.y / followTextRectTransform.lossyScale.y + followText.Offset.y
                 );
+            }
+        }
+
+        private void ResetSortingDetails()
+        {
+            (_currentSortingLayerID, _currentOrderInLayer) = GetLeadSortingDetails();
+
+            foreach (FollowRenderer followRenderer in FollowRenderers)
+            {
+                followRenderer.Renderer.sortingLayerID = _currentSortingLayerID;
+                followRenderer.Renderer.sortingOrder = _currentOrderInLayer + followRenderer.SortOrderOffset;
+            }
+
+            foreach (FollowText followText in FollowTexts)
+            {
+                var meshRenderer = followText.Text.GetComponent<MeshRenderer>();
+                meshRenderer.sortingLayerID = _currentSortingLayerID;
+                meshRenderer.sortingOrder = _currentOrderInLayer + followText.SortOrderOffset;
             }
         }
 
