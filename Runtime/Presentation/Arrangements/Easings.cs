@@ -1,5 +1,10 @@
+#region
+
 using System;
+using PrimeTween;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Presentation.Arrangements
 {
@@ -15,6 +20,7 @@ namespace Crysc.Presentation.Arrangements
             EaseInBack,
             EaseOutBack,
             EaseInOutBack,
+            Default,
         }
 
         private const float _c1 = 1.70158f;
@@ -34,6 +40,7 @@ namespace Crysc.Presentation.Arrangements
                 Enum.EaseInBack     => EaseInBack(t),
                 Enum.EaseOutBack    => EaseOutBack(t),
                 Enum.EaseInOutBack  => EaseInOutBack(t),
+                Enum.Default        => Linear(t),
                 _ => throw new ArgumentOutOfRangeException(
                     paramName: nameof(easing),
                     actualValue: easing,
@@ -42,7 +49,7 @@ namespace Crysc.Presentation.Arrangements
             };
         }
 
-        public static PrimeTween.Ease ToPrimeTweenEase(Enum easing)
+        public static Ease ToPrimeTweenEase(Enum easing)
         {
             return easing switch
             {
@@ -54,6 +61,7 @@ namespace Crysc.Presentation.Arrangements
                 Enum.EaseInBack     => PrimeTween.Ease.InBack,
                 Enum.EaseOutBack    => PrimeTween.Ease.OutBack,
                 Enum.EaseInOutBack  => PrimeTween.Ease.InOutBack,
+                Enum.Default        => PrimeTweenConfig.defaultEase,
                 _ => throw new ArgumentOutOfRangeException(
                     paramName: nameof(easing),
                     actualValue: easing,
@@ -69,6 +77,7 @@ namespace Crysc.Presentation.Arrangements
                 Enum.Linear         => Linear(x),
                 Enum.EaseInOutSine  => UneaseInOutSine(x),
                 Enum.EaseInOutCubic => UneaseInOutCubic(x),
+                Enum.Default        => Linear(x),
                 _ => throw new ArgumentOutOfRangeException(
                     paramName: nameof(easing),
                     actualValue: easing,
@@ -77,13 +86,25 @@ namespace Crysc.Presentation.Arrangements
             };
         }
 
-        private static float Linear(float t) { return t; }
+        private static float Linear(float t)
+        {
+            return t;
+        }
 
-        private static float EaseInOutSine(float t) { return -(Mathf.Cos(Mathf.PI * t) - 1) / 2; }
+        private static float EaseInOutSine(float t)
+        {
+            return -(Mathf.Cos(Mathf.PI * t) - 1) / 2;
+        }
 
-        private static float UneaseInOutSine(float x) { return Mathf.Acos(-2 * x + 1) / Mathf.PI; }
+        private static float UneaseInOutSine(float x)
+        {
+            return Mathf.Acos(-2 * x + 1) / Mathf.PI;
+        }
 
-        private static float EaseOutCubic(float t) { return 1 - Mathf.Pow(f: 1 - t, p: 3); }
+        private static float EaseOutCubic(float t)
+        {
+            return 1 - Mathf.Pow(f: 1 - t, p: 3);
+        }
 
         private static float EaseInOutCubic(float t)
         {
@@ -109,7 +130,10 @@ namespace Crysc.Presentation.Arrangements
             };
         }
 
-        private static float EaseInBack(float t) { return _c3 * t * t * t - _c1 * t * t; }
+        private static float EaseInBack(float t)
+        {
+            return _c3 * t * t * t - _c1 * t * t;
+        }
 
         private static float EaseOutBack(float t)
         {
