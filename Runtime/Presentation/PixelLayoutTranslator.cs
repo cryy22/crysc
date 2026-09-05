@@ -1,7 +1,11 @@
+#region
+
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
+
+#endregion
 
 namespace Crysc.Presentation
 {
@@ -11,7 +15,6 @@ namespace Crysc.Presentation
     [ExecuteAlways]
     public class PixelLayoutTranslator : MonoBehaviour
     {
-        private const float _roundingStep = 1 / 8f;
         [field: SerializeField] public Vector2 ReferenceLayoutSize { get; private set; } = new(x: 1280, y: 720);
 
         [field: FormerlySerializedAs("<UseSizeReferenceSprite>k__BackingField")]
@@ -55,8 +58,8 @@ namespace Crysc.Presentation
             unitPos -= _cornerOffsetUnits; // set unitPos to position of top-right corner of element
 
             return new Vector2(
-                x: Mathf.Round(unitPos.x * _pixelsPerUnit / _roundingStep) * _roundingStep,
-                y: Mathf.Round(unitPos.y * _pixelsPerUnit / _roundingStep) * _roundingStep
+                x: Round(unitPos.x * _pixelsPerUnit),
+                y: Round(unitPos.y * _pixelsPerUnit)
             );
         }
 
@@ -66,7 +69,11 @@ namespace Crysc.Presentation
             unitPos += _cornerOffsetUnits;
             unitPos -= _windowUnitSize / 2;
             unitPos.y *= -1;
-            _transform.position = unitPos;
+
+            _transform.position = new Vector2(
+                x: Round(unitPos.x),
+                y: Round(unitPos.y)
+            );
         }
 
         private void UpdateTranslationValues()
@@ -78,6 +85,12 @@ namespace Crysc.Presentation
 
             _pixelsPerUnit = ReferenceLayoutSize.x / _windowUnitSize.x;
             _cornerOffsetUnits = ElementSize / _pixelsPerUnit / 2;
+        }
+
+        private static float Round(float value)
+        {
+            const float roundingStep = 1 / 80f;
+            return Mathf.Round(value / roundingStep) * roundingStep;
         }
 
 #if UNITY_EDITOR
@@ -113,6 +126,10 @@ namespace Crysc.Presentation
                         return;
 
                     SpriteRenderer.size = ElementSize / _pixelsPerUnit;
+                    SpriteRenderer.size = new Vector2(
+                        x: Round(SpriteRenderer.size.x),
+                        y: Round(SpriteRenderer.size.y)
+                    );
                 };
             }
         }
