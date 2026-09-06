@@ -26,6 +26,12 @@ namespace Crysc.Presentation.Arrangements
                 Spacing = Vector2.Min(lhs: maxSpacing, rhs: TargetSpacing);
 
                 Size = Spacing * (Elements.Count - 1);
+
+                // haven't fully parsed out why this works; first culprit if some simplearrangement breaks
+                // w/ odd numbers of elements
+                if ((Elements.Count % 2) == 1)
+                    Size -= OddElementStagger;
+
                 Size = new Vector2(x: Mathf.Max(a: Size.x, b: 0), y: Mathf.Max(a: Size.y, b: 0));
             }
             else
