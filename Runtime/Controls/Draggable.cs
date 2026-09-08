@@ -1,5 +1,9 @@
+#region
+
 using System;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Controls
 {
@@ -18,6 +22,7 @@ namespace Crysc.Controls
         private Camera _camera;
         private Vector2 _initialClickOffset;
         private T _target;
+        private bool _isDragging;
 
         protected virtual void Awake()
         {
@@ -42,8 +47,10 @@ namespace Crysc.Controls
 
         private void OnPointerDown(object sender, PointerEventArgs e)
         {
-            if (!IsActive) return;
+            if (!IsActive)
+                return;
 
+            _isDragging = true;
             Vector2 cursor = _camera.ScreenToWorldPoint(e.ScreenPosition);
             _initialClickOffset = (Vector2) transform.position - cursor;
 
@@ -58,8 +65,10 @@ namespace Crysc.Controls
 
         private void OnPointerUp(object sender, PointerEventArgs e)
         {
-            if (!IsActive) return;
+            if (!IsActive || !_isDragging)
+                return;
 
+            _isDragging = false;
             Ended?.Invoke(
                 sender: this,
                 e: new DraggableEventArgs<T>(
@@ -71,7 +80,8 @@ namespace Crysc.Controls
 
         private void OnPointerDragged(object sender, PointerEventArgs e)
         {
-            if (!IsActive) return;
+            if (!IsActive || !_isDragging)
+                return;
 
             Vector2 cursor = (Vector2) _camera.ScreenToWorldPoint(e.ScreenPosition) + _initialClickOffset;
 
