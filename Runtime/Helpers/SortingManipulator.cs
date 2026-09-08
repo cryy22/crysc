@@ -28,6 +28,21 @@ namespace Crysc.Helpers
                 }
             }
 
+            if (go.GetComponent<SortingManipulatorRoot>())
+            {
+                var root = go.GetComponent<SortingManipulatorRoot>();
+
+                if (root.SortingLayerID != sourceSortingLayerId)
+                {
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    return;
+                }
+
+                root.SortingLayerID = sortingLayerId;
+                root.SortOrder -= sourceSortingOrder;
+                root.SortOrder += sortingOrder;
+            }
+
             if (go.GetComponent<Canvas>())
             {
                 var canvas = go.GetComponent<Canvas>();
@@ -98,24 +113,14 @@ namespace Crysc.Helpers
                 );
         }
 
-        private static (int sortingLayerIdOffset, int sortingOrderOffset) GetOffsets(
-            int sortingLayerId,
-            int sortingOrder,
-            int baselineSortingLayerId,
-            int baselineSortingOrder
-        )
-        {
-            if (baselineSortingLayerId < 0)
-                return (0, 0);
-
-            return (
-                sortingLayerId - baselineSortingLayerId,
-                sortingOrder - baselineSortingOrder
-            );
-        }
-
         public static (int sortingLayerId, int sortingOrder, bool found) GetSortingDetails(this GameObject go)
         {
+            if (go.GetComponent<SortingManipulatorRoot>())
+            {
+                var root = go.GetComponent<SortingManipulatorRoot>();
+                return (root.SortingLayerID, root.SortOrder, true);
+            }
+
             if (go.GetComponent<Canvas>())
             {
                 var canvas = go.GetComponent<Canvas>();
