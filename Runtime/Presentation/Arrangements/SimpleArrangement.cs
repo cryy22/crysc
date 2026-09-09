@@ -17,6 +17,9 @@ namespace Crysc.Presentation.Arrangements
         {
             if (Elements.Count > 1)
             {
+                if (Mathf.Approximately(a: TargetSize.y, b: -0.05f))
+                    Debug.Log("here...");
+
                 var maxSize = new Vector2(
                     x: TargetSize.x > 0 ? TargetSize.x : float.PositiveInfinity,
                     y: TargetSize.y > 0 ? TargetSize.y : float.PositiveInfinity
@@ -25,14 +28,13 @@ namespace Crysc.Presentation.Arrangements
                 Vector2 maxSpacing = maxSize / (Elements.Count - 1);
                 Spacing = Vector2.Min(lhs: maxSpacing, rhs: TargetSpacing);
 
-                Size = Spacing * (Elements.Count - 1);
+                Vector2 finalElementRelativePosition = CalculateRelativePosition(Elements.Count - 1);
+                Vector2 penultimateElementRelativePosition = CalculateRelativePosition(Elements.Count - 2);
 
-                // haven't fully parsed out why this works; first culprit if some simplearrangement breaks
-                // w/ odd numbers of elements
-                if ((Elements.Count % 2) == 1)
-                    Size -= OddElementStagger;
-
-                Size = new Vector2(x: Mathf.Max(a: Size.x, b: 0), y: Mathf.Max(a: Size.y, b: 0));
+                Size = Vector2.Max(
+                    lhs: finalElementRelativePosition,
+                    rhs: penultimateElementRelativePosition
+                );
             }
             else
             {
@@ -42,6 +44,11 @@ namespace Crysc.Presentation.Arrangements
 
             foreach (ElementPlacement placement in _calculator.CalculateElementPlacements(this))
                 SetPlacement(placement);
+        }
+
+        private Vector2 CalculateRelativePosition(int index)
+        {
+            return index * Spacing + index % 2 * OddElementStagger;
         }
     }
 }
