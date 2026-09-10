@@ -1,7 +1,6 @@
 #region
 
 using System;
-using UnityEngine;
 
 #endregion
 
@@ -12,16 +11,12 @@ namespace Crysc.Patterns
         private static T _instance;
         public static T I => _instance ??= new T();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void OnPlay()
-        {
-            _instance = null;
-        }
-
         protected CSharpSingleton()
         {
             if (_instance != null)
                 throw new InvalidOperationException("Singleton already initialized");
+
+            CSharpSingletonResetter.AddResetAction(() => _instance = null);
         }
     }
 }
