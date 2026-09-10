@@ -32,6 +32,9 @@ namespace Crysc.Helpers
             {
                 var root = go.GetComponent<SortingManipulatorRoot>();
 
+                if (root.Skip)
+                    return;
+
                 if (root.SortingLayerID != sourceSortingLayerId)
                 {
                     Debug.LogWarning($"{go.name} sorting layer does not match root object.");

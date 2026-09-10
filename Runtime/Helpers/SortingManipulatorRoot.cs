@@ -14,6 +14,7 @@ namespace Crysc.Helpers
         [field: SerializeField, ValueDropdown("GetSortingLayers")]
         public string SortingLayerName { get; set; }
         [field: SerializeField] public int SortOrder { get; set; }
+        [field: SerializeField] public bool Skip { get; private set; }
 
         public int SortingLayerID
         {
