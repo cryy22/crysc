@@ -1,23 +1,25 @@
+#region
+
 using System;
+using Crysc.Patterns;
+
+#endregion
 
 namespace Crysc.UI.Tooltips
 {
-    public class TooltipPublisher
+    public class TooltipPublisher : CSharpSingleton<TooltipPublisher>
     {
         public event EventHandler<TooltipEventArgs> Hovered;
         public event EventHandler<TooltipEventArgs> Unhovered;
         public event EventHandler<TooltipEventArgs> Clicked;
 
-        private static TooltipPublisher _instance;
-        public static TooltipPublisher I => _instance ??= new TooltipPublisher();
-
         public bool Enabled { get; set; } = true;
 
         public void RegisterHover(ITooltipTargetProvider targetProvider)
         {
-            if (!Enabled) 
+            if (!Enabled)
                 return;
-            
+
             Hovered?.Invoke(
                 sender: this,
                 e: new TooltipEventArgs(
@@ -31,7 +33,7 @@ namespace Crysc.UI.Tooltips
         {
             if (!Enabled)
                 return;
-            
+
             Unhovered?.Invoke(
                 sender: this,
                 e: new TooltipEventArgs(

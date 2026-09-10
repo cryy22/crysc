@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Crysc.Common
+namespace Crysc.Patterns
 {
     public abstract class CSharpSingleton<T> where T : CSharpSingleton<T>, new()
     {
