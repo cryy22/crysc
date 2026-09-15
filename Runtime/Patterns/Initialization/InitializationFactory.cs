@@ -1,19 +1,21 @@
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Patterns.Initialization
 {
-    public abstract class InitializationFactory<T, TConfig> : ScriptableObject
-        where T : InitializationBehaviour<TConfig>
+    public abstract class InitializationFactory<T, TBlueprint> : ScriptableObject
+        where T : Object
     {
         [SerializeField] private T Prefab;
 
-        public virtual T Create(TConfig config)
-        {
-            T instance = Instantiate();
-            instance.Initialize(config);
-            return instance;
-        }
+        public abstract T Create(TBlueprint config);
 
-        protected T Instantiate() { return Instantiate(Prefab); }
+        protected T Instantiate()
+        {
+            return Instantiate(Prefab);
+        }
     }
 }
