@@ -96,8 +96,11 @@ namespace Crysc.Presentation.Arrangements
             _elements.AddRange(elements);
             List<IElement> existingElements = _elementsPlacements.Keys.ToList();
 
-            foreach (IElement element in _elements.Except(existingElements))
+            foreach (IElement element in _elements)
             {
+                if (existingElements.Contains(element))
+                    continue;
+
                 Transform eTransform = element.Transform;
                 eTransform.SetParent(ElementsParent);
                 eTransform.gameObject.SetActive(true);
@@ -110,8 +113,11 @@ namespace Crysc.Presentation.Arrangements
                 );
             }
 
-            foreach (IElement element in existingElements.Except(_elements))
+            foreach (IElement element in existingElements)
             {
+                if (_elements.Contains(element))
+                    continue;
+
                 _elementsPlacements.Remove(element);
                 _elementsMovementPlans.Remove(element);
                 _dirtyPlanElements.Remove(element);
@@ -203,23 +209,26 @@ namespace Crysc.Presentation.Arrangements
                     );
                 }
 
-            if (!HasLiveTweens) _batchStartTime = Time.time;
+            if (!HasLiveTweens)
+                _batchStartTime = Time.time;
+
             float elapsed = Time.time - _batchStartTime;
 
             foreach (IElement element in _elementsMovementPlans.Keys.ToArray())
                 StartTweenForPlan(element: element, elapsed: elapsed);
 
-            while (HasLiveTweens) yield return null;
+            while (HasLiveTweens)
+                yield return null;
         }
 
         private void StartTweenForPlan(IElement element, float elapsed)
         {
             if (_elementsTweens.TryGetValue(key: element, value: out Tween existing) && existing.isAlive)
             {
-                // an untouched plan mid-flight keeps its tween; restarting it would
-                // snap the element back to the plan's start pose.
-                if (!_dirtyPlanElements.Contains(element)) return;
-                existing.Stop();
+                if (_dirtyPlanElements.Contains(element))
+                    existing.Stop();
+                else
+                    return;
             }
 
             _dirtyPlanElements.Remove(element);
@@ -294,9 +303,7 @@ namespace Crysc.Presentation.Arrangements
 
         public void RearrangeInstantly()
         {
-            this.StopActiveCoroutine();
             ExecuteMovementPlansInstantly();
-
             RecalculateElementPlacements();
 
             foreach ((IElement element, ElementPlacement placement) in ElementsPlacements)
@@ -328,17 +335,24 @@ namespace Crysc.Presentation.Arrangements
             _dirtyPlanElements.Clear();
         }
 
+        public void StopAll()
+        {
+            this.StopActiveCoroutine();
+            StopAllTweens();
+        }
+
         private void StopTweenForElement(IElement element)
         {
-            if (_elementsTweens.TryGetValue(key: element, value: out Tween tween) && tween.isAlive) tween.Stop();
+            if (_elementsTweens.TryGetValue(key: element, value: out Tween tween))
+                tween.Stop();
+
             _elementsTweens.Remove(element);
         }
 
         private void StopAllTweens()
         {
             foreach (Tween tween in _elementsTweens.Values)
-                if (tween.isAlive)
-                    tween.Stop();
+                tween.Stop();
 
             _elementsTweens.Clear();
         }
