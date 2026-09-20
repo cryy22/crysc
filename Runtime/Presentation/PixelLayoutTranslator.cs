@@ -78,10 +78,11 @@ namespace Crysc.Presentation
 
         private void UpdateTranslationValues()
         {
-            _windowUnitSize = new Vector2(
-                x: _camera.orthographicSize * 2 * _camera.aspect,
-                y: _camera.orthographicSize * 2
-            );
+            if (_camera)
+                _windowUnitSize = new Vector2(
+                    x: _camera.orthographicSize * 2 * _camera.aspect,
+                    y: _camera.orthographicSize * 2
+                );
 
             _pixelsPerUnit = ReferenceLayoutSize.x / _windowUnitSize.x;
             _cornerOffsetUnits = ElementSize / _pixelsPerUnit / 2;
