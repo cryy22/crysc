@@ -16,13 +16,26 @@ namespace Crysc.Helpers
             Vector3 end,
             float duration = 0.25f,
             bool isLocal = true,
-            Easings.Enum easing = Easings.Enum.Linear
+            Easings.Enum easing = Easings.Enum.Linear,
+            float delay = 0f
         )
         {
             Ease ease = Easings.ToPrimeTweenEase(easing);
             Tween tween = isLocal
-                ? Tween.LocalPosition(target: transform, endValue: end, duration: duration, ease: ease)
-                : Tween.Position(target: transform, endValue: end, duration: duration, ease: ease);
+                ? Tween.LocalPosition(
+                    target: transform,
+                    endValue: end,
+                    duration: duration,
+                    ease: ease,
+                    startDelay: delay
+                )
+                : Tween.Position(
+                    target: transform,
+                    endValue: end,
+                    duration: duration,
+                    ease: ease,
+                    startDelay: delay
+                );
 
             return new AnimationHandle(tween);
         }
@@ -51,13 +64,14 @@ namespace Crysc.Helpers
             Transform transform,
             Vector3 end,
             float duration = 0.25f,
-            bool isLocal = true
+            bool isLocal = true,
+            float delay = 0f
         )
         {
             return new AnimationHandle(
                 isLocal
-                    ? Tween.LocalPosition(target: transform, endValue: end, duration: duration)
-                    : Tween.Position(target: transform, endValue: end, duration: duration)
+                    ? Tween.LocalPosition(target: transform, endValue: end, duration: duration, startDelay: delay)
+                    : Tween.Position(target: transform, endValue: end, duration: duration, startDelay: delay)
             );
         }
 
