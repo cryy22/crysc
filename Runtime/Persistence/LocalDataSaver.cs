@@ -1,10 +1,17 @@
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Persistence
 {
     public static class LocalDataSaver
     {
-        public static bool Exists(string path) { return LocalStorage.Exists($"{path}.json"); }
+        public static bool Exists(string path)
+        {
+            return LocalStorage.Exists($"{path}.json");
+        }
 
         public static void Save(string path, object data)
         {
@@ -31,6 +38,9 @@ namespace Crysc.Persistence
             return data;
         }
 
-        public static void Delete(string path) { LocalStorage.Delete($"{path}.json"); }
+        public static void Delete(string path)
+        {
+            LocalStorage.Delete($"{path}.json");
+        }
     }
 }
