@@ -1,20 +1,23 @@
+#region
+
 using System;
-using Crysc.Common;
+
+#endregion
 
 namespace Crysc.UI.Tooltips
 {
     public class TooltipEventArgs : EventArgs
     {
         public ITooltipTargetProvider TargetProvider { get; }
-        public object[] TooltipContent { get; }
+        public object Content { get; }
 
         public TooltipEventArgs(
             ITooltipTargetProvider targetProvider,
-            object[] tooltipContent
+            object content
         )
         {
             TargetProvider = targetProvider;
-            TooltipContent = tooltipContent;
+            Content = content;
         }
     }
 }

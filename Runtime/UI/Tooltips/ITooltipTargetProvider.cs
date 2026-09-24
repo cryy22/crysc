@@ -1,5 +1,3 @@
-using Crysc.Common;
-
 namespace Crysc.UI.Tooltips
 {
     public interface ITooltipTargetProvider
@@ -7,6 +5,6 @@ namespace Crysc.UI.Tooltips
         public bool IsHovered { get; }
         public bool IgnoreRaycastBlocking { get; }
 
-        public object[] GetTooltipContent();
+        public object GetTooltipContent();
     }
 }

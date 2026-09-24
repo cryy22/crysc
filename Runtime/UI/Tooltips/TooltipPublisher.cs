@@ -24,7 +24,7 @@ namespace Crysc.UI.Tooltips
                 sender: this,
                 e: new TooltipEventArgs(
                     targetProvider: targetProvider,
-                    tooltipContent: targetProvider.GetTooltipContent()
+                    content: targetProvider.GetTooltipContent()
                 )
             );
         }
@@ -38,7 +38,7 @@ namespace Crysc.UI.Tooltips
                 sender: this,
                 e: new TooltipEventArgs(
                     targetProvider: targetProvider,
-                    tooltipContent: targetProvider.GetTooltipContent()
+                    content: targetProvider.GetTooltipContent()
                 )
             );
         }
@@ -51,7 +51,7 @@ namespace Crysc.UI.Tooltips
                 sender: this,
                 e: new TooltipEventArgs(
                     targetProvider: targetProvider,
-                    tooltipContent: targetProvider.GetTooltipContent()
+                    content: targetProvider.GetTooltipContent()
                 )
             );
         }
