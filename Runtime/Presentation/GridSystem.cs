@@ -44,7 +44,14 @@ namespace Crysc.Presentation
             EditorApplication.delayCall += () =>
             {
                 if (this)
+                {
                     Refresh();
+
+                    SceneVisibilityManager.instance.DisablePicking(
+                        gameObject: _canvas.gameObject,
+                        includeDescendants: true
+                    );
+                }
             };
         }
 
