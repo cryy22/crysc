@@ -1,5 +1,6 @@
 #region
 
+using System;
 using PrimeTween;
 
 #endregion
@@ -25,6 +26,11 @@ namespace Crysc.Helpers
         public void Stop()
         {
             _sequence.Stop();
+        }
+
+        public void ChainCallback<T>(T target, Action<T> action) where T : class
+        {
+            _sequence.ChainCallback(target: target, callback: action);
         }
     }
 }
