@@ -1,8 +1,12 @@
+#region
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Helpers
 {
@@ -50,7 +54,10 @@ namespace Crysc.Helpers
             yield return RunConcurrently(routines.ToArray());
         }
 
-        public static IEnumerator RunConcurrently(params Coroutine[] coroutines) { return coroutines.GetEnumerator(); }
+        public static IEnumerator RunConcurrently(params Coroutine[] coroutines)
+        {
+            return coroutines.GetEnumerator();
+        }
 
         public static IEnumerator RunConcurrently<T>(this IEnumerable<T> behaviours, Func<T, IEnumerator> enumerator)
             where T : MonoBehaviour
@@ -66,7 +73,7 @@ namespace Crysc.Helpers
             return RunConcurrently(coroutines);
         }
 
-        public static IEnumerator RunConcurrently(params ConcurrentCryRoutine[] routines)
+        public static IEnumerator RunConcurrently(params ConcurrentStoppableRoutine[] routines)
         {
             yield return new WaitUntil(() => routines.All(r => r.IsComplete));
         }
