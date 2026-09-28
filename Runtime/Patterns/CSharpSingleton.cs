@@ -16,7 +16,12 @@ namespace Crysc.Patterns
             if (_instance != null)
                 throw new InvalidOperationException("Singleton already initialized");
 
-            CSharpSingletonResetter.AddResetAction(() => _instance = null);
+            CSharpSingletonResetter.AddResetAction(ResetInstance);
+        }
+
+        protected virtual void ResetInstance()
+        {
+            _instance = null;
         }
     }
 }
