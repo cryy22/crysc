@@ -12,6 +12,7 @@ namespace Crysc.Presentation
     [ExecuteAlways]
     public class RelativePositioningMaintainer : MonoBehaviour
     {
+#if UNITY_EDITOR
         [SerializeField] private SpriteRenderer LeadRenderer;
         [SerializeField] private TMP_Text LeadText;
 
@@ -57,6 +58,9 @@ namespace Crysc.Presentation
 
         private void Update()
         {
+            if (Application.isPlaying)
+                return;
+
             if (_leadType == LeadType.None)
                 DetermineLeadType();
 
@@ -175,7 +179,6 @@ namespace Crysc.Presentation
             }
         }
 
-#if UNITY_EDITOR
         private void OnValidate()
         {
             EditorApplication.delayCall += () =>
@@ -187,6 +190,11 @@ namespace Crysc.Presentation
                         ResetSizes();
                 }
             };
+        }
+#else
+        private void Awake()
+        {
+            Destroy(this);
         }
 #endif
     }
