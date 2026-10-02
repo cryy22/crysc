@@ -1,6 +1,7 @@
 #region
 
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #endregion
 
@@ -28,10 +29,8 @@ namespace Crysc.Helpers
                 }
             }
 
-            if (go.GetComponent<SortingManipulatorRoot>())
+            if (go.TryGetComponent(out SortingManipulatorRoot root))
             {
-                var root = go.GetComponent<SortingManipulatorRoot>();
-
                 if (root.Skip)
                     return;
 
@@ -46,10 +45,22 @@ namespace Crysc.Helpers
                 root.SortOrder += sortingOrder;
             }
 
-            if (go.GetComponent<Canvas>())
+            else if (go.TryGetComponent(out SortingGroup group))
             {
-                var canvas = go.GetComponent<Canvas>();
+                if (group.sortingLayerID != sourceSortingLayerId)
+                {
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    return;
+                }
 
+                group.sortingLayerID = sortingLayerId;
+                group.sortingOrder -= sourceSortingOrder;
+                group.sortingOrder += sortingOrder;
+                return;
+            }
+
+            else if (go.TryGetComponent(out Canvas canvas))
+            {
                 if (canvas.sortingLayerID != sourceSortingLayerId)
                 {
                     Debug.LogWarning($"{go.name} sorting layer does not match root object.");
@@ -59,51 +70,46 @@ namespace Crysc.Helpers
                 canvas.sortingLayerID = sortingLayerId;
                 canvas.sortingOrder -= sourceSortingOrder;
                 canvas.sortingOrder += sortingOrder;
+                return;
             }
 
-            if (go.GetComponent<SpriteRenderer>())
+            else if (go.TryGetComponent(out SpriteRenderer spriteRenderer))
             {
-                var renderer = go.GetComponent<SpriteRenderer>();
-
-                if (renderer.sortingLayerID != sourceSortingLayerId)
+                if (spriteRenderer.sortingLayerID != sourceSortingLayerId)
                 {
                     Debug.LogWarning($"{go.name} sorting layer does not match root object.");
                     return;
                 }
 
-                renderer.sortingLayerID = sortingLayerId;
-                renderer.sortingOrder -= sourceSortingOrder;
-                renderer.sortingOrder += sortingOrder;
+                spriteRenderer.sortingLayerID = sortingLayerId;
+                spriteRenderer.sortingOrder -= sourceSortingOrder;
+                spriteRenderer.sortingOrder += sortingOrder;
             }
 
-            if (go.GetComponent<MeshRenderer>())
+            else if (go.TryGetComponent(out MeshRenderer meshRenderer))
             {
-                var renderer = go.GetComponent<MeshRenderer>();
-
-                if (renderer.sortingLayerID != sourceSortingLayerId)
+                if (meshRenderer.sortingLayerID != sourceSortingLayerId)
                 {
                     Debug.LogWarning($"{go.name} sorting layer does not match root object.");
                     return;
                 }
 
-                renderer.sortingLayerID = sortingLayerId;
-                renderer.sortingOrder -= sourceSortingOrder;
-                renderer.sortingOrder += sortingOrder;
+                meshRenderer.sortingLayerID = sortingLayerId;
+                meshRenderer.sortingOrder -= sourceSortingOrder;
+                meshRenderer.sortingOrder += sortingOrder;
             }
 
-            if (go.GetComponent<ParticleSystemRenderer>())
+            else if (go.TryGetComponent(out ParticleSystemRenderer particleRenderer))
             {
-                var renderer = go.GetComponent<ParticleSystemRenderer>();
-
-                if (renderer.sortingLayerID != sourceSortingLayerId)
+                if (particleRenderer.sortingLayerID != sourceSortingLayerId)
                 {
                     Debug.LogWarning($"{go.name} sorting layer does not match root object.");
                     return;
                 }
 
-                renderer.sortingLayerID = sortingLayerId;
-                renderer.sortingOrder -= sourceSortingOrder;
-                renderer.sortingOrder += sortingOrder;
+                particleRenderer.sortingLayerID = sortingLayerId;
+                particleRenderer.sortingOrder -= sourceSortingOrder;
+                particleRenderer.sortingOrder += sortingOrder;
             }
 
             foreach (Transform child in go.transform)
@@ -118,35 +124,23 @@ namespace Crysc.Helpers
 
         public static (int sortingLayerId, int sortingOrder, bool found) GetSortingDetails(this GameObject go)
         {
-            if (go.GetComponent<SortingManipulatorRoot>())
-            {
-                var root = go.GetComponent<SortingManipulatorRoot>();
+            if (go.TryGetComponent(out SortingManipulatorRoot root))
                 return (root.SortingLayerID, root.SortOrder, true);
-            }
 
-            if (go.GetComponent<Canvas>())
-            {
-                var canvas = go.GetComponent<Canvas>();
+            if (go.TryGetComponent(out SortingGroup group))
+                return (group.sortingLayerID, group.sortingOrder, true);
+
+            if (go.TryGetComponent(out Canvas canvas))
                 return (canvas.sortingLayerID, canvas.sortingOrder, true);
-            }
 
-            if (go.GetComponent<SpriteRenderer>())
-            {
-                var renderer = go.GetComponent<SpriteRenderer>();
-                return (renderer.sortingLayerID, renderer.sortingOrder, true);
-            }
+            if (go.TryGetComponent(out SpriteRenderer spriteRenderer))
+                return (spriteRenderer.sortingLayerID, spriteRenderer.sortingOrder, true);
 
-            if (go.GetComponent<MeshRenderer>())
-            {
-                var renderer = go.GetComponent<MeshRenderer>();
-                return (renderer.sortingLayerID, renderer.sortingOrder, true);
-            }
+            if (go.TryGetComponent(out MeshRenderer meshRenderer))
+                return (meshRenderer.sortingLayerID, meshRenderer.sortingOrder, true);
 
-            if (go.GetComponent<ParticleSystemRenderer>())
-            {
-                var renderer = go.GetComponent<ParticleSystemRenderer>();
-                return (renderer.sortingLayerID, renderer.sortingOrder, true);
-            }
+            if (go.TryGetComponent(out ParticleSystemRenderer particleRenderer))
+                return (particleRenderer.sortingLayerID, particleRenderer.sortingOrder, true);
 
             Debug.LogWarning("No sorting component found on GameObject " + go.name);
             return (0, 0, false);
