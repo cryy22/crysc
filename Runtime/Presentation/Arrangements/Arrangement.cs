@@ -128,6 +128,17 @@ namespace Crysc.Presentation.Arrangements
             RecalculateElementPlacements();
         }
 
+        public virtual void ReparentElements()
+        {
+            foreach (IElement element in _elements)
+            {
+                if (_excludedElements.Contains(element))
+                    continue;
+
+                element.Transform.SetParent(parent: ElementsParent, worldPositionStays: true);
+            }
+        }
+
         public void AddExcludedElement(IElement element)
         {
             if (!_excludedElements.Add(element))
