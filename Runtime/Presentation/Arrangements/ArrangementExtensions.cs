@@ -15,7 +15,7 @@ namespace Crysc.Presentation.Arrangements
             int closestIndex = -1;
             var closestDistance = float.MaxValue;
 
-            foreach (SimpleArrangement row in arrangementTable.Rows)
+            foreach (SimpleArrangement row in arrangementTable.Arrangements)
             {
                 (int index, float distance) = row.GetClosestIndex(position: position, isLocal: false);
                 if (distance < closestDistance)

@@ -97,7 +97,7 @@ namespace Crysc.Presentation.Arrangements
         )
         {
             ScheduleSimultaneousMovement(
-                arrangements: arrangementTable.Rows,
+                arrangements: arrangementTable.Arrangements,
                 elements: elements,
                 duration: duration,
                 extraRotations: extraRotations,

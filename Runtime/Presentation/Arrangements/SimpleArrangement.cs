@@ -6,14 +6,12 @@ using UnityEngine;
 
 namespace Crysc.Presentation.Arrangements
 {
-    public class SimpleArrangement : Arrangement, IArrangementElement
+    public class SimpleArrangement : Arrangement
     {
         private static readonly DefaultArrangementCalculator _calculator = new();
 
         [field: SerializeField] public Vector2 TargetSize { get; set; }
         [field: SerializeField] public Vector2 TargetSpacing { get; set; }
-
-        public Transform Transform => transform;
 
         public override void RecalculateElementPlacements()
         {

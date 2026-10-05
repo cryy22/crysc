@@ -1,7 +1,5 @@
 #region
 
-using System.Collections.Generic;
-using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -11,7 +9,8 @@ namespace Crysc.Helpers
 {
     public class SortingEnforcer : MonoBehaviour
     {
-        [field: SerializeField, ValueDropdown("GetSortingLayers")] public string SortingLayer { get; private set; }
+        [field: SerializeField, ValueDropdown("@SortingLayersUtility.GetSortingLayers()")]
+        public string SortingLayer { get; private set; }
         [field: SerializeField] public int SortOrder { get; private set; }
 
         private void OnTransformChildrenChanged()
@@ -38,11 +37,6 @@ namespace Crysc.Helpers
         {
             SortOrder = sortingOrder;
             Refresh();
-        }
-
-        private IEnumerable<string> GetSortingLayers()
-        {
-            return UnityEngine.SortingLayer.layers.Select(l => l.name);
         }
     }
 }
