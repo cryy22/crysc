@@ -1,4 +1,8 @@
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Presentation.Arrangements
 {
@@ -9,6 +13,7 @@ namespace Crysc.Presentation.Arrangements
         public static readonly Vector3 DefaultArrangementOffset = Vector3.zero;
 
         public Transform Transform { get; }
+        public GameObject GameObject => Transform.gameObject;
         public Vector2 SizeMultiplier => DefaultSizeMultiplier;
         public Vector2 Pivot => DefaultPivot;
         public Vector3 ArrangementOffset => DefaultArrangementOffset;
