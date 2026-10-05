@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Crysc.Common.CoroutineControl;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 #endregion
@@ -29,6 +30,11 @@ namespace Crysc.Presentation.Arrangements
         [field: SerializeField] public Arrangement.HorizontalAlignmentType HorizontalAlignment { get; private set; }
         [field: SerializeField] public Arrangement.VerticalAlignmentType VerticalAlignment { get; private set; }
         [field: SerializeField] public bool IsInverted { get; private set; }
+
+        [field: SerializeField, ValueDropdown("@SortingLayersUtility.GetSortingLayers()")]
+        public string SortingLayer { get; private set; }
+        [field: SerializeField] public int SortOrder { get; private set; }
+        [field: SerializeField] public int SortOrderRowDelta { get; private set; }
 
         public IReadOnlyList<ArrangementTableRow> Rows => _rows;
         private readonly List<ArrangementTableRow> _rows = new();
@@ -84,6 +90,27 @@ namespace Crysc.Presentation.Arrangements
             IsInverted = isInverted;
             foreach (SimpleArrangement row in Arrangements)
                 row.IsInverted = isInverted;
+        }
+
+        public void SetSortingLayer(string sortingLayer)
+        {
+            SortingLayer = sortingLayer;
+            foreach (ArrangementTableRow row in Rows)
+                row.SortingEnforcer.SetSortingLayer(SortingLayer);
+        }
+
+        public void SetSortOrder(int sortOrder)
+        {
+            SortOrder = sortOrder;
+            for (var i = 0; i < Rows.Count; i++)
+                Rows[i].SortingEnforcer.SetSortOrder(SortOrder + i * SortOrderRowDelta);
+        }
+
+        public void SetSortOrderRowDelta(int sortOrderRowDelta)
+        {
+            SortOrderRowDelta = sortOrderRowDelta;
+            for (var i = 0; i < Rows.Count; i++)
+                Rows[i].SortingEnforcer.SetSortOrder(SortOrder + i * SortOrderRowDelta);
         }
 
         public void SetElements(IEnumerable<IElement> elements)
@@ -190,11 +217,15 @@ namespace Crysc.Presentation.Arrangements
         private void InstantiateRow()
         {
             ArrangementTableRow row = Instantiate(RowPrefab);
+
             row.Arrangement.TargetSize = TargetSize;
             row.Arrangement.TargetSpacing = TargetSpacing;
             row.Arrangement.OddElementStagger = OddElementStagger;
             row.Arrangement.HorizontalAlignment = HorizontalAlignment;
             row.Arrangement.VerticalAlignment = VerticalAlignment;
+
+            row.SortingEnforcer.SetSortingLayer(SortingLayer);
+            row.SortingEnforcer.SetSortOrder(SortOrder + _rows.Count * SortOrderRowDelta);
 
             _rows.Add(row);
             _arrangements.Add(row.Arrangement);
