@@ -90,10 +90,31 @@ namespace Crysc.Presentation.Arrangements
 
         public abstract void RecalculateElementPlacements();
 
+        public void SetElements(IElement[] elements)
+        {
+            _elements.Clear();
+            foreach (IElement element in elements)
+                _elements.Add(element);
+            ProcessSetElements();
+        }
+
         public void SetElements(IEnumerable<IElement> elements)
         {
             _elements.Clear();
             _elements.AddRange(elements);
+            ProcessSetElements();
+        }
+
+        public void SetElements(ReadOnlySpan<IElement> elements)
+        {
+            _elements.Clear();
+            foreach (IElement element in elements)
+                _elements.Add(element);
+            ProcessSetElements();
+        }
+
+        private void ProcessSetElements()
+        {
             List<IElement> existingElements = _elementsPlacements.Keys.ToList();
 
             foreach (IElement element in _elements)

@@ -23,41 +23,91 @@ namespace Crysc.Presentation.Arrangements
         [SerializeField] private SimpleArrangement RowPrefab;
 
         [field: SerializeField] public int ElementsPerRow { get; set; }
-        [field: SerializeField] public Vector2 OddElementStagger { get; set; }
-        [field: SerializeField] public Vector2 TargetSize { get; set; }
-        [field: SerializeField] public Vector2 TargetSpacing { get; set; }
-
-        public int ElementsCount
-        {
-            get
-            {
-                var count = 0;
-                foreach (SimpleArrangement row in _rows)
-                    count += row.Elements.Count;
-
-                return count;
-            }
-        }
+        [field: SerializeField] public Vector2 TargetSize { get; private set; }
+        [field: SerializeField] public Vector2 TargetSpacing { get; private set; }
+        [field: SerializeField] public Vector2 OddElementStagger { get; private set; }
+        [field: SerializeField] public Arrangement.HorizontalAlignmentType HorizontalAlignment { get; private set; }
+        [field: SerializeField] public Arrangement.VerticalAlignmentType VerticalAlignment { get; private set; }
+        [field: SerializeField] public bool IsInverted { get; private set; }
 
         public IReadOnlyList<SimpleArrangement> Rows => _rows;
         private readonly List<SimpleArrangement> _rows = new();
 
+        public int GetElementsCount()
+        {
+            var count = 0;
+            foreach (SimpleArrangement row in _rows)
+                count += row.Elements.Count;
+
+            return count;
+        }
+
+        public void SetTargetSize(Vector2 targetSize)
+        {
+            TargetSize = targetSize;
+            foreach (SimpleArrangement row in _rows)
+                row.TargetSize = targetSize;
+        }
+
+        public void SetTargetSpacing(Vector2 targetSpacing)
+        {
+            TargetSpacing = targetSpacing;
+            foreach (SimpleArrangement row in _rows)
+                row.TargetSpacing = targetSpacing;
+        }
+
+        public void SetOddElementStagger(Vector2 oddElementStagger)
+        {
+            OddElementStagger = oddElementStagger;
+            foreach (SimpleArrangement row in _rows)
+                row.OddElementStagger = oddElementStagger;
+        }
+
         public void SetHorizontalAlignment(Arrangement.HorizontalAlignmentType horizontalAlignment)
         {
+            HorizontalAlignment = horizontalAlignment;
             foreach (SimpleArrangement row in _rows)
                 row.HorizontalAlignment = horizontalAlignment;
         }
 
-        public void SetInverted(bool isInverted)
+        public void SetVerticalAlignment(Arrangement.VerticalAlignmentType verticalAlignment)
         {
+            VerticalAlignment = verticalAlignment;
+            foreach (SimpleArrangement row in _rows)
+                row.VerticalAlignment = verticalAlignment;
+        }
+
+        public void SetIsInverted(bool isInverted)
+        {
+            IsInverted = isInverted;
             foreach (SimpleArrangement row in _rows)
                 row.IsInverted = isInverted;
         }
 
         public void SetElements(IEnumerable<IElement> elements)
         {
-            // ensure enough rows
-            // populate each row
+            ReadOnlySpan<IElement> elementsSpan = elements.ToArray().AsSpan();
+            int targetRowCount = elementsSpan.Length / ElementsPerRow;
+            if ((elementsSpan.Length % ElementsPerRow) > 0)
+                targetRowCount++;
+
+            while (_rows.Count < targetRowCount)
+                InstantiateRow();
+
+            RowsArrangement.SetElements(Rows);
+            RowsArrangement.RearrangeInstantly();
+
+            for (var rowIndex = 0; rowIndex < targetRowCount; rowIndex++)
+            {
+                SimpleArrangement row = Rows[rowIndex];
+                int start = rowIndex * ElementsPerRow;
+                int end = Mathf.Min(a: start + ElementsPerRow, b: elementsSpan.Length);
+
+                row.SetElements(elementsSpan[start..end]);
+            }
+
+            for (int rowIndex = targetRowCount; rowIndex < Rows.Count; rowIndex++)
+                Rows[rowIndex].SetElements(Array.Empty<IElement>());
         }
 
         public IElement GetElementAtIndex(int index)
@@ -82,12 +132,18 @@ namespace Crysc.Presentation.Arrangements
             throw new ArgumentException($"no element {element} found in ArrangementTable {this}");
         }
 
-        public void SetMovementPlan(ElementMovementPlan movementPlan, bool relativeTiming = true)
+        public void RemoveMovementPlanForElement(IElement element)
         {
             foreach (SimpleArrangement row in _rows)
-                if (row.Elements.Contains(movementPlan.Element))
+                row.RemoveMovementPlanForElement(element);
+        }
+
+        public void SetMovementPlan(ElementMovementPlan plan, bool relativeTiming = true)
+        {
+            foreach (SimpleArrangement row in _rows)
+                if (row.Elements.Contains(plan.Element))
                 {
-                    row.SetMovementPlan(plan: movementPlan, relativeTiming: relativeTiming);
+                    row.SetMovementPlan(plan: plan, relativeTiming: relativeTiming);
                     break;
                 }
         }
@@ -127,6 +183,18 @@ namespace Crysc.Presentation.Arrangements
         {
             foreach (SimpleArrangement row in _rows)
                 row.ReparentElements();
+        }
+
+        private void InstantiateRow()
+        {
+            SimpleArrangement row = Instantiate(RowPrefab);
+            row.TargetSize = TargetSize;
+            row.TargetSpacing = TargetSpacing;
+            row.OddElementStagger = OddElementStagger;
+            row.HorizontalAlignment = HorizontalAlignment;
+            row.VerticalAlignment = VerticalAlignment;
+
+            _rows.Add(row);
         }
     }
 }

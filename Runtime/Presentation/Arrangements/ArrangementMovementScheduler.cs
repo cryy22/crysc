@@ -87,6 +87,27 @@ namespace Crysc.Presentation.Arrangements
                 arrangementsForPlans[i].SetMovementPlan(plans[i]);
         }
 
+        public static ArrangementTable ScheduleSimultaneousMovement(
+            this ArrangementTable arrangementTable,
+            IEnumerable<IElement> elements = null,
+            float duration = 0.25f,
+            int extraRotations = 0,
+            bool consistentSpeed = true,
+            Easings.Enum easing = Easings.Enum.Linear
+        )
+        {
+            ScheduleSimultaneousMovement(
+                arrangements: arrangementTable.Rows,
+                elements: elements,
+                duration: duration,
+                extraRotations: extraRotations,
+                consistentSpeed: consistentSpeed,
+                easing: easing
+            );
+
+            return arrangementTable;
+        }
+
         public static void ScheduleSimultaneousTiming(
             Plan[] plans,
             float duration,

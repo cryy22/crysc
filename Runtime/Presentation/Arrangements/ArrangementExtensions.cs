@@ -1,13 +1,38 @@
+#region
+
 using System.Linq;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Presentation.Arrangements
 {
     public static class ArrangementExtensions
     {
-        public static int GetClosestIndex(this Arrangement arrangement, Vector2 position, bool isLocal = true)
+        public static int GetClosestIndex(this ArrangementTable arrangementTable, Vector2 position)
         {
-            var closestIndex = 0;
+            var indexOffset = 0;
+            int closestIndex = -1;
+            var closestDistance = float.MaxValue;
+
+            foreach (SimpleArrangement row in arrangementTable.Rows)
+            {
+                (int index, float distance) = row.GetClosestIndex(position: position, isLocal: false);
+                if (distance < closestDistance)
+                {
+                    closestIndex = index + indexOffset;
+                    closestDistance = distance;
+                }
+
+                indexOffset += row.Elements.Count;
+            }
+
+            return closestIndex;
+        }
+
+        public static (int, float) GetClosestIndex(this Arrangement arrangement, Vector2 position, bool isLocal = true)
+        {
+            int closestIndex = -1;
             var closestDistance = float.MaxValue;
 
             Vector2 localPosition = isLocal ? position : arrangement.transform.InverseTransformPoint(position);
@@ -17,15 +42,17 @@ namespace Crysc.Presentation.Arrangements
                 IArrangementElement element = arrangement.Elements[i];
                 if (!arrangement.ElementsPlacements.TryGetValue(key: element, value: out ElementPlacement placement))
                     continue;
+
                 float distance = Vector2.Distance(a: localPosition, b: placement.Position);
 
-                if (!(distance < closestDistance)) continue;
-
-                closestDistance = distance;
-                closestIndex = i;
+                if (distance < closestDistance)
+                {
+                    closestIndex = i;
+                    closestDistance = distance;
+                }
             }
 
-            return closestIndex;
+            return (closestIndex, closestDistance);
         }
 
         public static int GetInsertionIndex(
@@ -37,13 +64,16 @@ namespace Crysc.Presentation.Arrangements
         {
             Vector2 localPosition = isLocal ? position : arrangement.transform.InverseTransformPoint(position);
 
-            int closestIndex = arrangement.GetClosestIndex(position: localPosition);
+            (int closestIndex, _) = arrangement.GetClosestIndex(position: localPosition);
             IArrangementElement closestElement = arrangement.Elements.ElementAtOrDefault(closestIndex);
 
             if (
-                (closestElement == null) 
-                || !arrangement.ElementsPlacements.TryGetValue(key: closestElement, value: out ElementPlacement placement)
-            ) 
+                (closestElement == null)
+                || !arrangement.ElementsPlacements.TryGetValue(
+                    key: closestElement,
+                    value: out ElementPlacement placement
+                )
+            )
                 return closestIndex;
 
             float closestAxialPosition =
