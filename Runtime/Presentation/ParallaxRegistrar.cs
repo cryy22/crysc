@@ -1,5 +1,9 @@
+#region
+
 using System;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Presentation
 {
@@ -7,13 +11,12 @@ namespace Crysc.Presentation
     {
         [field: SerializeField] public ParallaxLayerConfig Layer { get; set; }
         [field: SerializeField] public bool IsAffectedBySpeed { get; set; }
-        
-        [NonSerialized] private ParallaxLayerConfig _registeredLayer;
+
+        [NonSerialized] private bool _registered;
 
         private void Start()
         {
-            if (!_registeredLayer)
-                Register(Layer, isAffectedBySpeed: IsAffectedBySpeed);
+            Register(layer: Layer, isAffectedBySpeed: IsAffectedBySpeed);
         }
 
         private void OnDestroy()
@@ -23,34 +26,41 @@ namespace Crysc.Presentation
 
         public void Register(ParallaxLayerConfig layer, bool isAffectedBySpeed = true)
         {
-            if (_registeredLayer == layer)
+            if (!ParallaxSystem.I)
                 return;
-            if (_registeredLayer)
-                Deregister();
 
-            if (ParallaxSystem.I)
+            if (_registered)
             {
-                ParallaxSystem.I.Register(
-                    layer: layer,
-                    registrant: transform,
-                    isAffectedBySpeed: isAffectedBySpeed
-                );
-                
-                _registeredLayer = layer;
+                if ((Layer == layer) && (IsAffectedBySpeed == isAffectedBySpeed))
+                    return;
+                Deregister();
             }
+
+            Layer = layer;
+            IsAffectedBySpeed = isAffectedBySpeed;
+            if (Layer == null)
+                return;
+
+            ParallaxSystem.I.Register(
+                layer: layer,
+                registrant: transform,
+                isAffectedBySpeed: isAffectedBySpeed
+            );
+
+            _registered = true;
         }
 
         public void Deregister()
         {
-            if (ParallaxSystem.I && _registeredLayer)
-            {
-                ParallaxSystem.I.Deregister(
-                    layer: _registeredLayer,
-                    registrant: transform
-                );
-                
-                _registeredLayer = null;
-            }
+            if (!_registered || !ParallaxSystem.I)
+                return;
+
+            ParallaxSystem.I.Deregister(
+                layer: Layer,
+                registrant: transform
+            );
+
+            _registered = false;
         }
     }
 }

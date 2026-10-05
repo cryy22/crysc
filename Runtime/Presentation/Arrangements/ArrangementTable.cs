@@ -36,6 +36,10 @@ namespace Crysc.Presentation.Arrangements
         [field: SerializeField] public int SortOrder { get; private set; }
         [field: SerializeField] public int SortOrderRowDelta { get; private set; }
 
+        [SerializeField] private List<ParallaxLayerConfig> _ParallaxLayers = new();
+        public IReadOnlyList<ParallaxLayerConfig> ParallaxLayers => _ParallaxLayers;
+        [field: SerializeField] public bool IsAffectedBySpeed { get; private set; }
+
         public IReadOnlyList<ArrangementTableRow> Rows => _rows;
         private readonly List<ArrangementTableRow> _rows = new();
         public IReadOnlyList<SimpleArrangement> Arrangements => _arrangements;
@@ -92,25 +96,35 @@ namespace Crysc.Presentation.Arrangements
                 row.IsInverted = isInverted;
         }
 
-        public void SetSortingLayer(string sortingLayer)
+        public void SetSortingDetails(string sortingLayer, int sortOrder, int sortOrderRowDelta)
         {
             SortingLayer = sortingLayer;
-            foreach (ArrangementTableRow row in Rows)
-                row.SortingEnforcer.SetSortingLayer(SortingLayer);
-        }
-
-        public void SetSortOrder(int sortOrder)
-        {
             SortOrder = sortOrder;
-            for (var i = 0; i < Rows.Count; i++)
-                Rows[i].SortingEnforcer.SetSortOrder(SortOrder + i * SortOrderRowDelta);
+            SortOrderRowDelta = sortOrderRowDelta;
+
+            for (var i = 0; i < _rows.Count; i++)
+            {
+                ArrangementTableRow row = _rows[i];
+                row.SortingEnforcer.SetSortingLayer(SortingLayer);
+                row.SortingEnforcer.SetSortOrder(SortOrder + i * SortOrderRowDelta);
+            }
         }
 
-        public void SetSortOrderRowDelta(int sortOrderRowDelta)
+        public void SetParallaxLayers(IReadOnlyList<ParallaxLayerConfig> layers, bool isAffectedBySpeed)
         {
-            SortOrderRowDelta = sortOrderRowDelta;
-            for (var i = 0; i < Rows.Count; i++)
-                Rows[i].SortingEnforcer.SetSortOrder(SortOrder + i * SortOrderRowDelta);
+            _ParallaxLayers.Clear();
+            _ParallaxLayers.AddRange(layers);
+            IsAffectedBySpeed = isAffectedBySpeed;
+
+            ParallaxLayerConfig currentConfig = null;
+            for (var i = 0; i < _rows.Count; i++)
+            {
+                if (_ParallaxLayers.Count > i)
+                    currentConfig = _ParallaxLayers[i];
+
+                ArrangementTableRow row = _rows[i];
+                row.ParallaxRegistrar.Register(layer: currentConfig, isAffectedBySpeed: IsAffectedBySpeed);
+            }
         }
 
         public void SetElements(IEnumerable<IElement> elements)
@@ -123,7 +137,7 @@ namespace Crysc.Presentation.Arrangements
             while (_rows.Count < targetRowCount)
                 InstantiateRow();
 
-            RowsArrangement.SetElements(Rows);
+            RowsArrangement.SetElements(_rows);
             RowsArrangement.RearrangeInstantly();
 
             for (var rowIndex = 0; rowIndex < targetRowCount; rowIndex++)
@@ -135,7 +149,7 @@ namespace Crysc.Presentation.Arrangements
                 row.SetElements(elementsSpan[start..end]);
             }
 
-            for (int rowIndex = targetRowCount; rowIndex < Rows.Count; rowIndex++)
+            for (int rowIndex = targetRowCount; rowIndex < _rows.Count; rowIndex++)
                 Arrangements[rowIndex].SetElements(Array.Empty<IElement>());
         }
 
