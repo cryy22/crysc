@@ -1,11 +1,19 @@
+#region
+
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+#endregion
+
 namespace Crysc.Presentation.Arrangements
 {
+    #region
+
     using IElement = IArrangementElement;
     using Plan = ElementMovementPlan;
+
+    #endregion
 
     public static class ArrangementMovementScheduler
     {
@@ -51,7 +59,8 @@ namespace Crysc.Presentation.Arrangements
 
             ScheduleSimultaneousTiming(plans: plans, duration: duration, consistentSpeed: consistentSpeed);
 
-            foreach (Plan plan in plans) arrangement.SetMovementPlan(plan);
+            foreach (Plan plan in plans)
+                arrangement.SetMovementPlan(plan);
             return arrangement;
         }
 
@@ -388,7 +397,8 @@ namespace Crysc.Presentation.Arrangements
             Easings.Enum easing
         )
         {
-            foreach (Arrangement arrangement in arrangements) arrangement.RecalculateElementPlacements();
+            foreach (Arrangement arrangement in arrangements)
+                arrangement.RecalculateElementPlacements();
 
             IElement[] elementsAry = (elements ?? arrangements.SelectMany(a => a.Elements)).ToArray();
 
@@ -396,7 +406,8 @@ namespace Crysc.Presentation.Arrangements
             foreach (Arrangement arrangement in arrangements)
             foreach (IElement element in arrangement.Elements)
             {
-                if (elementsAry.Contains(element) == false) continue;
+                if (elementsAry.Contains(element) == false)
+                    continue;
                 elementsArrangements[element] = arrangement;
             }
 
