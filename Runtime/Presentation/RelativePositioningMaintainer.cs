@@ -118,7 +118,7 @@ namespace Crysc.Presentation
                 Vector2 targetSize = _currentSize / boxCollider.transform.lossyScale;
                 targetSize += followBoxCollider.SizeOffset;
                 boxCollider.size = targetSize;
-                // SetPosition(positioningT: boxCollider.transform, offset: followBoxCollider.PositioningOffset);
+                boxCollider.offset = followBoxCollider.PositioningOffset;
             }
 
             foreach (FollowRenderer followRenderer in FollowRenderers)
