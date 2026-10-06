@@ -27,27 +27,38 @@ namespace Crysc.Presentation
             Text,
         }
 
+        private enum Alignment
+        {
+            Center,
+            Left,
+            Right,
+        }
+
         private LeadType _leadType = LeadType.None;
 
         [Serializable]
         private struct FollowBoxCollider
         {
             [SerializeField] public BoxCollider2D Collider;
-            [SerializeField] public Vector2 Offset;
+            [SerializeField] public Vector2 SizeOffset;
+            [SerializeField] public Vector2 PositioningOffset;
         }
 
         [Serializable]
         private struct FollowRenderer
         {
             [SerializeField] public SpriteRenderer Renderer;
-            [SerializeField] public Vector2 Offset;
+            [SerializeField] public Vector2 SizeOffset;
+            [SerializeField] public Vector2 PositioningOffset;
+            [SerializeField] public bool IncludeScale;
         }
 
         [Serializable]
         private struct FollowText
         {
             [SerializeField] public TMP_Text Text;
-            [SerializeField] public Vector2 Offset;
+            [SerializeField] public Vector2 SizeOffset;
+            [SerializeField] public Vector2 PositioningOffset;
         }
 
         private Vector2 _currentSize;
@@ -100,38 +111,64 @@ namespace Crysc.Presentation
 
             foreach (FollowBoxCollider followBoxCollider in FollowBoxColliders)
             {
-                if (!followBoxCollider.Collider)
+                BoxCollider2D boxCollider = followBoxCollider.Collider;
+                if (!boxCollider)
                     continue;
 
-                followBoxCollider.Collider.size = new Vector2(
-                    x: _currentSize.x / followBoxCollider.Collider.transform.lossyScale.x + followBoxCollider.Offset.x,
-                    y: _currentSize.y / followBoxCollider.Collider.transform.lossyScale.y + followBoxCollider.Offset.y
-                );
+                Vector2 targetSize = _currentSize / boxCollider.transform.lossyScale;
+                targetSize += followBoxCollider.SizeOffset;
+                boxCollider.size = targetSize;
+                // SetPosition(positioningT: boxCollider.transform, offset: followBoxCollider.PositioningOffset);
             }
 
             foreach (FollowRenderer followRenderer in FollowRenderers)
             {
-                if (!followRenderer.Renderer)
+                SpriteRenderer spriteRenderer = followRenderer.Renderer;
+                if (!spriteRenderer)
                     continue;
 
-                Transform followRendererTransform = followRenderer.Renderer.transform;
-                followRenderer.Renderer.size = new Vector2(
-                    x: _currentSize.x / followRendererTransform.lossyScale.x + followRenderer.Offset.x,
-                    y: _currentSize.y / followRendererTransform.lossyScale.y + followRenderer.Offset.y
+                Vector2 targetSize = _currentSize
+                    / (followRenderer.IncludeScale ? spriteRenderer.transform.lossyScale : Vector2.one);
+                targetSize += followRenderer.SizeOffset;
+                spriteRenderer.size = targetSize;
+
+                SetPosition(
+                    positioningT: spriteRenderer.transform,
+                    offset: followRenderer.PositioningOffset,
+                    alignment: (spriteRenderer.sprite.pivot.x / spriteRenderer.sprite.rect.width) switch
+                    {
+                        < 0.4f => Alignment.Left,
+                        > 0.6f => Alignment.Right,
+                        _      => Alignment.Center,
+                    }
                 );
             }
 
             foreach (FollowText followText in FollowTexts)
             {
-                if (!followText.Text)
+                TMP_Text text = followText.Text;
+                if (!text)
                     continue;
 
-                RectTransform followTextRectTransform = followText.Text.rectTransform;
-                followTextRectTransform.sizeDelta = new Vector2(
-                    x: _currentSize.x / followTextRectTransform.lossyScale.x + followText.Offset.x,
-                    y: _currentSize.y / followTextRectTransform.lossyScale.y + followText.Offset.y
-                );
+                Vector2 targetSize = _currentSize / text.transform.lossyScale;
+                targetSize += followText.SizeOffset;
+                text.rectTransform.sizeDelta = targetSize;
+                SetPosition(positioningT: text.transform, offset: followText.PositioningOffset);
             }
+        }
+
+        private void SetPosition(Transform positioningT, Vector2 offset, Alignment alignment = Alignment.Center)
+        {
+            if (alignment == Alignment.Center)
+            {
+                positioningT.localPosition = offset;
+                return;
+            }
+
+            positioningT.localPosition = new Vector2(
+                x: _currentSize.x * 0.5f * (alignment == Alignment.Left ? -1 : 1),
+                y: 0
+            ) + offset;
         }
 
         private void OnValidate()
