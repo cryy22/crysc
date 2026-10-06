@@ -88,13 +88,17 @@ namespace Crysc.Presentation.Arrangements
             Bottom,
         }
 
+        private void OnDestroy()
+        {
+            StopAllTweens();
+        }
+
         public abstract void RecalculateElementPlacements();
 
         public void SetElements(IElement[] elements)
         {
             _elements.Clear();
-            foreach (IElement element in elements)
-                _elements.Add(element);
+            _elements.AddRange(elements);
             ProcessSetElements();
         }
 
@@ -123,8 +127,11 @@ namespace Crysc.Presentation.Arrangements
                     continue;
 
                 Transform eTransform = element.Transform;
-                eTransform.SetParent(ElementsParent);
-                eTransform.gameObject.SetActive(true);
+                if (!_excludedElements.Contains(element))
+                {
+                    eTransform.SetParent(ElementsParent);
+                    eTransform.gameObject.SetActive(true);
+                }
 
                 _elementsPlacements[element] = new ElementPlacement(
                     element: element,
@@ -142,7 +149,6 @@ namespace Crysc.Presentation.Arrangements
                 _elementsPlacements.Remove(element);
                 _elementsMovementPlans.Remove(element);
                 _dirtyPlanElements.Remove(element);
-                _excludedElements.Remove(element);
                 StopTweenForElement(element);
             }
 
@@ -160,7 +166,7 @@ namespace Crysc.Presentation.Arrangements
             }
         }
 
-        public void AddExcludedElement(IElement element)
+        public void AddToExcludedElements(IElement element)
         {
             if (!_excludedElements.Add(element))
                 return;
@@ -168,7 +174,7 @@ namespace Crysc.Presentation.Arrangements
             RemoveMovementPlanForElement(element);
         }
 
-        public void RemoveExcludedElement(IElement element)
+        public void RemoveFromExcludedElements(IElement element)
         {
             _excludedElements.Remove(element);
         }
@@ -387,11 +393,6 @@ namespace Crysc.Presentation.Arrangements
                 tween.Stop();
 
             _elementsTweens.Clear();
-        }
-
-        private void OnDestroy()
-        {
-            StopAllTweens();
         }
     }
 }

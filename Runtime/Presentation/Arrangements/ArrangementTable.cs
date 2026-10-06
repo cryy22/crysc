@@ -45,6 +45,8 @@ namespace Crysc.Presentation.Arrangements
         public IReadOnlyList<SimpleArrangement> Arrangements => _arrangements;
         private readonly List<SimpleArrangement> _arrangements = new();
 
+        private readonly HashSet<IElement> _excludedElements = new();
+
         public int GetElementsCount()
         {
             var count = 0;
@@ -200,6 +202,20 @@ namespace Crysc.Presentation.Arrangements
             throw new ArgumentException($"no element {element} found in ArrangementTable {this}");
         }
 
+        public void AddToExcludedElements(IElement element)
+        {
+            _excludedElements.Add(element);
+            foreach (SimpleArrangement arrangement in _arrangements)
+                arrangement.AddToExcludedElements(element);
+        }
+
+        public void RemoveFromExcludedElements(IElement element)
+        {
+            _excludedElements.Remove(element);
+            foreach (SimpleArrangement arrangement in _arrangements)
+                arrangement.RemoveFromExcludedElements(element);
+        }
+
         public void RecalculateElementPlacements()
         {
             foreach (SimpleArrangement row in Arrangements)
@@ -213,11 +229,21 @@ namespace Crysc.Presentation.Arrangements
             RowsArrangement.RearrangeInstantly();
         }
 
-        public IEnumerator ExecuteMovementPlansAndWait()
+        public void ExecuteMovementPlans()
         {
             foreach (SimpleArrangement row in Arrangements)
                 row.ExecuteMovementPlans();
+        }
 
+        public IEnumerator ExecuteMovementPlansAndWait()
+        {
+            ExecuteMovementPlans();
+            foreach (SimpleArrangement row in Arrangements)
+                yield return row.WaitForCompletion();
+        }
+
+        public IEnumerator WaitForCompletion()
+        {
             foreach (SimpleArrangement row in Arrangements)
                 yield return row.WaitForCompletion();
         }
@@ -237,6 +263,8 @@ namespace Crysc.Presentation.Arrangements
             row.Arrangement.OddElementStagger = OddElementStagger;
             row.Arrangement.HorizontalAlignment = HorizontalAlignment;
             row.Arrangement.VerticalAlignment = VerticalAlignment;
+            foreach (IElement element in _excludedElements)
+                row.Arrangement.AddToExcludedElements(element);
 
             row.SortingEnforcer.SetSortingLayer(SortingLayer);
             row.SortingEnforcer.SetSortOrder(SortOrder + _rows.Count * SortOrderRowDelta);
