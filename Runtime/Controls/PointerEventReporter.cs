@@ -95,6 +95,18 @@ namespace Crysc.Controls
             DragEnded?.Invoke(sender: Sender, e: CreatePointerEventArgs());
         }
 
+        public void ClearSubscribers()
+        {
+            Hovered = null;
+            Unhovered = null;
+            Pressed = null;
+            Unpressed = null;
+            Clicked = null;
+            BegunDrag = null;
+            Dragged = null;
+            DragEnded = null;
+        }
+
         private PointerEventArgs CreatePointerEventArgs()
         {
             return new PointerEventArgs(_latestScreenPosition);
