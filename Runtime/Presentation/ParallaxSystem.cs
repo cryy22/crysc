@@ -1,7 +1,12 @@
+#region
+
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
+
+#endregion
 
 namespace Crysc.Presentation
 {
@@ -51,7 +56,7 @@ namespace Crysc.Presentation
             }
             else
             {
-                Debug.LogWarning("No camera, defaulting to screen center focal point", gameObject);
+                Debug.LogWarning(message: "No camera, defaulting to screen center focal point", context: gameObject);
                 FocalPoint = Vector3.zero;
                 _focalPointScreenOffset = new Vector3(
                     x: Screen.width / 2f,
@@ -63,7 +68,7 @@ namespace Crysc.Presentation
 
         private void Update()
         {
-            Vector2 clampedPosition = Input.mousePosition;
+            Vector2 clampedPosition = Pointer.current?.position.value ?? _focalPointScreenOffset;
             clampedPosition.x = Mathf.Clamp(value: clampedPosition.x, min: 0, max: Screen.width);
             clampedPosition.y = Mathf.Clamp(value: clampedPosition.y, min: 0, max: Screen.height);
 
@@ -113,7 +118,7 @@ namespace Crysc.Presentation
                 );
                 _layersMovementDeltas.Add(
                     key: layer,
-                    value: 1 + ((PivotDistance - layer.DistanceFromObserver) / layer.DistanceFromObserver)
+                    value: 1 + (PivotDistance - layer.DistanceFromObserver) / layer.DistanceFromObserver
                 );
                 _layersForeshorteningFactors.Add(
                     key: layer,
@@ -153,16 +158,17 @@ namespace Crysc.Presentation
         {
             foreach ((ParallaxLayerConfig layer, HashSet<Transform> transforms) in _layersTransforms)
             {
-                var foreshorteningFactor = _layersForeshorteningFactors[layer];
-                var foreshorteningScale = Vector2.one - _currentFocalDelta * _currentFocalDelta * foreshorteningFactor;
-                var adjustedLayerWidth = LayerWidth * foreshorteningScale.x;
+                float foreshorteningFactor = _layersForeshorteningFactors[layer];
+                Vector2 foreshorteningScale =
+                    Vector2.one - _currentFocalDelta * _currentFocalDelta * foreshorteningFactor;
+                float adjustedLayerWidth = LayerWidth * foreshorteningScale.x;
 
-                var movementDelta = _layersMovementDeltas[layer];
+                float movementDelta = _layersMovementDeltas[layer];
                 float xDelta = _distance * movementDelta * foreshorteningScale.x;
                 xDelta = (xDelta + adjustedLayerWidth / 2f) % adjustedLayerWidth
                     - adjustedLayerWidth / 2f; // xDelta range should be -LayerWidth/2 to LayerWidth/2
 
-                var pivotDelta = _layersPivotDeltas[layer];
+                float pivotDelta = _layersPivotDeltas[layer];
 
                 foreach (Transform registrant in transforms)
                 {

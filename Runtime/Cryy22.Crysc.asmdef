@@ -6,7 +6,8 @@
     "Unity.RenderPipelines.Universal.Runtime",
     "Unity.Splines",
     "Unity.Mathematics",
-    "PrimeTween.Runtime"
+    "PrimeTween.Runtime",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
