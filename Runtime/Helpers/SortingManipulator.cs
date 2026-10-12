@@ -56,7 +56,6 @@ namespace Crysc.Helpers
                 group.sortingLayerID = sortingLayerId;
                 group.sortingOrder -= sourceSortingOrder;
                 group.sortingOrder += sortingOrder;
-                return;
             }
 
             else if (go.TryGetComponent(out Canvas canvas))
