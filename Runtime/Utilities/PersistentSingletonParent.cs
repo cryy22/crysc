@@ -1,25 +1,34 @@
 #region
 
+using System.Collections.Generic;
 using UnityEngine;
 
 #endregion
 
 namespace Crysc.Utilities
 {
+    [DefaultExecutionOrder(-100)]
     public class PersistentSingletonParent : MonoBehaviour
     {
-        private static PersistentSingletonParent _instance;
+        private static readonly HashSet<string> _typeIds = new();
+
+        [field: SerializeField] private string TypeId { get; set; } = "";
 
         private void Awake()
         {
-            if (_instance != null)
+            if (!_typeIds.Add(TypeId))
             {
-                Destroy(gameObject);
+                DestroyImmediate(gameObject);
                 return;
             }
 
-            _instance = this;
             DontDestroyOnLoad(gameObject);
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void ResetAll()
+        {
+            _typeIds?.Clear();
         }
     }
 }
