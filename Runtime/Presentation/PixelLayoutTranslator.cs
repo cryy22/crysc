@@ -15,6 +15,8 @@ namespace Crysc.Presentation
     [ExecuteAlways]
     public class PixelLayoutTranslator : MonoBehaviour
     {
+        private const float RoundingStep = 1 / 80f;
+
         [field: SerializeField] public Vector2 ReferenceLayoutSize { get; private set; } = new(x: 1280, y: 720);
 
         [field: FormerlySerializedAs("<UseSizeReferenceSprite>k__BackingField")]
@@ -90,8 +92,7 @@ namespace Crysc.Presentation
 
         private static float Round(float value)
         {
-            const float roundingStep = 1 / 80f;
-            return Mathf.Round(value / roundingStep) * roundingStep;
+            return Mathf.Round(value / RoundingStep) * RoundingStep;
         }
 
 #if UNITY_EDITOR
@@ -126,13 +127,25 @@ namespace Crysc.Presentation
                     if (!this || !SpriteRenderer)
                         return;
 
-                    SpriteRenderer.size = ElementSize / _pixelsPerUnit;
-                    SpriteRenderer.size = new Vector2(
-                        x: Round(SpriteRenderer.size.x),
-                        y: Round(SpriteRenderer.size.y)
-                    );
+                    Vector2 targetSize = Round(ElementSize / _pixelsPerUnit);
+                    if (IsSignificantChange(current: SpriteRenderer.size, target: targetSize))
+                        SpriteRenderer.size = targetSize;
                 };
             }
+        }
+
+        private static bool IsSignificantChange(Vector2 current, Vector2 target)
+        {
+            const float threshold = RoundingStep / 2;
+
+            if (Mathf.Abs(current.x - target.x) >= threshold) return true;
+            if (Mathf.Abs(current.y - target.y) >= threshold) return true;
+            return false;
+        }
+
+        private static Vector2 Round(Vector2 value)
+        {
+            return new Vector2(x: Round(value.x), y: Round(value.y));
         }
 
         private bool RendererUsesSimpleDrawMode()
