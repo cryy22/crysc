@@ -14,8 +14,8 @@ namespace Crysc.Presentation
     public class RelativePositioningMaintainer : MonoBehaviour
     {
 #if UNITY_EDITOR
-        private const float RoundingFactor = 100000f;
-        private const string UndoName = "Reset Positioning";
+        private const float _roundingFactor = 100000f;
+        private const string _undoName = "Reset Positioning";
 
         [SerializeField] private SpriteRenderer LeadRenderer;
         [SerializeField] private TMP_Text LeadText;
@@ -142,7 +142,7 @@ namespace Crysc.Presentation
                 return LeadRenderer.size * GetRelativeScale(LeadRenderer.transform);
 
             LeadText.ForceMeshUpdate();
-            return (Vector2) LeadText.textBounds.size * GetRelativeScale(LeadText.transform);
+            return Round(LeadText.textBounds.size * GetRelativeScale(LeadText.transform));
         }
 
         private Vector2 GetRelativeScale(Transform t)
@@ -182,13 +182,13 @@ namespace Crysc.Presentation
             if (!IsSignificantChange(current: current, target: roundedTarget))
                 return;
 
-            Undo.RecordObject(objectToUndo: undoTarget, name: UndoName);
+            Undo.RecordObject(objectToUndo: undoTarget, name: _undoName);
             apply(roundedTarget);
         }
 
         private static bool IsSignificantChange(Vector2 current, Vector2 target)
         {
-            const float threshold = RoundingFactor / 2;
+            const float threshold = 1 / _roundingFactor / 2;
 
             if (Mathf.Abs(current.x - target.x) >= threshold) return true;
             if (Mathf.Abs(current.y - target.y) >= threshold) return true;
@@ -202,7 +202,7 @@ namespace Crysc.Presentation
 
         private static float Round(float value)
         {
-            return Mathf.Round(value * RoundingFactor) / RoundingFactor;
+            return Mathf.Round(value * _roundingFactor) / _roundingFactor;
         }
 #else
         private void Awake()
