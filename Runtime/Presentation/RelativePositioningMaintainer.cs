@@ -1,6 +1,7 @@
 #region
 
 using System;
+using Crysc.Helpers;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEditor;
@@ -45,6 +46,7 @@ namespace Crysc.Presentation
             [SerializeField] public SpriteRenderer Renderer;
             [SerializeField] public Vector2 SizeOffset;
             [SerializeField] public Vector2 PositioningOffset;
+            [SerializeField] public int SortingOffset;
             [SerializeField] public bool IncludeScale;
         }
 
@@ -54,6 +56,7 @@ namespace Crysc.Presentation
             [SerializeField] public TMP_Text Text;
             [SerializeField] public Vector2 SizeOffset;
             [SerializeField] public Vector2 PositioningOffset;
+            [SerializeField] public int SortingOffset;
         }
 
         [Button]
@@ -69,6 +72,7 @@ namespace Crysc.Presentation
             }
 
             Vector2 leadSize = GetLeadSize();
+            (int sortingLayerId, int sortOrder) = GetLeadSortingDetails();
 
             foreach (FollowBoxCollider followBoxCollider in FollowBoxColliders)
             {
@@ -118,6 +122,15 @@ namespace Crysc.Presentation
                         _      => Alignment.Center,
                     }
                 );
+
+                int targetSortOrder = sortOrder + followRenderer.SortingOffset;
+                if ((spriteRenderer.sortingLayerID == sortingLayerId)
+                    && (spriteRenderer.sortingOrder == targetSortOrder))
+                    continue;
+
+                Undo.RecordObject(objectToUndo: spriteRenderer, name: _undoName);
+                spriteRenderer.sortingLayerID = sortingLayerId;
+                spriteRenderer.sortingOrder = targetSortOrder;
             }
 
             foreach (FollowText followText in FollowTexts)
@@ -133,6 +146,18 @@ namespace Crysc.Presentation
                     apply: size => text.rectTransform.sizeDelta = size
                 );
                 SetPosition(positioningT: text.transform, leadSize: leadSize, offset: followText.PositioningOffset);
+
+                if (!followText.Text.TryGetComponent(out MeshRenderer meshRenderer))
+                    continue;
+
+                int targetSortOrder = sortOrder + followText.SortingOffset;
+                if ((meshRenderer.sortingLayerID == sortingLayerId)
+                    && (meshRenderer.sortingOrder == targetSortOrder))
+                    continue;
+
+                Undo.RecordObject(objectToUndo: meshRenderer, name: _undoName);
+                meshRenderer.sortingLayerID = sortingLayerId;
+                meshRenderer.sortingOrder = targetSortOrder;
             }
         }
 
@@ -143,6 +168,20 @@ namespace Crysc.Presentation
 
             LeadText.ForceMeshUpdate();
             return Round(LeadText.textBounds.size * GetRelativeScale(LeadText.transform));
+        }
+
+        private (int sortingLayerId, int sortingOrder) GetLeadSortingDetails()
+        {
+            var sortingLayerId = 0;
+            var sortingOrder = 0;
+
+            if (LeadRenderer)
+                (sortingLayerId, sortingOrder, _) = LeadRenderer.gameObject.GetSortingDetails();
+
+            else if (LeadText)
+                (sortingLayerId, sortingOrder, _) = LeadText.gameObject.GetSortingDetails();
+
+            return (sortingLayerId, sortingOrder);
         }
 
         private Vector2 GetRelativeScale(Transform t)
