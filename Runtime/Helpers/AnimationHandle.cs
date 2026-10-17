@@ -18,9 +18,9 @@ namespace Crysc.Helpers
             _sequence = sequence;
         }
 
-        public AnimationHandle(Tween tween)
+        public AnimationHandle(Tween tween, bool useUnscaledTime = false)
         {
-            _sequence = Sequence.Create().Chain(tween);
+            _sequence = Sequence.Create(useUnscaledTime: useUnscaledTime).Chain(tween);
         }
 
         public void Stop()

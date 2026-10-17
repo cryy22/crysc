@@ -17,7 +17,8 @@ namespace Crysc.Helpers
             float duration = 0.25f,
             bool isLocal = true,
             Easings.Enum easing = Easings.Enum.Linear,
-            float delay = 0f
+            float delay = 0f,
+            bool ignoreTimeScale = false
         )
         {
             Ease ease = Easings.ToPrimeTweenEase(easing);
@@ -37,7 +38,7 @@ namespace Crysc.Helpers
                     startDelay: delay
                 );
 
-            return new AnimationHandle(tween);
+            return new AnimationHandle(tween: tween, useUnscaledTime: ignoreTimeScale);
         }
 
         public static void MoveToStep(
@@ -65,14 +66,24 @@ namespace Crysc.Helpers
             Vector3 end,
             float duration = 0.25f,
             bool isLocal = true,
-            float delay = 0f
+            float delay = 0f,
+            bool ignoreTimeScale = false
         )
         {
-            return new AnimationHandle(
-                isLocal
-                    ? Tween.LocalPosition(target: transform, endValue: end, duration: duration, startDelay: delay)
-                    : Tween.Position(target: transform, endValue: end, duration: duration, startDelay: delay)
-            );
+            Tween tween = isLocal
+                ? Tween.LocalPosition(
+                    target: transform,
+                    endValue: end,
+                    duration: duration,
+                    startDelay: delay
+                )
+                : Tween.Position(
+                    target: transform,
+                    endValue: end,
+                    duration: duration,
+                    startDelay: delay
+                );
+            return new AnimationHandle(tween: tween, useUnscaledTime: ignoreTimeScale);
         }
 
         public static IEnumerator MoveSine(
