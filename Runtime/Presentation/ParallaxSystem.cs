@@ -1,6 +1,7 @@
 #region
 
 using System.Collections.Generic;
+using Crysc.Patterns;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Vector2 = UnityEngine.Vector2;
@@ -11,10 +12,8 @@ using Vector3 = UnityEngine.Vector3;
 namespace Crysc.Presentation
 {
     [DefaultExecutionOrder(-1)]
-    public class ParallaxSystem : MonoBehaviour
+    public class ParallaxSystem : MonoBehaviourSingleton<ParallaxSystem>
     {
-        public static ParallaxSystem I { get; private set; }
-
         [field: SerializeField] public float LayerWidth { get; private set; } = 20;
         [SerializeField] private Vector2 InitialFocalPoint;
 
@@ -38,15 +37,9 @@ namespace Crysc.Presentation
         private Vector2 _focalPointScreenOffset;
         private Vector2 _currentFocalDelta;
 
-        private void Awake()
+        protected override void Awake()
         {
-            if (I != null)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            I = this;
+            base.Awake();
 
             _camera = Camera.main;
             if (_camera)
