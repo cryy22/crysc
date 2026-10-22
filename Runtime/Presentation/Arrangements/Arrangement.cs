@@ -76,16 +76,16 @@ namespace Crysc.Presentation.Arrangements
 
         public enum HorizontalAlignmentType
         {
-            Left,
-            Center,
-            Right,
+            Left = 0,
+            Center = 1,
+            Right = 2,
         }
 
         public enum VerticalAlignmentType
         {
-            Top,
-            Middle,
-            Bottom,
+            Top = 0,
+            Middle = 1,
+            Bottom = 2,
         }
 
         private void OnDestroy()
