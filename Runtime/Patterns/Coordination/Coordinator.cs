@@ -1,6 +1,10 @@
+#region
+
 using System;
 using System.Collections;
 using UnityEngine;
+
+#endregion
 
 namespace Crysc.Patterns.Coordination
 {
@@ -8,16 +12,13 @@ namespace Crysc.Patterns.Coordination
         where TEvent : Enum
         where TState : class
     {
-        public event EventHandler<EventArgs> Announcement;
+        public event Action<EventContext> Announcement;
 
         protected virtual IEnumerator Coordinate(TEvent eventEnum, TState state)
         {
             WaitGroup waitGroup = new();
             waitGroup.Join();
-            Announcement?.Invoke(
-                sender: this,
-                e: new EventArgs(eventEnum: eventEnum, state: state, waitGroup: waitGroup)
-            );
+            Announcement?.Invoke(new EventContext(eventEnum: eventEnum, state: state, waitGroup: waitGroup));
 
             waitGroup.Leave();
             yield return null;
@@ -31,24 +32,21 @@ namespace Crysc.Patterns.Coordination
 
         protected virtual void CoordinateWithoutWaiting(TEvent eventEnum, TState state)
         {
-            Announcement?.Invoke(
-                sender: this,
-                e: new EventArgs(eventEnum: eventEnum, state: state, waitGroup: null)
-            );
+            Announcement?.Invoke(new EventContext(eventEnum: eventEnum, state: state, waitGroup: null));
         }
 
-        public class EventArgs : CoordinationEventArgs<TEvent, TState>
+        public readonly struct EventContext
         {
-            public EventArgs(
-                TEvent eventEnum,
-                TState state,
-                WaitGroup waitGroup
-            ) : base(
-                eventEnum: eventEnum,
-                state: state,
-                waitGroup: waitGroup
-            )
-            { }
+            public WaitGroup WaitGroup { get; }
+            public TEvent Event { get; }
+            public TState State { get; }
+
+            public EventContext(TEvent eventEnum, TState state, WaitGroup waitGroup)
+            {
+                Event = eventEnum;
+                State = state;
+                WaitGroup = waitGroup;
+            }
         }
     }
 }
