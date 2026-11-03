@@ -10,15 +10,15 @@ namespace Crysc.Controls
     [RequireComponent(typeof(PointerEventReporter))]
     public class Draggable<T> : MonoBehaviour where T : Component
     {
-        public event EventHandler<DraggableEventArgs<T>> Began;
-        public event EventHandler<DraggableEventArgs<T>> Ended;
-        public event EventHandler<DraggableEventArgs<T>> Moved;
+        public event Action<DraggableEventContext<T>> Began;
+        public event Action<DraggableEventContext<T>> Ended;
+        public event Action<DraggableEventContext<T>> Moved;
 
         private const float _zAxis = -5f;
 
         [field: SerializeField] public bool IsActive { get; set; }
 
-        private PointerEventReporter _pointerEventReporter;
+        private PointerEventReporter _pointerReporter;
         private Camera _camera;
         private Vector2 _initialClickOffset;
         private T _target;
@@ -26,23 +26,23 @@ namespace Crysc.Controls
 
         protected virtual void Awake()
         {
-            _pointerEventReporter = GetComponent<PointerEventReporter>();
+            _pointerReporter = GetComponent<PointerEventReporter>();
             _camera = Camera.main;
             _target = GetComponentInParent<T>();
         }
 
         private void OnEnable()
         {
-            _pointerEventReporter.Pressed += OnPointerDown;
-            _pointerEventReporter.Dragged += OnPointerDragged;
-            _pointerEventReporter.Unpressed += OnPointerUp;
+            _pointerReporter.Pressed += OnPointerDown;
+            _pointerReporter.Dragged += OnPointerDragged;
+            _pointerReporter.Unpressed += OnPointerUp;
         }
 
         private void OnDisable()
         {
-            _pointerEventReporter.Pressed -= OnPointerDown;
-            _pointerEventReporter.Dragged -= OnPointerDragged;
-            _pointerEventReporter.Unpressed -= OnPointerUp;
+            _pointerReporter.Pressed -= OnPointerDown;
+            _pointerReporter.Dragged -= OnPointerDragged;
+            _pointerReporter.Unpressed -= OnPointerUp;
         }
 
         private void OnPointerDown(PointerEventContext ctx)
@@ -55,8 +55,7 @@ namespace Crysc.Controls
             _initialClickOffset = (Vector2) transform.position - cursor;
 
             Began?.Invoke(
-                sender: this,
-                e: new DraggableEventArgs<T>(
+                new DraggableEventContext<T>(
                     target: _target,
                     screenPosition: _camera.WorldToScreenPoint(cursor + _initialClickOffset)
                 )
@@ -70,8 +69,7 @@ namespace Crysc.Controls
 
             _isDragging = false;
             Ended?.Invoke(
-                sender: this,
-                e: new DraggableEventArgs<T>(
+                new DraggableEventContext<T>(
                     target: _target,
                     screenPosition: ctx.ScreenPosition + (Vector2) _camera.WorldToScreenPoint(_initialClickOffset)
                 )
@@ -89,8 +87,7 @@ namespace Crysc.Controls
             targetTransform.position = new Vector3(x: cursor.x, y: cursor.y, z: _zAxis);
 
             Moved?.Invoke(
-                sender: this,
-                e: new DraggableEventArgs<T>(
+                new DraggableEventContext<T>(
                     target: _target,
                     screenPosition: _camera.WorldToScreenPoint(cursor)
                 )
