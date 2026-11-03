@@ -18,19 +18,19 @@ namespace Crysc.Controls
         IDragHandler,
         IEndDragHandler
     {
-        public event EventHandler<PointerEventArgs> Hovered;
-        public event EventHandler<PointerEventArgs> Unhovered;
-        public event EventHandler<PointerEventArgs> Pressed;
-        public event EventHandler<PointerEventArgs> Unpressed;
-        public event EventHandler<PointerEventArgs> Clicked;
-        public event EventHandler<PointerEventArgs> BegunDrag;
-        public event EventHandler<PointerEventArgs> Dragged;
-        public event EventHandler<PointerEventArgs> DragEnded;
+        public event Action<PointerEventContext> Hovered;
+        public event Action<PointerEventContext> Unhovered;
+        public event Action<PointerEventContext> Pressed;
+        public event Action<PointerEventContext> Unpressed;
+        public event Action<PointerEventContext> Clicked;
+        public event Action<PointerEventContext> BegunDrag;
+        public event Action<PointerEventContext> Dragged;
+        public event Action<PointerEventContext> DragEnded;
 
         [SerializeField] private Component SenderOverrideInput;
 
         public bool IsHovered { get; private set; }
-        private object Sender => SenderOverrideInput ? SenderOverrideInput : this;
+        private Component Sender => SenderOverrideInput ? SenderOverrideInput : this;
 
         private Vector2 _latestScreenPosition;
 
@@ -40,7 +40,7 @@ namespace Crysc.Controls
                 return;
 
             IsHovered = false;
-            Unhovered?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            Unhovered?.Invoke(CreatePointerEventContext());
         }
 
         public void OnPointerEnter(PointerEventData data)
@@ -48,7 +48,7 @@ namespace Crysc.Controls
             IsHovered = true;
             _latestScreenPosition = data.position;
 
-            Hovered?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            Hovered?.Invoke(CreatePointerEventContext());
         }
 
         public void OnPointerExit(PointerEventData data)
@@ -56,43 +56,43 @@ namespace Crysc.Controls
             IsHovered = false;
             _latestScreenPosition = data.position;
 
-            Unhovered?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            Unhovered?.Invoke(CreatePointerEventContext());
         }
 
         public void OnPointerDown(PointerEventData data)
         {
             _latestScreenPosition = data.position;
-            Pressed?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            Pressed?.Invoke(CreatePointerEventContext());
         }
 
         public void OnPointerUp(PointerEventData data)
         {
             _latestScreenPosition = data.position;
-            Unpressed?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            Unpressed?.Invoke(CreatePointerEventContext());
         }
 
         public void OnPointerClick(PointerEventData data)
         {
             _latestScreenPosition = data.position;
-            Clicked?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            Clicked?.Invoke(CreatePointerEventContext());
         }
 
         public void OnBeginDrag(PointerEventData data)
         {
             _latestScreenPosition = data.position;
-            BegunDrag?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            BegunDrag?.Invoke(CreatePointerEventContext());
         }
 
         public void OnDrag(PointerEventData data)
         {
             _latestScreenPosition = data.position;
-            Dragged?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            Dragged?.Invoke(CreatePointerEventContext());
         }
 
         public void OnEndDrag(PointerEventData data)
         {
             _latestScreenPosition = data.position;
-            DragEnded?.Invoke(sender: Sender, e: CreatePointerEventArgs());
+            DragEnded?.Invoke(CreatePointerEventContext());
         }
 
         public void ClearSubscribers()
@@ -107,9 +107,9 @@ namespace Crysc.Controls
             DragEnded = null;
         }
 
-        private PointerEventArgs CreatePointerEventArgs()
+        private PointerEventContext CreatePointerEventContext()
         {
-            return new PointerEventArgs(_latestScreenPosition);
+            return new PointerEventContext(sender: Sender, screenPosition: _latestScreenPosition);
         }
     }
 }
