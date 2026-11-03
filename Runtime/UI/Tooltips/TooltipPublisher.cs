@@ -9,9 +9,9 @@ namespace Crysc.UI.Tooltips
 {
     public class TooltipPublisher : CSharpSingleton<TooltipPublisher>
     {
-        public event EventHandler<TooltipEventArgs> Hovered;
-        public event EventHandler<TooltipEventArgs> Unhovered;
-        public event EventHandler<TooltipEventArgs> Clicked;
+        public event Action<TooltipEventContext> Hovered;
+        public event Action<TooltipEventContext> Unhovered;
+        public event Action<TooltipEventContext> Clicked;
 
         public bool Enabled { get; set; } = true;
 
@@ -21,8 +21,7 @@ namespace Crysc.UI.Tooltips
                 return;
 
             Hovered?.Invoke(
-                sender: this,
-                e: new TooltipEventArgs(
+                new TooltipEventContext(
                     targetProvider: targetProvider,
                     content: targetProvider.GetTooltipContent()
                 )
@@ -35,8 +34,7 @@ namespace Crysc.UI.Tooltips
                 return;
 
             Unhovered?.Invoke(
-                sender: this,
-                e: new TooltipEventArgs(
+                new TooltipEventContext(
                     targetProvider: targetProvider,
                     content: targetProvider.GetTooltipContent()
                 )
@@ -48,8 +46,7 @@ namespace Crysc.UI.Tooltips
             if (!Enabled) return;
 
             Clicked?.Invoke(
-                sender: this,
-                e: new TooltipEventArgs(
+                new TooltipEventContext(
                     targetProvider: targetProvider,
                     content: targetProvider.GetTooltipContent()
                 )

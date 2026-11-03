@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,11 +34,6 @@ namespace Crysc.UI
         }
 
         private void OpenUri()
-        {
-            Application.OpenURL(Uri);
-        }
-
-        private void OpenUri(object sender, EventArgs e)
         {
             Application.OpenURL(Uri);
         }

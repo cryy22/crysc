@@ -7,13 +7,13 @@ namespace Crysc.UI.Presenters
 {
     public class ButtonPresenter : MonoBehaviour, IPresenter
     {
-        public event EventHandler Dismissed
+        public event Action Dismissed
         {
             add => Presenter.Dismissed += value;
             remove => Presenter.Dismissed -= value;
         }
 
-        public event EventHandler Presented
+        public event Action Presented
         {
             add => Presenter.Presented += value;
             remove => Presenter.Presented -= value;

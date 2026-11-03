@@ -24,8 +24,8 @@ namespace Crysc.Presentation.Arrangements
     {
         public const float ZOffset = 0.01f;
 
-        public event EventHandler<ArrangementEventArgs> ElementArrangeStarted;
-        public event EventHandler<ArrangementEventArgs> ElementArrangeEnded;
+        public event Action<ElementMovementPlan> ElementArrangeStarted;
+        public event Action<ElementMovementPlan> ElementArrangeEnded;
 
         [field: SerializeField, FormerlySerializedAs("ElementsParent"), FormerlySerializedAs("ElementsParentInput")]
         public Transform ElementsParent { get; private set; }
@@ -296,7 +296,7 @@ namespace Crysc.Presentation.Arrangements
                 element.Transform.SetParent(ElementsParent);
                 plan = plan.Copy(isStarted: true);
                 _elementsMovementPlans[element] = plan;
-                ElementArrangeStarted?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
+                ElementArrangeStarted?.Invoke(plan);
             }
 
             IncrementPlan(plan: plan, t: t);
@@ -308,7 +308,7 @@ namespace Crysc.Presentation.Arrangements
             if (!_elementsMovementPlans.Remove(key: element, value: out ElementMovementPlan plan))
                 return;
 
-            ElementArrangeEnded?.Invoke(sender: this, e: new ArrangementEventArgs(plan));
+            ElementArrangeEnded?.Invoke(plan);
         }
 
         private static void IncrementPlan(ElementMovementPlan plan, float t)

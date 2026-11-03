@@ -6,8 +6,8 @@ namespace Crysc.UI.Presenters
 {
     public interface IPresenter
     {
-        public event EventHandler Dismissed;
-        public event EventHandler Presented;
+        public event Action Dismissed;
+        public event Action Presented;
 
         PresentationState PresentationState { get; }
         void Present();
