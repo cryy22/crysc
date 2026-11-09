@@ -3,8 +3,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using UnityEngine;
+using UnityEngine.Pool;
 
 #endregion
 
@@ -15,67 +16,101 @@ namespace Crysc.Helpers
         private const float _initialDelay = 1.5f;
         private const float _perInstanceDelayPct = 0.9f;
 
-        public static IEnumerator RunExponentially(
-            this MonoBehaviour behaviour,
+        public static async Awaitable RunExponentiallyAsync<T>(
+            this IEnumerable<T> arguments,
+            Action<T> action,
+            CancellationToken cancellationToken,
             float initialDelay = _initialDelay,
-            float perInstanceDelayPct = _perInstanceDelayPct,
-            params IEnumerator[] enumerators
+            float perInstanceDelayPct = _perInstanceDelayPct
         )
+            where T : MonoBehaviour
         {
-            List<Coroutine> routines = new();
             float delay = initialDelay;
-            foreach (IEnumerator enumerator in enumerators)
+            try
             {
-                routines.Add(behaviour.StartCoroutine(enumerator));
-                yield return new WaitForSeconds(delay);
-                delay *= perInstanceDelayPct;
+                foreach (T argument in arguments)
+                {
+                    action(argument);
+                    await Awaitable.WaitForSecondsAsync(seconds: delay, cancellationToken: cancellationToken);
+                    delay *= perInstanceDelayPct;
+                }
             }
-
-            yield return RunConcurrently(routines.ToArray());
+            catch (OperationCanceledException)
+            { }
         }
 
         public static IEnumerator RunExponentially<T>(
-            this IEnumerable<T> behaviours,
+            this List<T> behaviours,
             Func<T, IEnumerator> enumerator,
             float initialDelay = _initialDelay,
             float perInstanceDelayPct = _perInstanceDelayPct
         )
             where T : MonoBehaviour
         {
-            List<Coroutine> routines = new();
-            float delay = initialDelay;
-            foreach (T behaviour in behaviours)
+            List<Coroutine> routines = ListPool<Coroutine>.Get();
+            try
             {
-                routines.Add(behaviour.StartCoroutine(enumerator(behaviour)));
-                yield return new WaitForSeconds(delay);
-                delay *= perInstanceDelayPct;
-            }
+                float delay = initialDelay;
+                foreach (T behaviour in behaviours)
+                {
+                    routines.Add(behaviour.StartCoroutine(enumerator(behaviour)));
 
-            yield return RunConcurrently(routines.ToArray());
+                    yield return new WaitForSeconds(delay);
+                    delay *= perInstanceDelayPct;
+                }
+
+                yield return RunConcurrently(routines);
+            }
+            finally
+            {
+                ListPool<Coroutine>.Release(routines);
+            }
         }
 
-        public static IEnumerator RunConcurrently(params Coroutine[] coroutines)
+        public static IEnumerator RunConcurrently(IEnumerable<Coroutine> coroutines, int count = int.MaxValue)
         {
-            return coroutines.GetEnumerator();
+            var i = 0;
+            foreach (Coroutine coroutine in coroutines)
+            {
+                if (i >= count)
+                    yield break;
+
+                yield return coroutine;
+                i++;
+            }
         }
 
         public static IEnumerator RunConcurrently<T>(this IEnumerable<T> behaviours, Func<T, IEnumerator> enumerator)
             where T : MonoBehaviour
         {
-            yield return RunConcurrently(
-                behaviours.Select(b => b.StartCoroutine(enumerator(b))).ToArray()
-            );
+            List<Coroutine> routines = ListPool<Coroutine>.Get();
+            try
+            {
+                foreach (T behaviour in behaviours)
+                    routines.Add(behaviour.StartCoroutine(enumerator(behaviour)));
+
+                yield return RunConcurrently(routines);
+            }
+            finally
+            {
+                ListPool<Coroutine>.Release(routines);
+            }
         }
 
         public static IEnumerator RunConcurrently(this MonoBehaviour behaviour, params IEnumerator[] enumerators)
         {
-            Coroutine[] coroutines = enumerators.Select(behaviour.StartCoroutine).ToArray();
-            return RunConcurrently(coroutines);
-        }
+            List<Coroutine> routines = ListPool<Coroutine>.Get();
+            try
+            {
+                foreach (IEnumerator enumerator in enumerators)
+                    routines.Add(behaviour.StartCoroutine(enumerator));
 
-        public static IEnumerator RunConcurrently(params ConcurrentStoppableRoutine[] routines)
-        {
-            yield return new WaitUntil(() => routines.All(r => r.IsComplete));
+                yield return RunConcurrently(routines);
+            }
+            finally
+            {
+                ListPool<Coroutine>.Release(routines);
+            }
         }
     }
 }
