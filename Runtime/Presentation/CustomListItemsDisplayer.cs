@@ -17,13 +17,14 @@ namespace Crysc.Presentation
         [FormerlySerializedAs("PresentersParent")] [SerializeField] private Transform ItemsParent;
         [SerializeField] private Transform NoElementsIndicator;
 
-        protected readonly List<TItem> Items = new();
-        protected int ActiveCount;
+        protected readonly List<TItem> _Items = new();
+        public int ActiveCount { get; protected set; }
+        public IReadOnlyList<TItem> Items => _Items;
 
         protected void Awake()
         {
-            if (Items.Capacity < InitialCapacity)
-                Items.Capacity = InitialCapacity;
+            if (_Items.Capacity < InitialCapacity)
+                _Items.Capacity = InitialCapacity;
 
             for (int i = ItemsParent.childCount - 1; i >= 0; i--)
             {
@@ -31,17 +32,17 @@ namespace Crysc.Presentation
                 child.gameObject.SetActive(false);
 
                 var item = child.GetComponent<TItem>();
-                if (item && (Items.Count < InitialCapacity))
-                    Items.Insert(index: 0, item: item);
+                if (item && (_Items.Count < InitialCapacity))
+                    _Items.Insert(index: 0, item: item);
                 else
                     Destroy(child.gameObject);
             }
 
-            for (int i = Items.Count; i < InitialCapacity; i++)
+            for (int i = _Items.Count; i < InitialCapacity; i++)
             {
                 TItem presenter = Instantiate(original: ItemPrefab, parent: ItemsParent);
                 presenter.gameObject.SetActive(false);
-                Items.Add(presenter);
+                _Items.Add(presenter);
             }
         }
 
@@ -57,9 +58,9 @@ namespace Crysc.Presentation
             if (ActiveCount == 0)
                 return;
 
-            for (var i = 0; i < Items.Count; i++)
+            for (var i = 0; i < _Items.Count; i++)
             {
-                TItem presenter = Items[i];
+                TItem presenter = _Items[i];
                 if (i < elementsAry.Length)
                 {
                     bool ignore = ignoreNullElements && (elementsAry[i] == null);
@@ -78,12 +79,12 @@ namespace Crysc.Presentation
 
         protected void EnsureCapacity(int count)
         {
-            Items.Capacity = Mathf.Max(a: count, b: Items.Capacity);
-            while (Items.Count < count)
+            _Items.Capacity = Mathf.Max(a: count, b: _Items.Capacity);
+            while (_Items.Count < count)
             {
                 TItem presenter = Instantiate(original: ItemPrefab, parent: ItemsParent);
                 presenter.gameObject.SetActive(false);
-                Items.Add(presenter);
+                _Items.Add(presenter);
             }
         }
     }

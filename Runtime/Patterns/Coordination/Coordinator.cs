@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 #endregion
@@ -12,7 +13,24 @@ namespace Crysc.Patterns.Coordination
         where TEvent : Enum
         where TState : class
     {
+        public event Action<TState> Initialized;
         public event Action<EventContext> Announcement;
+
+        protected readonly List<IDisposable> Observers = new();
+
+        protected void OnDestroy()
+        {
+            foreach (IDisposable observer in Observers)
+                observer.Dispose();
+        }
+
+        public void Initialize(TState state)
+        {
+            CreateObservers(state);
+            Initialized?.Invoke(state);
+        }
+
+        protected abstract void CreateObservers(TState state);
 
         protected virtual IEnumerator Coordinate(TEvent eventEnum, TState state)
         {

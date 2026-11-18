@@ -24,7 +24,7 @@ namespace Crysc.Helpers
 
                 if (!sourceFound)
                 {
-                    Debug.LogWarning("Root game object has not sorting layer component.");
+                    Debug.LogWarning("Root game object has not sorting layer component.", go);
                     return;
                 }
             }
@@ -36,7 +36,7 @@ namespace Crysc.Helpers
 
                 if (root.SortingLayerID != sourceSortingLayerId)
                 {
-                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.", go);
                     return;
                 }
 
@@ -49,7 +49,7 @@ namespace Crysc.Helpers
             {
                 if (group.sortingLayerID != sourceSortingLayerId)
                 {
-                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.", go);
                     return;
                 }
 
@@ -62,7 +62,7 @@ namespace Crysc.Helpers
             {
                 if (canvas.sortingLayerID != sourceSortingLayerId)
                 {
-                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.", go);
                     return;
                 }
 
@@ -76,7 +76,7 @@ namespace Crysc.Helpers
             {
                 if (spriteRenderer.sortingLayerID != sourceSortingLayerId)
                 {
-                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.", go);
                     return;
                 }
 
@@ -89,7 +89,7 @@ namespace Crysc.Helpers
             {
                 if (meshRenderer.sortingLayerID != sourceSortingLayerId)
                 {
-                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.", go);
                     return;
                 }
 
@@ -102,7 +102,7 @@ namespace Crysc.Helpers
             {
                 if (particleRenderer.sortingLayerID != sourceSortingLayerId)
                 {
-                    Debug.LogWarning($"{go.name} sorting layer does not match root object.");
+                    Debug.LogWarning($"{go.name} sorting layer does not match root object.", go);
                     return;
                 }
 
@@ -141,7 +141,7 @@ namespace Crysc.Helpers
             if (go.TryGetComponent(out ParticleSystemRenderer particleRenderer))
                 return (particleRenderer.sortingLayerID, particleRenderer.sortingOrder, true);
 
-            Debug.LogWarning("No sorting component found on GameObject " + go.name);
+            Debug.LogWarning("No sorting component found on GameObject " + go.name, go);
             return (0, 0, false);
         }
     }

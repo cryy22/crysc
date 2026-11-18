@@ -20,7 +20,8 @@ namespace Crysc.Presentation
         [field: SerializeField] public float PivotDistance { get; private set; } = 10;
         [field: SerializeField] public float Speed { get; set; }
         [field: SerializeField] public Vector2 MouseEffectModifier { get; set; } = Vector2.one;
-        [field: SerializeField] public float CameraMouseAlignmentSpeed { get; set; } = 1f;
+        [field: SerializeField] public float CameraMouseAlignmentDuration { get; set; } = 1f;
+        [field: SerializeField] public float MinCameraMouseAlignmentSpeed { get; set; } = 1f;
 
         public Vector2 FocalPoint { get; private set; }
 
@@ -36,6 +37,7 @@ namespace Crysc.Presentation
         private Transform _cameraTransform;
         private Vector2 _focalPointScreenOffset;
         private Vector2 _currentFocalDelta;
+        private Mouse _mouse;
 
         protected override void Awake()
         {
@@ -59,9 +61,19 @@ namespace Crysc.Presentation
             }
         }
 
+        public void SetMouse(Mouse mouse)
+        {
+            _mouse = mouse;
+        }
+
+        private Pointer GetPointer()
+        {
+            return _mouse ?? Pointer.current;
+        }
+
         private void Update()
         {
-            Vector2 clampedPosition = Pointer.current?.position.value ?? _focalPointScreenOffset;
+            Vector2 clampedPosition = GetPointer()?.position.value ?? _focalPointScreenOffset;
             clampedPosition.x = Mathf.Clamp(value: clampedPosition.x, min: 0, max: Screen.width);
             clampedPosition.y = Mathf.Clamp(value: clampedPosition.y, min: 0, max: Screen.height);
 
@@ -70,8 +82,14 @@ namespace Crysc.Presentation
             Vector2 focalDelta = focalDeltaPixels / Screen.width;
 
             Vector2 focalDeltaDiff = focalDelta - _currentFocalDelta;
+            float diffMagnitude = focalDeltaDiff.magnitude;
+
+            float alignmentMagnitude =
+                diffMagnitude * Mathf.Min(a: Time.deltaTime / CameraMouseAlignmentDuration, b: 1);
+            alignmentMagnitude = Mathf.Max(a: alignmentMagnitude, b: MinCameraMouseAlignmentSpeed * Time.deltaTime);
+
             _currentFocalDelta +=
-                focalDeltaDiff * (Time.deltaTime % CameraMouseAlignmentSpeed / CameraMouseAlignmentSpeed);
+                focalDeltaDiff.normalized * Mathf.Min(a: alignmentMagnitude, b: diffMagnitude);
 
             _distance += Speed * Time.deltaTime;
             UpdateRegistrants();
