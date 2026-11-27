@@ -30,7 +30,10 @@ namespace Crysc.Helpers
 
         public void ChainCallback<T>(T target, Action<T> action) where T : class
         {
-            _sequence.ChainCallback(target: target, callback: action);
+            if (IsRunning)
+                _sequence.ChainCallback(target: target, callback: action);
+            else
+                action?.Invoke(target);
         }
     }
 }
